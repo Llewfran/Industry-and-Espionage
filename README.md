@@ -21,4 +21,4 @@ A single web page that runs the rhythm of the Decade on the Chamber's iPad:
 - **Chairman's controls** (gear button, PIN): pause, +30 seconds, next Call, restart Call, change Call length, end the year, start a new Decade.
 - Keeps the screen awake where the browser allows, and survives a reload.
 
-**Run it on the iPad:** enable GitHub Pages for this repository (Settings → Pages → Deploy from branch → `main`, folder `/root`). Open `https://llewfran.github.io/Industry-and-Espionage/app/` in Safari, then Share → **Add to Home Screen** so it opens full screen. Tap any button once so the iPad allows sound, and turn off the side switch's silent mode.
+**Run it on the iPad:** enable GitHub Pages for this repository (Settings → Pages → Deploy from branch → `main`, folder `/root`). Open `https://llewfran.github.io/Industry-and-Espionage/` in Safari (it goes straight to the Year Clock), then Share → **Add to Home Screen** so it opens full screen. Tap any button once so the iPad allows sound, and turn off the side switch's silent mode.
