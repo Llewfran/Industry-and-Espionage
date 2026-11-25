@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Year Clock">
+<title>Year Clock · Industry &amp; Espionage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* VOICE: ceremonial, brass, the Chamber's great clock — readable across a room.
+   IDEA: the Port's brass call-dial mounted in the Negotiation Chamber.
+   PICTURE: a huge riveted dial with the called Warehouse number and a burning countdown ring; the Order of Access as brass tokens beneath.
+   COLOUR and TYPE: mahogany dark, polished brass, parchment, wax-seal red for the warning. Cinzel Decorative numerals, Crimson Text.
+   LAYOUT: one full screen; dial centre, status above, token rail below; Chairman controls hidden behind a PIN. */
+:root{--bg:#160d07;--wood:#2a170b;--brass:#c9973f;--brass-l:#f2d48a;--brass-d:#6b4517;--parch:#ecd9ad;--ink:#f3e3bd;--seal:#b5372e;--seal-l:#ff7a62;
+  color-scheme:dark}
+*{box-sizing:border-box;min-width:0;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:radial-gradient(ellipse at 50% 30%,#3a2210 0%,var(--bg) 70%);color:var(--ink);font:18px/1.45 "Crimson Text",Georgia,serif;overflow:hidden;
+  user-select:none;-webkit-user-select:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:max(3vh,18px) 4vw;gap:2.2vh}
+.screen.on{display:flex}
+h1,.t{font-family:"Cinzel",serif;font-weight:700;letter-spacing:.06em;color:var(--brass-l);text-align:center}
+h1{font-size:clamp(26px,4.2vw,44px);line-height:1.05;text-wrap:balance}
+.sub{font-style:italic;color:#d9c08c;text-align:center;font-size:clamp(17px,2.2vw,22px);max-width:40em}
+.kick{font-family:"Cinzel",serif;font-size:14px;letter-spacing:.32em;text-transform:uppercase;color:var(--brass)}
+.brass{background:linear-gradient(180deg,#f6dc96 0%,#c99a45 42%,#8d5e1f 100%);color:#2a1606;border:2px solid #3b210b;
+  box-shadow:inset 0 0 0 2px #f7e3ad,inset 0 0 12px rgba(60,30,5,.5),0 4px 12px rgba(0,0,0,.55)}
+button{font:700 18px "Cinzel",serif;letter-spacing:.06em;border-radius:12px;min-height:56px;padding:0 26px;cursor:pointer}
+button:focus-visible{outline:3px solid var(--brass-l);outline-offset:3px}
+button.ghost{background:rgba(201,151,63,.12);color:var(--brass-l);border:2px solid var(--brass-d);box-shadow:none}
+button:active{transform:translateY(1px)}
+/* setup card */
+.card{background:linear-gradient(#f1e0b8,#dcc391);color:#2a1a0c;border-radius:14px;border:3px solid #3b210b;
+  box-shadow:inset 0 0 0 2px #f7e3ad,inset 0 0 28px rgba(110,70,25,.35),0 10px 30px rgba(0,0,0,.6);padding:26px 30px;width:min(560px,100%)}
+.card h1{color:#3b210b}
+.card button.ghost{color:#3b210b;border-color:#6b4517;background:rgba(255,248,230,.5)}
+.field{display:grid;grid-template-columns:1fr auto;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid rgba(110,70,25,.35)}
+.field label{font:700 17px "Cinzel",serif;color:#3b210b}
+.field small{display:block;font:italic 15px "Crimson Text",serif;color:#5a3a1a}
+.step{display:flex;align-items:center;gap:10px}
+.step button{min-height:48px;width:48px;padding:0;font-size:24px}
+.step output{font:700 26px "Cinzel",serif;min-width:3.4em;text-align:center;color:#2a1606}
+input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-align:center;padding:8px;border-radius:10px;border:2px solid #6b4517;background:#fff8e6;color:#2a1606}
+.err{color:#8e1d17;font-weight:600;min-height:1.4em;text-align:center;margin-top:8px}
+.row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+/* status line */
+.status{display:flex;gap:28px;align-items:baseline;justify-content:center;flex-wrap:wrap}
+.status .t{font-size:clamp(20px,2.6vw,30px)}
+.status .s{font-family:"Cinzel",serif;color:var(--brass);font-size:clamp(15px,1.7vw,19px);letter-spacing:.14em;text-transform:uppercase}
+/* dial */
+.dialwrap{position:relative;width:min(56vmin,520px);aspect-ratio:1}
+.dial{position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%,#fbe7aa 0%,#d6a654 30%,#9a6a24 62%,#4d300c 100%);
+  box-shadow:0 0 0 6px #3b210b,0 0 0 10px #c9973f,0 0 0 13px #3b210b,0 18px 50px rgba(0,0,0,.7),inset 0 0 40px rgba(60,30,5,.6)}
+.dial::after{content:"";position:absolute;inset:16%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#3a2412,#120a04 75%);
+  box-shadow:inset 0 0 0 4px #8d5e1f,inset 0 0 30px #000}
+.rivets{position:absolute;inset:0}
+.ring{position:absolute;inset:0;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:5.2}
+.ring .track{stroke:rgba(40,20,5,.55)}
+.ring .burn{stroke:var(--brass-l);stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(255,220,140,.8));transition:stroke .4s}
+.warn .ring .burn{stroke:var(--seal-l);filter:drop-shadow(0 0 8px rgba(255,90,60,.9))}
+.face{position:absolute;inset:16%;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;text-align:center}
+.face .lbl{font-family:"Cinzel",serif;font-size:clamp(12px,1.6vmin,16px);letter-spacing:.3em;text-transform:uppercase;color:var(--brass)}
+.face .num{font:900 clamp(90px,22vmin,210px)/.95 "Cinzel Decorative",serif;color:var(--brass-l);text-shadow:0 0 18px rgba(255,210,120,.35),0 3px 0 #3b210b}
+.face .time{font:700 clamp(30px,6vmin,58px)/1 "Cinzel",serif;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.warn .face .time{color:var(--seal-l)}
+/* next banner */
+.next{position:fixed;left:50%;top:max(3vh,14px);transform:translate(-50%,-160%);transition:transform .5s cubic-bezier(.2,1.4,.4,1);z-index:5;
+  display:flex;align-items:center;gap:18px;padding:12px 28px 12px 22px;border-radius:60px;
+  background:radial-gradient(circle at 30% 30%,#d5503f,#7e1410);border:3px solid #f2d48a;box-shadow:0 10px 30px rgba(0,0,0,.7)}
+.next.show{transform:translate(-50%,0)}
+.next .t{color:#ffe4d8;font-size:clamp(17px,2vw,22px);text-transform:uppercase;letter-spacing:.18em}
+.next .n{font:900 clamp(40px,5vw,60px)/1 "Cinzel Decorative",serif;color:#fff3c8;animation:flash .8s ease-in-out infinite alternate}
+@keyframes flash{from{opacity:1;transform:scale(1)}to{opacity:.35;transform:scale(1.15)}}
+/* token rail */
+.rail{display:flex;gap:clamp(8px,1.4vw,16px);flex-wrap:wrap;justify-content:center;max-width:94vw}
+.tok{width:clamp(52px,7vw,78px);aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;
+  font:900 clamp(22px,3vw,34px) "Cinzel Decorative",serif;color:#2a1606;
+  background:radial-gradient(circle at 35% 30%,#fbe7aa,#c99a45 55%,#6b4517);border:2px solid #3b210b;box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 0 0 2px #f7e3ad;
+  transition:opacity .4s,transform .4s,filter .4s}
+.tok small{position:absolute;bottom:-22px;font:600 13px "Cinzel",serif;color:var(--brass);letter-spacing:.1em}
+.tok.done{opacity:.28;filter:grayscale(.7)}
+.tok.cur{transform:scale(1.18);box-shadow:0 0 0 4px var(--brass-l),0 0 24px rgba(255,210,120,.8)}
+.tok.nxt{animation:pulse .8s ease-in-out infinite alternate}
+.warn .tok.nxt{box-shadow:0 0 0 4px var(--seal-l),0 0 26px rgba(255,90,60,.9)}
+@keyframes pulse{to{transform:translateY(-6px) scale(1.08)}}
+.deal .tok{animation:deal .55s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes deal{from{opacity:0;transform:translateY(-60vh) rotate(-200deg) scale(.4)}}
+/* cue plaque */
+.plaque{padding:16px 30px;border-radius:12px;text-align:center;max-width:min(760px,92vw)}
+.plaque .t{color:#2a1606;font-size:14px;letter-spacing:.3em;text-transform:uppercase}
+.plaque p{font:italic 20px/1.35 "Crimson Text",serif;color:#2a1606;margin-top:4px}
+/* pin pad */
+.overlay{position:fixed;inset:0;background:rgba(10,5,2,.82);display:none;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
+.overlay.on{display:flex}
+.pad{width:min(380px,92vw);text-align:center}
+.dots{display:flex;gap:14px;justify-content:center;margin:16px 0 20px}
+.dots i{width:18px;height:18px;border-radius:50%;border:2px solid var(--brass);display:block}
+.dots i.f{background:var(--brass-l)}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-12px)}75%{transform:translateX(12px)}}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.keys button{min-height:68px;font-size:28px;border-radius:50%;aspect-ratio:1;padding:0}
+.menu{width:min(520px,94vw);display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.menu .wide{grid-column:1/-1}
+.gear{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));width:52px;height:52px;min-height:0;padding:0;border-radius:50%;font-size:26px;z-index:4;opacity:.55}
+.paused-tag{font:700 18px "Cinzel",serif;letter-spacing:.3em;color:var(--seal-l);text-transform:uppercase;display:none}
+.paused .paused-tag{display:block}
+@media (orientation:portrait){.dialwrap{width:min(78vw,560px)}}
+@media (max-height:620px){.dialwrap{width:min(48vmin,400px)}.rail .tok{width:46px}}
+@media (prefers-reduced-motion:reduce){.next .n,.tok.nxt,.deal .tok{animation:none}}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<section class="screen on" id="sSetup">
+  <div class="kick">Industry &amp; Espionage</div>
+  <div class="card">
+    <h1>The Year Clock</h1>
+    <p class="sub" style="color:#5a3a1a;margin:6px auto 8px">Set by the Chairman before the Welcome.</p>
+    <div class="field"><label>Industrialists<small>Warehouses in play, 4 to 10</small></label>
+      <div class="step"><button class="brass" data-adj="players:-1" aria-label="Fewer">−</button><output id="oPlayers">6</output><button class="brass" data-adj="players:1" aria-label="More">+</button></div></div>
+    <div class="field"><label>Length of a Call<small>Warning tone 30 seconds before the end</small></label>
+      <div class="step"><button class="brass" data-adj="call:-15" aria-label="Shorter">−</button><output id="oCall">3:00</output><button class="brass" data-adj="call:15" aria-label="Longer">+</button></div></div>
+    <div class="field"><label>Begin at Year<small>Year One runs in number order</small></label>
+      <div class="step"><button class="brass" data-adj="year:-1" aria-label="Earlier">−</button><output id="oYear">1</output><button class="brass" data-adj="year:1" aria-label="Later">+</button></div></div>
+    <div class="field"><label>Chairman's PIN<small>4 digits; opens each year and the controls</small></label>
+      <input class="pin" id="iPin" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="····"></div>
+    <div class="err" id="setupErr"></div>
+    <div class="row">
+      <button class="ghost" id="bTest">Test the bell</button>
+      <button class="brass" id="bOpen">Seal the clock</button>
+    </div>
+  </div>
+</section>
+
+<!-- LOCKED: waiting for the Chairman -->
+<section class="screen" id="sLock">
+  <div class="kick" id="lKick">The Port is being swept</div>
+  <h1 id="lTitle">Year One awaits</h1>
+  <p class="sub" id="lSub">The Chairman will open the year.</p>
+  <div class="plaque brass" id="lCue"><div class="t">The Herald's cue</div><p id="lCueText"></p></div>
+  <button class="brass" id="bUnlock" style="margin-top:1vh">Chairman: open the year</button>
+</section>
+
+<!-- RUNNING -->
+<section class="screen" id="sRun">
+  <div class="status"><div class="t" id="rYear">Year One</div><div class="s" id="rCall">Call 1 of 6</div></div>
+  <div class="paused-tag">Paused by the Chairman</div>
+  <div class="dialwrap">
+    <div class="dial"></div>
+    <svg class="rivets" viewBox="0 0 100 100" aria-hidden="true" id="rivets"></svg>
+    <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"/><circle class="burn" id="burn" cx="50" cy="50" r="44"/></svg>
+    <div class="face"><div class="lbl">To the Port</div><div class="num" id="rNum">1</div><div class="time" id="rTime">3:00</div></div>
+  </div>
+  <div class="kick" style="margin-top:.6vh">Order of Access</div>
+  <div class="rail" id="rail"></div>
+</section>
+
+<!-- DECADE OVER -->
+<section class="screen" id="sEnd">
+  <div class="kick">The Decade is over</div>
+  <h1 style="font-size:clamp(34px,6vw,64px)">The Great Reveal</h1>
+  <div class="plaque brass"><div class="t">The Herald's cue</div><p>Proclamation VII. All Industrialists to the Port of Ironreach.</p></div>
+</section>
+
+<div class="next" id="next" aria-live="assertive"><span class="t" id="nextT">Next to the Port</span><span class="n" id="nextN">4</span></div>
+<button class="gear ghost" id="bGear" aria-label="Chairman's controls" style="display:none">⚙</button>
+
+<!-- PIN PAD -->
+<div class="overlay" id="oPin">
+  <div class="pad">
+    <div class="t" id="pinTitle" style="font-size:22px">Chairman's PIN</div>
+    <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+    <div class="keys" id="keys"></div>
+    <div class="row"><button class="ghost" id="pinCancel">Cancel</button></div>
+  </div>
+</div>
+
+<!-- CHAIRMAN MENU -->
+<div class="overlay" id="oMenu">
+  <div>
+    <div class="t" style="font-size:22px;margin-bottom:16px">The Chairman's Controls</div>
+    <div class="menu">
+      <button class="brass" id="mPause">Pause</button>
+      <button class="brass" id="mPlus">+30 seconds</button>
+      <button class="brass" id="mSkip">Next Call</button>
+      <button class="brass" id="mRestart">Restart this Call</button>
+      <button class="ghost" id="mShorter">Calls −15 s</button>
+      <button class="ghost" id="mLonger">Calls +15 s</button>
+      <div class="wide sub" id="mInfo" style="font-size:17px"></div>
+      <button class="ghost" id="mEndYear">End the year now</button>
+      <button class="ghost" id="mReset">New Decade</button>
+      <button class="brass wide" id="mClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+{
+const $ = id => document.getElementById(id);
+const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
+const CUES = {
+  1: 'Before the Welcome, then Proclamation I, The Welcome. Year One runs in number order.',
+  2: 'Proclamation II, The Honour of the Pin, before this year’s order is set.',
+  3: 'Proclamation III, The Warning, before the first Call.',
+  5: 'Proclamation IV, Year Five. Production Lines begin this year.',
+  6: 'First, Proclamation V and the Silent Procession. Then the Chairman opens Year Six.',
+  9: 'Year Nine brings the last draw of the Decade.',
+  10: 'Proclamation VI, Year Ten. No shipping, and no new card.'
+};
+const KEY = 'ie-yearclock-v1';
+let S = { phase:'setup', players:6, callSec:180, year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
+try { const v = JSON.parse(localStorage.getItem(KEY)||'null'); if (v && v.phase) S = Object.assign(S, v); } catch(e){}
+
+/* ---------- sound: synthesised brass bell ---------- */
+let AC = null;
+const audio = () => { try { if (!AC) AC = new (window.AudioContext||window.webkitAudioContext)(); if (AC.state==='suspended') AC.resume(); } catch(e){} return AC; };
+function bell(f, at, dur, vol){
+  const ac = audio(); if (!ac) return;
+  const t = ac.currentTime + at, out = ac.createGain();
+  out.gain.setValueAtTime(0.0001, t); out.gain.exponentialRampToValueAtTime(vol, t+0.01); out.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  out.connect(ac.destination);
+  [[1,1],[2.76,.45],[5.4,.22],[0.5,.3]].forEach(([m,g])=>{ const o=ac.createOscillator(), gg=ac.createGain(); o.type='sine'; o.frequency.value=f*m; gg.gain.value=g; o.connect(gg); gg.connect(out); o.start(t); o.stop(t+dur); });
+}
+const warnTone = () => { bell(880,0,1.2,.5); bell(660,.4,1.4,.5); bell(880,1.1,1.2,.5); bell(660,1.5,1.8,.5); };
+const endTone  = () => { bell(523,0,2,.6); bell(523,.7,2,.6); bell(392,1.4,3,.7); };
+const yearTone = () => { [0,.5,1,1.5].forEach((d,i)=>bell([392,523,659,784][i],d,2.4,.5)); };
+
+/* ---------- wake lock ---------- */
+let lock = null;
+async function keepAwake(){ try { if ('wakeLock' in navigator && !lock) { lock = await navigator.wakeLock.request('screen'); lock.addEventListener('release',()=>lock=null); } } catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if (document.visibilityState==='visible' && S.phase!=='setup') keepAwake(); });
+
+/* ---------- helpers ---------- */
+const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+function shuffled(n){
+  const a = Array.from({length:n},(_,i)=>i+1);
+  for (let i=n-1;i>0;i--){ const r = new Uint32Array(1); crypto.getRandomValues(r); const j = r[0]%(i+1); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id)); $('bGear').style.display = (id==='sRun'||id==='sLock') ? 'block':'none'; }
+
+/* rivets on the dial */
+$('rivets').innerHTML = Array.from({length:24},(_,i)=>{ const a=i/24*Math.PI*2, x=50+47.2*Math.cos(a), y=50+47.2*Math.sin(a);
+  return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="1.05" fill="#fff1c4" stroke="#3b210b" stroke-width=".35"/>`; }).join('');
+const C = 2*Math.PI*44; $('burn').style.strokeDasharray = C;
+
+/* ---------- setup ---------- */
+function renderSetup(){ $('oPlayers').textContent=S.players; $('oCall').textContent=fmt(S.callSec); $('oYear').textContent=S.year; }
+document.querySelectorAll('[data-adj]').forEach(b=>b.addEventListener('click',()=>{
+  const [k,d] = b.dataset.adj.split(':'), n = +d;
+  if (k==='players') S.players = Math.min(10, Math.max(4, S.players+n));
+  if (k==='call') S.callSec = Math.min(600, Math.max(60, S.callSec+n));
+  if (k==='year') S.year = Math.min(10, Math.max(1, S.year+n));
+  renderSetup();
+}));
+$('bTest').addEventListener('click',()=>{ audio(); warnTone(); });
+$('bOpen').addEventListener('click',()=>{
+  const p = $('iPin').value.trim();
+  if (!/^\d{4}$/.test(p)) { $('setupErr').textContent = 'Choose a four-digit PIN.'; return; }
+  audio(); S.pin = p; S.phase='locked'; S.order=[]; S.idx=0; save(); render(); keepAwake();
+});
+
+/* ---------- locked ---------- */
+function renderLock(){
+  const y = S.year;
+  $('lKick').textContent = y===1 ? 'The Decade is ready' : 'The Port is being swept';
+  $('lTitle').textContent = 'Year ' + WORDS[y] + ' awaits';
+  $('lSub').textContent = y===1 ? 'Calls run in number order this year.' : 'A new Order of Access will be drawn when the Chairman opens the year.';
+  const c = CUES[y]; $('lCue').style.display = c ? 'block':'none'; $('lCueText').textContent = c||'';
+  $('bUnlock').textContent = 'Chairman: open Year ' + WORDS[y];
+}
+$('bUnlock').addEventListener('click',()=>askPin('Open Year '+WORDS[S.year], openYear));
+function openYear(){
+  S.order = S.year===1 ? Array.from({length:S.players},(_,i)=>i+1) : shuffled(S.players);
+  S.idx = 0; S.phase='call'; S.warned=false; S.endAt = Date.now() + S.callSec*1000;
+  save(); yearTone(); keepAwake();
+  render(true);
+}
+
+/* ---------- running ---------- */
+function renderRail(deal){
+  const r = $('rail');
+  r.classList.toggle('deal', !!deal);
+  r.innerHTML = S.order.map((n,i)=>`<div class="tok ${i<S.idx?'done':''} ${i===S.idx?'cur':''} ${i===S.idx+1?'nxt':''}" style="animation-delay:${deal?i*0.18:0}s">${n}<small>${i+1}</small></div>`).join('');
+}
+function renderRun(deal){
+  $('rYear').textContent = 'Year ' + WORDS[S.year];
+  $('rCall').textContent = 'Call ' + (S.idx+1) + ' of ' + S.players;
+  $('rNum').textContent = S.order[S.idx];
+  renderRail(deal);
+  tick();
+}
+function nextBanner(on){
+  const last = S.idx >= S.players-1;
+  $('nextT').textContent = last ? 'Last Call of Year ' + WORDS[S.year] : 'Next to the Port';
+  $('nextN').textContent = last ? '⚙' : S.order[S.idx+1];
+  $('next').classList.toggle('show', !!on);
+}
+function advance(silent){
+  if (!silent) endTone();
+  S.idx++; S.warned=false; nextBanner(false); $('sRun').classList.remove('warn');
+  if (S.idx >= S.players) { endYear(); return; }
+  S.endAt = Date.now() + S.callSec*1000; save(); renderRun(false);
+}
+function endYear(){
+  nextBanner(false); $('sRun').classList.remove('warn','paused');
+  S.year++; S.idx=0;
+  S.phase = S.year > 10 ? 'done' : 'locked';
+  save(); render();
+}
+function tick(){
+  if (S.phase!=='call' && S.phase!=='paused') return;
+  const left = S.phase==='paused' ? S.left : (S.endAt - Date.now())/1000;
+  if (S.phase==='call' && left <= 0) { advance(false); return; }
+  $('rTime').textContent = fmt(left);
+  $('burn').style.strokeDashoffset = C * (1 - Math.max(0,left)/S.callSec);
+  const w = left <= 30;
+  $('sRun').classList.toggle('warn', w);
+  if (w && !S.warned && S.phase==='call') { S.warned=true; save(); warnTone(); nextBanner(true); }
+  if (w) nextBanner(true);
+}
+setInterval(tick, 200);
+
+/* ---------- PIN pad ---------- */
+let pinBuf='', pinCb=null;
+$('keys').innerHTML = [1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k=> k==='' ? '<span></span>' : `<button class="${k==='⌫'?'ghost':'brass'}" data-k="${k}">${k}</button>`).join('');
+function dots(){ [...$('dots').children].forEach((d,i)=>d.classList.toggle('f', i<pinBuf.length)); }
+function askPin(title, cb){ audio(); pinBuf=''; pinCb=cb; $('pinTitle').textContent=title; dots(); $('oPin').classList.add('on'); }
+$('keys').addEventListener('click',e=>{
+  const k = e.target.dataset && e.target.dataset.k; if (k===undefined) return;
+  if (k==='⌫') pinBuf = pinBuf.slice(0,-1); else if (pinBuf.length<4) pinBuf += k;
+  dots();
+  if (pinBuf.length===4) {
+    if (pinBuf===S.pin) { $('oPin').classList.remove('on'); const cb=pinCb; pinCb=null; setTimeout(cb, 50); }
+    else { $('dots').classList.remove('shake'); void $('dots').offsetWidth; $('dots').classList.add('shake'); setTimeout(()=>{pinBuf='';dots();},350); }
+  }
+});
+$('pinCancel').addEventListener('click',()=>{ $('oPin').classList.remove('on'); pinCb=null; });
+
+/* ---------- Chairman's menu ---------- */
+$('bGear').addEventListener('click',()=>askPin("Chairman's controls", openMenu));
+function openMenu(){
+  const run = S.phase==='call'||S.phase==='paused';
+  ['mPause','mPlus','mSkip','mRestart','mEndYear'].forEach(id=>$(id).disabled = !run);
+  $('mPause').textContent = S.phase==='paused' ? 'Resume' : 'Pause';
+  $('mInfo').textContent = 'Calls last ' + fmt(S.callSec) + ' · ' + S.players + ' Industrialists · Year ' + WORDS[Math.min(S.year,10)];
+  $('oMenu').classList.add('on');
+}
+const closeMenu = () => $('oMenu').classList.remove('on');
+$('mClose').addEventListener('click', closeMenu);
+$('mPause').addEventListener('click',()=>{
+  if (S.phase==='call') { S.left = (S.endAt-Date.now())/1000; S.phase='paused'; $('sRun').classList.add('paused'); }
+  else if (S.phase==='paused') { S.endAt = Date.now()+S.left*1000; S.phase='call'; $('sRun').classList.remove('paused'); }
+  save(); closeMenu(); tick();
+});
+$('mPlus').addEventListener('click',()=>{
+  if (S.phase==='paused') S.left += 30; else S.endAt += 30000;
+  if ((S.phase==='paused'?S.left:(S.endAt-Date.now())/1000) > 30) { S.warned=false; nextBanner(false); }
+  save(); closeMenu(); tick();
+});
+$('mSkip').addEventListener('click',()=>{ if (S.phase==='paused'){S.phase='call';$('sRun').classList.remove('paused');} closeMenu(); advance(false); });
+$('mRestart').addEventListener('click',()=>{ S.endAt=Date.now()+S.callSec*1000; S.left=S.callSec; S.warned=false; nextBanner(false); save(); closeMenu(); tick(); });
+$('mShorter').addEventListener('click',()=>{ S.callSec=Math.max(60,S.callSec-15); save(); openMenu(); });
+$('mLonger').addEventListener('click',()=>{ S.callSec=Math.min(600,S.callSec+15); save(); openMenu(); });
+$('mEndYear').addEventListener('click',()=>{ closeMenu(); endTone(); endYear(); });
+$('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', players:S.players, callSec:S.callSec, year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false }; $('iPin').value=''; save(); render(); });
+
+/* ---------- render ---------- */
+function render(deal){
+  if (S.phase==='setup') { renderSetup(); show('sSetup'); }
+  else if (S.phase==='locked') { renderLock(); show('sLock'); }
+  else if (S.phase==='done') { show('sEnd'); }
+  else {
+    show('sRun'); $('sRun').classList.toggle('paused', S.phase==='paused');
+    // catch up silently if the iPad slept through whole Calls
+    while (S.phase==='call' && S.endAt + 0 <= Date.now() - S.callSec*1000 && S.idx < S.players-1) { S.idx++; S.endAt += S.callSec*1000; S.warned=false; }
+    renderRun(deal);
+  }
+}
+render();
+}
+</script>
+</body>
+</html>
