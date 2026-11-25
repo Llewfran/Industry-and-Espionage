@@ -76,6 +76,18 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
   background:radial-gradient(circle at 30% 30%,#d5503f,#7e1410);border:3px solid #f2d48a;box-shadow:0 10px 30px rgba(0,0,0,.7)}
 .next.show{transform:translate(-50%,0)}
 #sRun .status{transition:opacity .3s}
+.open{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:8;pointer-events:none;opacity:0;transition:opacity .4s}
+.open.show{opacity:1}
+.open .gate{position:absolute;top:0;bottom:0;width:50%;background:repeating-linear-gradient(90deg,#3a2412 0 22px,#2a170b 22px 26px);
+  box-shadow:inset 0 0 0 6px #8d5e1f,inset 0 0 60px #000;transition:transform 1.6s cubic-bezier(.6,0,.3,1)}
+.open .gate.l{left:0;border-right:4px solid var(--brass)}.open .gate.r{right:0;border-left:4px solid var(--brass)}
+.open.show .gate.l{transform:translateX(-100%)}.open.show .gate.r{transform:translateX(100%)}
+.open .msg{position:relative;text-align:center;padding:30px 50px;border-radius:18px;background:#1d1209;border:3px solid var(--brass);box-shadow:0 20px 60px #000}
+.open .msg .t{font-size:clamp(30px,5vw,56px)}
+.open .who{display:flex;gap:70px;justify-content:center;margin-top:14px;font:700 clamp(20px,2.6vw,30px) "Cinzel",serif;color:var(--ink)}
+.open .who b{font:900 clamp(44px,6vw,72px)/1 "Cinzel Decorative",serif;color:var(--brass-l);display:block}
+.open .who span{display:flex;flex-direction:column;align-items:center;gap:4px}
+@media (prefers-reduced-motion:reduce){.open .gate{transition:none}}
 #sRun.banner .status{opacity:0}
 .next .t{color:#ffe4d8;font-size:clamp(17px,2vw,22px);text-transform:uppercase;letter-spacing:.18em}
 .next .n{font:900 clamp(40px,5vw,60px)/1 "Cinzel Decorative",serif;color:#fff3c8;animation:flash .8s ease-in-out infinite alternate}
@@ -162,7 +174,7 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
     <div class="dial"></div>
     <svg class="rivets" viewBox="0 0 100 100" aria-hidden="true" id="rivets"></svg>
     <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"/><circle class="burn" id="burn" cx="50" cy="50" r="44"/></svg>
-    <div class="face"><div class="lbl" id="rLbl">To the Port</div><div class="num" id="rNum">1</div><div class="time" id="rTime">3:00</div></div>
+    <div class="face"><div class="lbl" id="rLbl">In Port</div><div class="num" id="rNum">1</div><div class="time" id="rTime">3:00</div></div>
   </div>
   <div class="kick" style="margin-top:.6vh">Order of Access</div>
   <div class="rail" id="rail"></div>
@@ -175,7 +187,9 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
   <div class="plaque brass"><div class="t">The Herald's cue</div><p>Proclamation VII. All Industrialists to the Port of Ironreach.</p></div>
 </section>
 
-<div class="next" id="next" aria-live="assertive"><span class="t" id="nextT">Next to the Port</span><span class="n" id="nextN">4</span></div>
+<div class="open" id="open" aria-live="assertive"><div class="gate l"></div><div class="gate r"></div>
+  <div class="msg"><div class="t">The Port is open</div><div class="who" id="openWho"></div></div></div>
+<div class="next" id="next" aria-live="assertive"><span class="t" id="nextT">Stand ready at the Iron Gate</span><span class="n" id="nextN">4</span></div>
 <button class="gear ghost" id="bGear" aria-label="Chairman's controls" style="display:none">⚙</button>
 
 <!-- PIN PAD -->
@@ -280,7 +294,7 @@ $('bOpen').addEventListener('click',()=>{
 /* ---------- locked ---------- */
 function renderLock(){
   const y = S.year;
-  $('lKick').textContent = y===1 ? 'The Decade is ready' : 'The Port is being swept';
+  $('lKick').textContent = y===1 ? 'The Decade is ready' : 'Year ' + WORDS[y-1] + ' is complete · the Chairman sweeps the Port';
   $('lTitle').textContent = 'Year ' + WORDS[y] + ' awaits';
   $('lSub').textContent = y===1 ? 'Calls run in number order this year.' : 'A new Order of Access will be drawn when the Chairman opens the year.';
   const c = CUES[y]; $('lCue').style.display = c ? 'block':'none'; $('lCueText').textContent = c||'';
@@ -307,26 +321,37 @@ function renderRun(deal){
   $('rYear').textContent = 'Year ' + WORDS[S.year];
   const settling = isSettle();
   $('rCall').textContent = settling ? 'Settling · Call 1 next' : 'Call ' + (S.idx+1) + ' of ' + S.players;
-  $('rLbl').textContent = settling ? 'First to the Port' : 'To the Port';
+  $('rLbl').textContent = settling ? 'First to the Gate' : 'In Port';
   $('rNum').textContent = S.order[S.idx];
   renderRail(deal);
   tick();
 }
 const isSettle = () => S.phase==='settle' || (S.phase==='paused' && S.pausedFrom==='settle');
+let openT = null;
+function portOpen(out, inn){
+  const w = [];
+  if (out) w.push(`<span><b>${out}</b>exits</span>`);
+  if (inn) w.push(`<span><b>${inn}</b>enters</span>`);
+  $('openWho').innerHTML = w.join('');
+  $('open').classList.add('show'); clearTimeout(openT);
+  openT = setTimeout(()=>$('open').classList.remove('show'), 6000);
+}
 function startCalls(){
   S.phase='call'; S.idx=0; S.warned=false; S.endAt = Date.now() + S.callSec*1000;
-  nextBanner(false); save(); startTone(); renderRun(false);
+  nextBanner(false); save(); startTone(); portOpen(null, S.order[0]); renderRun(false);
 }
 function nextBanner(on){
   $('sRun').classList.toggle('banner', !!on);
-  if (isSettle()) { $('nextT').textContent='First to the Port'; $('nextN').textContent=S.order[0]; $('next').classList.toggle('show', !!on); return; }
+  if (isSettle()) { $('nextT').textContent='Stand ready at the Iron Gate'; $('nextN').textContent=S.order[0]; $('next').classList.toggle('show', !!on); return; }
   const last = S.idx >= S.players-1;
-  $('nextT').textContent = last ? 'Last Call of Year ' + WORDS[S.year] : 'Next to the Port';
+  $('nextT').textContent = last ? 'Last Call of Year ' + WORDS[S.year] + ' · prepare to exit' : 'Stand ready at the Iron Gate';
   $('nextN').textContent = last ? '⚙' : S.order[S.idx+1];
   $('next').classList.toggle('show', !!on);
 }
 function advance(silent){
   if (!silent) endTone();
+  const out = S.order[S.idx], inn = S.order[S.idx+1];
+  if (!silent) portOpen(out, inn);
   S.idx++; S.warned=false; nextBanner(false); $('sRun').classList.remove('warn');
   if (S.idx >= S.players) { endYear(); return; }
   S.endAt = Date.now() + S.callSec*1000; save(); renderRun(false);
@@ -403,7 +428,7 @@ $('mRestart').addEventListener('click',()=>{
   S.endAt=Date.now()+sec*1000; S.left=sec; S.warned=false; if (!isSettle()) nextBanner(false); save(); closeMenu(); tick(); });
 $('mShorter').addEventListener('click',()=>{ S.callSec=Math.max(60,S.callSec-15); save(); openMenu(); });
 $('mLonger').addEventListener('click',()=>{ S.callSec=Math.min(600,S.callSec+15); save(); openMenu(); });
-$('mEndYear').addEventListener('click',()=>{ closeMenu(); endTone(); endYear(); });
+$('mEndYear').addEventListener('click',()=>{ closeMenu(); endTone(); if (!isSettle()) portOpen(S.order[S.idx], null); endYear(); });
 $('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', players:S.players, callSec:S.callSec, settleSec:S.settleSec, pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false }; $('iPin').value=''; save(); render(); });
 
 /* ---------- render ---------- */
