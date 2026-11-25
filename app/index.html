@@ -143,7 +143,8 @@ body.dial-gauge .steam{display:block}
 .warn #gTime{fill:#ff8a70}
 .steam{position:absolute;left:50%;top:-3%;width:0;height:0;z-index:3;pointer-events:none}
 .steam i{position:absolute;left:-14px;top:-10px;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle,rgba(255,250,240,.75),rgba(255,250,240,0) 70%);opacity:0}
-.warn .steam i{animation:puff 1.6s ease-out infinite}
+.warn .steam i,.blow .steam i{animation:puff 1.6s ease-out infinite}
+.blow .steam i{animation-duration:.9s}
 .warn .steam i:nth-child(2){animation-delay:.5s}.warn .steam i:nth-child(3){animation-delay:1s}
 @keyframes puff{0%{opacity:.9;transform:translate(0,0) scale(.4)}100%{opacity:0;transform:translate(var(--dx,18px),-90px) scale(3.2)}}
 .steam i:nth-child(2){--dx:-22px}.steam i:nth-child(3){--dx:6px}
@@ -321,7 +322,7 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch
 try { const v = JSON.parse(localStorage.getItem(KEY)||'null'); if (v && v.phase) S = Object.assign(S, v); } catch(e){}
 if (S.settleSec===undefined) S.settleSec = 60;
 if (!S.dial) S.dial = 'gauge';
-const startTone = () => gateTone();
+const startTone = () => gateSound();
 
 /* ---------- sound: synthesised brass bell ---------- */
 let AC = null;
@@ -350,7 +351,41 @@ function clank(at, vol){
 }
 /* The Iron Gate: a bolt drawn back, then two deep tolls (well below the bright warning chime) */
 const gateTone = () => { clank(0,.5); clank(.22,.4); bell(110,.45,4.5,.5); bell(82.4,1.6,5.5,.55); };
-const endTone  = gateTone;
+/* Steam whistle: a three-note chord blown for 5 seconds, with breath and a rising start */
+function steamWhistle(at, dur, vol){
+  const ac = audio(); if (!ac) return;
+  const t = ac.currentTime + at, master = ac.createGain();
+  master.gain.setValueAtTime(0.0001, t);
+  master.gain.exponentialRampToValueAtTime(vol, t+0.18);
+  master.gain.setValueAtTime(vol, t+dur-0.6);
+  master.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  master.connect(ac.destination);
+  const vib = ac.createOscillator(), vg = ac.createGain(); vib.frequency.value = 5.5; vg.gain.value = 2.2; vib.connect(vg); vib.start(t); vib.stop(t+dur);
+  [311.1, 370.0, 466.2].forEach(f=>{
+    const o = ac.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(f*0.88, t); o.frequency.exponentialRampToValueAtTime(f, t+0.35);
+    o.frequency.setValueAtTime(f, t+dur-0.5); o.frequency.exponentialRampToValueAtTime(f*0.94, t+dur);
+    vg.connect(o.frequency);
+    const bp = ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = f*2; bp.Q.value = 1.6;
+    const g = ac.createGain(); g.gain.value = .33;
+    o.connect(bp); bp.connect(g); g.connect(master); o.start(t); o.stop(t+dur);
+  });
+  const len = Math.floor(ac.sampleRate*dur), buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+  for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
+  const n = ac.createBufferSource(); n.buffer = buf;
+  const hp = ac.createBiquadFilter(); hp.type='bandpass'; hp.frequency.value = 2400; hp.Q.value = .7;
+  const ng = ac.createGain(); ng.gain.value = .22;
+  n.connect(hp); hp.connect(ng); ng.connect(master); n.start(t); n.stop(t+dur);
+}
+let blowT = null;
+function gateSound(){
+  if (S.dial === 'gauge') {
+    clank(0,.45); steamWhistle(.15, 5, 1.3);
+    const r = document.getElementById('sRun'); r.classList.add('blow'); clearTimeout(blowT);
+    blowT = setTimeout(()=>r.classList.remove('blow'), 5200);
+  } else gateTone();
+}
+const endTone  = gateSound;
 const yearTone = () => { [0,.5,1,1.5].forEach((d,i)=>bell([392,523,659,784][i],d,2.4,.5)); };
 
 /* ---------- wake lock ---------- */
@@ -413,7 +448,7 @@ document.querySelectorAll('[data-adj]').forEach(b=>b.addEventListener('click',()
   if (k==='year') S.year = Math.min(10, Math.max(1, S.year+n));
   renderSetup();
 }));
-$('bTest').addEventListener('click',()=>{ audio(); warnTone(); setTimeout(gateTone, 3000); });
+$('bTest').addEventListener('click',()=>{ audio(); warnTone(); setTimeout(gateSound, 3000); });
 $('bOpen').addEventListener('click',()=>{
   const p = $('iPin').value.trim();
   if (!/^\d{4}$/.test(p)) { $('setupErr').textContent = 'Choose a four-digit PIN.'; return; }
@@ -453,7 +488,7 @@ function renderRun(deal){
   $('rLbl').textContent = settling ? 'First to the Gate' : 'In Port';
   $('rNum').textContent = S.order[S.idx];
   $('gNum').textContent = S.order[S.idx];
-  $('gLbl').textContent = settling ? 'FIRST TO THE GATE' : 'IN PORT';
+  $('gLbl').textContent = settling ? 'TO THE GATE' : 'IN PORT';
   renderRail(deal);
   tick();
 }
