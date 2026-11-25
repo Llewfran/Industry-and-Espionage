@@ -75,6 +75,8 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
   display:flex;align-items:center;gap:18px;padding:12px 28px 12px 22px;border-radius:60px;
   background:radial-gradient(circle at 30% 30%,#d5503f,#7e1410);border:3px solid #f2d48a;box-shadow:0 10px 30px rgba(0,0,0,.7)}
 .next.show{transform:translate(-50%,0)}
+#sRun .status{transition:opacity .3s}
+#sRun.banner .status{opacity:0}
 .next .t{color:#ffe4d8;font-size:clamp(17px,2vw,22px);text-transform:uppercase;letter-spacing:.18em}
 .next .n{font:900 clamp(40px,5vw,60px)/1 "Cinzel Decorative",serif;color:#fff3c8;animation:flash .8s ease-in-out infinite alternate}
 @keyframes flash{from{opacity:1;transform:scale(1)}to{opacity:.35;transform:scale(1.15)}}
@@ -129,6 +131,8 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
       <div class="step"><button class="brass" data-adj="players:-1" aria-label="Fewer">−</button><output id="oPlayers">6</output><button class="brass" data-adj="players:1" aria-label="More">+</button></div></div>
     <div class="field"><label>Length of a Call<small>Warning tone 30 seconds before the end</small></label>
       <div class="step"><button class="brass" data-adj="call:-15" aria-label="Shorter">−</button><output id="oCall">3:00</output><button class="brass" data-adj="call:15" aria-label="Longer">+</button></div></div>
+    <div class="field"><label>Settling time<small>Before the first Call of each year</small></label>
+      <div class="step"><button class="brass" data-adj="settle:-15" aria-label="Shorter">−</button><output id="oSettle">1:00</output><button class="brass" data-adj="settle:15" aria-label="Longer">+</button></div></div>
     <div class="field"><label>Begin at Year<small>Year One runs in number order</small></label>
       <div class="step"><button class="brass" data-adj="year:-1" aria-label="Earlier">−</button><output id="oYear">1</output><button class="brass" data-adj="year:1" aria-label="Later">+</button></div></div>
     <div class="field"><label>Chairman's PIN<small>4 digits; opens each year and the controls</small></label>
@@ -158,7 +162,7 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
     <div class="dial"></div>
     <svg class="rivets" viewBox="0 0 100 100" aria-hidden="true" id="rivets"></svg>
     <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"/><circle class="burn" id="burn" cx="50" cy="50" r="44"/></svg>
-    <div class="face"><div class="lbl">To the Port</div><div class="num" id="rNum">1</div><div class="time" id="rTime">3:00</div></div>
+    <div class="face"><div class="lbl" id="rLbl">To the Port</div><div class="num" id="rNum">1</div><div class="time" id="rTime">3:00</div></div>
   </div>
   <div class="kick" style="margin-top:.6vh">Order of Access</div>
   <div class="rail" id="rail"></div>
@@ -217,9 +221,11 @@ const CUES = {
   10: 'Proclamation VI, Year Ten. No shipping, and no new card.'
 };
 const KEY = 'ie-yearclock-v1';
-let S = { phase:'setup', players:6, callSec:180, year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false };
+let S = { phase:'setup', players:6, callSec:180, settleSec:60, pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false };
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
 try { const v = JSON.parse(localStorage.getItem(KEY)||'null'); if (v && v.phase) S = Object.assign(S, v); } catch(e){}
+if (S.settleSec===undefined) S.settleSec = 60;
+const startTone = () => { bell(523,0,1.6,.55); bell(784,.25,2.2,.55); };
 
 /* ---------- sound: synthesised brass bell ---------- */
 let AC = null;
@@ -255,11 +261,12 @@ $('rivets').innerHTML = Array.from({length:24},(_,i)=>{ const a=i/24*Math.PI*2, 
 const C = 2*Math.PI*44; $('burn').style.strokeDasharray = C;
 
 /* ---------- setup ---------- */
-function renderSetup(){ $('oPlayers').textContent=S.players; $('oCall').textContent=fmt(S.callSec); $('oYear').textContent=S.year; }
+function renderSetup(){ $('oPlayers').textContent=S.players; $('oCall').textContent=fmt(S.callSec); $('oSettle').textContent=fmt(S.settleSec); $('oYear').textContent=S.year; }
 document.querySelectorAll('[data-adj]').forEach(b=>b.addEventListener('click',()=>{
   const [k,d] = b.dataset.adj.split(':'), n = +d;
   if (k==='players') S.players = Math.min(10, Math.max(4, S.players+n));
   if (k==='call') S.callSec = Math.min(600, Math.max(60, S.callSec+n));
+  if (k==='settle') S.settleSec = Math.min(180, Math.max(0, S.settleSec+n));
   if (k==='year') S.year = Math.min(10, Math.max(1, S.year+n));
   renderSetup();
 }));
@@ -282,7 +289,9 @@ function renderLock(){
 $('bUnlock').addEventListener('click',()=>askPin('Open Year '+WORDS[S.year], openYear));
 function openYear(){
   S.order = S.year===1 ? Array.from({length:S.players},(_,i)=>i+1) : shuffled(S.players);
-  S.idx = 0; S.phase='call'; S.warned=false; S.endAt = Date.now() + S.callSec*1000;
+  S.idx = 0; S.warned=false;
+  if (S.settleSec > 0) { S.phase='settle'; S.endAt = Date.now() + S.settleSec*1000; }
+  else { S.phase='call'; S.endAt = Date.now() + S.callSec*1000; }
   save(); yearTone(); keepAwake();
   render(true);
 }
@@ -291,16 +300,26 @@ function openYear(){
 function renderRail(deal){
   const r = $('rail');
   r.classList.toggle('deal', !!deal);
-  r.innerHTML = S.order.map((n,i)=>`<div class="tok ${i<S.idx?'done':''} ${i===S.idx?'cur':''} ${i===S.idx+1?'nxt':''}" style="animation-delay:${deal?i*0.18:0}s">${n}<small>${i+1}</small></div>`).join('');
+  const st = isSettle();
+  r.innerHTML = S.order.map((n,i)=>`<div class="tok ${i<S.idx?'done':''} ${i===S.idx&&!st?'cur':''} ${(st?i===0:i===S.idx+1)?'nxt':''}" style="animation-delay:${deal?i*0.18:0}s">${n}<small>${i+1}</small></div>`).join('');
 }
 function renderRun(deal){
   $('rYear').textContent = 'Year ' + WORDS[S.year];
-  $('rCall').textContent = 'Call ' + (S.idx+1) + ' of ' + S.players;
+  const settling = isSettle();
+  $('rCall').textContent = settling ? 'Settling · Call 1 next' : 'Call ' + (S.idx+1) + ' of ' + S.players;
+  $('rLbl').textContent = settling ? 'First to the Port' : 'To the Port';
   $('rNum').textContent = S.order[S.idx];
   renderRail(deal);
   tick();
 }
+const isSettle = () => S.phase==='settle' || (S.phase==='paused' && S.pausedFrom==='settle');
+function startCalls(){
+  S.phase='call'; S.idx=0; S.warned=false; S.endAt = Date.now() + S.callSec*1000;
+  nextBanner(false); save(); startTone(); renderRun(false);
+}
 function nextBanner(on){
+  $('sRun').classList.toggle('banner', !!on);
+  if (isSettle()) { $('nextT').textContent='First to the Port'; $('nextN').textContent=S.order[0]; $('next').classList.toggle('show', !!on); return; }
   const last = S.idx >= S.players-1;
   $('nextT').textContent = last ? 'Last Call of Year ' + WORDS[S.year] : 'Next to the Port';
   $('nextN').textContent = last ? '⚙' : S.order[S.idx+1];
@@ -319,10 +338,15 @@ function endYear(){
   save(); render();
 }
 function tick(){
-  if (S.phase!=='call' && S.phase!=='paused') return;
+  if (S.phase!=='call' && S.phase!=='paused' && S.phase!=='settle') return;
   const left = S.phase==='paused' ? S.left : (S.endAt - Date.now())/1000;
+  if (S.phase==='settle' && left <= 0) { startCalls(); return; }
   if (S.phase==='call' && left <= 0) { advance(false); return; }
   $('rTime').textContent = fmt(left);
+  if (isSettle()) {
+    $('burn').style.strokeDashoffset = C * (1 - Math.max(0,left)/Math.max(1,S.settleSec));
+    $('sRun').classList.remove('warn'); nextBanner(true); return;
+  }
   $('burn').style.strokeDashoffset = C * (1 - Math.max(0,left)/S.callSec);
   const w = left <= 30;
   $('sRun').classList.toggle('warn', w);
@@ -350,30 +374,37 @@ $('pinCancel').addEventListener('click',()=>{ $('oPin').classList.remove('on'); 
 /* ---------- Chairman's menu ---------- */
 $('bGear').addEventListener('click',()=>askPin("Chairman's controls", openMenu));
 function openMenu(){
-  const run = S.phase==='call'||S.phase==='paused';
+  const run = S.phase==='call'||S.phase==='paused'||S.phase==='settle';
   ['mPause','mPlus','mSkip','mRestart','mEndYear'].forEach(id=>$(id).disabled = !run);
   $('mPause').textContent = S.phase==='paused' ? 'Resume' : 'Pause';
-  $('mInfo').textContent = 'Calls last ' + fmt(S.callSec) + ' · ' + S.players + ' Industrialists · Year ' + WORDS[Math.min(S.year,10)];
+  $('mSkip').textContent = isSettle() ? 'Begin Call 1 now' : 'Next Call';
+  $('mRestart').textContent = isSettle() ? 'Restart settling' : 'Restart this Call';
+  $('mInfo').textContent = 'Calls last ' + fmt(S.callSec) + ' · settling ' + fmt(S.settleSec) + ' · ' + S.players + ' Industrialists · Year ' + WORDS[Math.min(S.year,10)];
   $('oMenu').classList.add('on');
 }
 const closeMenu = () => $('oMenu').classList.remove('on');
 $('mClose').addEventListener('click', closeMenu);
 $('mPause').addEventListener('click',()=>{
-  if (S.phase==='call') { S.left = (S.endAt-Date.now())/1000; S.phase='paused'; $('sRun').classList.add('paused'); }
-  else if (S.phase==='paused') { S.endAt = Date.now()+S.left*1000; S.phase='call'; $('sRun').classList.remove('paused'); }
+  if (S.phase==='call' || S.phase==='settle') { S.left = (S.endAt-Date.now())/1000; S.pausedFrom=S.phase; S.phase='paused'; $('sRun').classList.add('paused'); }
+  else if (S.phase==='paused') { S.endAt = Date.now()+S.left*1000; S.phase=S.pausedFrom||'call'; $('sRun').classList.remove('paused'); }
   save(); closeMenu(); tick();
 });
 $('mPlus').addEventListener('click',()=>{
   if (S.phase==='paused') S.left += 30; else S.endAt += 30000;
-  if ((S.phase==='paused'?S.left:(S.endAt-Date.now())/1000) > 30) { S.warned=false; nextBanner(false); }
+  if (!isSettle() && (S.phase==='paused'?S.left:(S.endAt-Date.now())/1000) > 30) { S.warned=false; nextBanner(false); }
   save(); closeMenu(); tick();
 });
-$('mSkip').addEventListener('click',()=>{ if (S.phase==='paused'){S.phase='call';$('sRun').classList.remove('paused');} closeMenu(); advance(false); });
-$('mRestart').addEventListener('click',()=>{ S.endAt=Date.now()+S.callSec*1000; S.left=S.callSec; S.warned=false; nextBanner(false); save(); closeMenu(); tick(); });
+$('mSkip').addEventListener('click',()=>{
+  const st = isSettle();
+  if (S.phase==='paused'){S.phase=S.pausedFrom||'call';$('sRun').classList.remove('paused');}
+  closeMenu(); if (st) startCalls(); else advance(false); });
+$('mRestart').addEventListener('click',()=>{
+  const sec = isSettle() ? S.settleSec : S.callSec;
+  S.endAt=Date.now()+sec*1000; S.left=sec; S.warned=false; if (!isSettle()) nextBanner(false); save(); closeMenu(); tick(); });
 $('mShorter').addEventListener('click',()=>{ S.callSec=Math.max(60,S.callSec-15); save(); openMenu(); });
 $('mLonger').addEventListener('click',()=>{ S.callSec=Math.min(600,S.callSec+15); save(); openMenu(); });
 $('mEndYear').addEventListener('click',()=>{ closeMenu(); endTone(); endYear(); });
-$('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', players:S.players, callSec:S.callSec, year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false }; $('iPin').value=''; save(); render(); });
+$('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', players:S.players, callSec:S.callSec, settleSec:S.settleSec, pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false }; $('iPin').value=''; save(); render(); });
 
 /* ---------- render ---------- */
 function render(deal){
@@ -382,6 +413,7 @@ function render(deal){
   else if (S.phase==='done') { show('sEnd'); }
   else {
     show('sRun'); $('sRun').classList.toggle('paused', S.phase==='paused');
+    if (S.phase==='settle' && S.endAt <= Date.now()) { S.phase='call'; S.idx=0; S.endAt += S.callSec*1000; S.warned=false; }
     // catch up silently if the iPad slept through whole Calls
     while (S.phase==='call' && S.endAt + 0 <= Date.now() - S.callSec*1000 && S.idx < S.players-1) { S.idx++; S.endAt += S.callSec*1000; S.warned=false; }
     renderRun(deal);
