@@ -126,6 +126,32 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 .gear{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));width:52px;height:52px;min-height:0;padding:0;border-radius:50%;font-size:26px;z-index:4;opacity:.55}
 .paused-tag{font:700 18px "Cinzel",serif;letter-spacing:.3em;color:var(--seal-l);text-transform:uppercase;display:none}
 .paused .paused-tag{display:block}
+
+/* ---------- Steam gauge dial (alternative to the brass ring) ---------- */
+.gauge,.steam{display:none}
+body.dial-gauge .dial,body.dial-gauge .rivets,body.dial-gauge .ring,body.dial-gauge .face{display:none}
+body.dial-gauge .gauge{display:block;position:absolute;inset:-8% -6% -4%}
+body.dial-gauge .dialwrap{width:min(60vmin,560px);margin-top:4vh}
+body.dial-gauge .steam{display:block}
+.gauge svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 16px 30px rgba(0,0,0,.7))}
+#gNeedle{transform-origin:100px 100px;transform-box:view-box;transition:transform .35s linear}
+#gTremble{transform-origin:100px 100px;transform-box:view-box}
+.warn #gTremble{animation:tremble .11s linear infinite}
+@keyframes tremble{0%{transform:rotate(-.9deg)}50%{transform:rotate(.9deg)}100%{transform:rotate(-.9deg)}}
+#gLamp{transition:fill .3s}
+.warn #gLamp{fill:#ff5a3c;filter:url(#gGlow)}
+.warn #gTime{fill:#ff8a70}
+.steam{position:absolute;left:50%;top:-3%;width:0;height:0;z-index:3;pointer-events:none}
+.steam i{position:absolute;left:-14px;top:-10px;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle,rgba(255,250,240,.75),rgba(255,250,240,0) 70%);opacity:0}
+.warn .steam i{animation:puff 1.6s ease-out infinite}
+.warn .steam i:nth-child(2){animation-delay:.5s}.warn .steam i:nth-child(3){animation-delay:1s}
+@keyframes puff{0%{opacity:.9;transform:translate(0,0) scale(.4)}100%{opacity:0;transform:translate(var(--dx,18px),-90px) scale(3.2)}}
+.steam i:nth-child(2){--dx:-22px}.steam i:nth-child(3){--dx:6px}
+.seg{display:flex;border:2px solid #6b4517;border-radius:12px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-height:48px;padding:0 16px;font-size:15px;background:rgba(255,248,230,.5);color:#3b210b;box-shadow:none}
+.seg button.on{background:linear-gradient(180deg,#f6dc96,#c99a45 50%,#8d5e1f);color:#2a1606}
+@media (prefers-reduced-motion:reduce){.warn #gTremble,.warn .steam i{animation:none}}
+
 @media (orientation:portrait){.dialwrap{width:min(78vw,560px)}}
 @media (max-height:620px){.dialwrap{width:min(48vmin,400px)}.rail .tok{width:46px}}
 @media (prefers-reduced-motion:reduce){.next .n,.tok.nxt,.deal .tok{animation:none}}
@@ -147,6 +173,8 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
       <div class="step"><button class="brass" data-adj="settle:-15" aria-label="Shorter">−</button><output id="oSettle">1:00</output><button class="brass" data-adj="settle:15" aria-label="Longer">+</button></div></div>
     <div class="field"><label>Begin at Year<small>Year One runs in number order</small></label>
       <div class="step"><button class="brass" data-adj="year:-1" aria-label="Earlier">−</button><output id="oYear">1</output><button class="brass" data-adj="year:1" aria-label="Later">+</button></div></div>
+    <div class="field"><label>Dial<small>Steam gauge, or the original brass ring</small></label>
+      <div class="seg"><button data-dial="gauge">Steam gauge</button><button data-dial="ring">Brass ring</button></div></div>
     <div class="field"><label>Chairman's PIN<small>4 digits; opens each year and the controls</small></label>
       <input class="pin" id="iPin" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="····"></div>
     <div class="err" id="setupErr"></div>
@@ -175,6 +203,58 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
     <svg class="rivets" viewBox="0 0 100 100" aria-hidden="true" id="rivets"></svg>
     <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"/><circle class="burn" id="burn" cx="50" cy="50" r="44"/></svg>
     <div class="face"><div class="lbl" id="rLbl">In Port</div><div class="num" id="rNum">1</div><div class="time" id="rTime">3:00</div></div>
+    <div class="gauge" aria-hidden="true">
+      <svg viewBox="-10 -40 220 252" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <radialGradient id="gBrass" cx="35%" cy="28%" r="85%"><stop offset="0" stop-color="#fff0b8"/><stop offset=".35" stop-color="#d9a957"/><stop offset=".72" stop-color="#9a6a24"/><stop offset="1" stop-color="#4d300c"/></radialGradient>
+          <linearGradient id="gPipe" x1="0" x2="1"><stop offset="0" stop-color="#6b4517"/><stop offset=".45" stop-color="#f6dc96"/><stop offset="1" stop-color="#6b4517"/></linearGradient>
+          <radialGradient id="gFace" cx="50%" cy="42%" r="62%"><stop offset="0" stop-color="#fbf2d8"/><stop offset=".7" stop-color="#ead5a4"/><stop offset="1" stop-color="#bf9c5e"/></radialGradient>
+          <radialGradient id="gGlass" cx="30%" cy="18%" r="70%"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset=".45" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+          <linearGradient id="gSteel" x1="0" x2="1"><stop offset="0" stop-color="#1a2430"/><stop offset=".5" stop-color="#6a84a0"/><stop offset="1" stop-color="#141c26"/></linearGradient>
+          <filter id="gGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <filter id="gSh"><feDropShadow dx="0" dy="1.6" stdDeviation="1.2" flood-opacity=".55"/></filter>
+        </defs>
+        <!-- whistle and valve -->
+        <rect x="93" y="-14" width="14" height="20" fill="url(#gPipe)" stroke="#3b210b" stroke-width=".8"/>
+        <rect x="86" y="-22" width="28" height="10" rx="2.5" fill="url(#gBrass)" stroke="#3b210b" stroke-width=".8"/>
+        <rect x="95.5" y="-36" width="9" height="15" rx="1.5" fill="url(#gPipe)" stroke="#3b210b" stroke-width=".8"/>
+        <path d="M94 -36 h12 l-2 -3 h-8 z" fill="#3b210b"/>
+        <circle cx="118" cy="-17" r="5" fill="url(#gBrass)" stroke="#3b210b" stroke-width=".8"/><path d="M114.5 -17 h7 M118 -20.5 v7" stroke="#3b210b" stroke-width="1"/>
+        <!-- bezel -->
+        <circle cx="100" cy="100" r="99" fill="url(#gBrass)" stroke="#2a1606" stroke-width="1.6"/>
+        <circle cx="100" cy="100" r="96" fill="none" stroke="#6b4517" stroke-width="2.4" stroke-dasharray="1.1 1.3"/>
+        <circle cx="100" cy="100" r="89" fill="#24140a" stroke="#f6dc96" stroke-width=".6"/>
+        <g id="gScrews"></g>
+        <circle id="gLamp" cx="170" cy="30" r="6.5" fill="#5a1410" stroke="#2a1606" stroke-width="1.2"/>
+        <circle cx="168" cy="28" r="1.8" fill="#fff" opacity=".45"/>
+        <!-- face -->
+        <circle cx="100" cy="100" r="86" fill="url(#gFace)"/>
+        <g opacity=".14" fill="#6b4517"><circle cx="62" cy="140" r="9"/><circle cx="140" cy="62" r="6"/><circle cx="128" cy="150" r="4"/><circle cx="58" cy="70" r="3"/></g>
+        <circle cx="100" cy="100" r="86" fill="none" stroke="#7a5420" stroke-width="1.2"/>
+        <g id="gScale"></g>
+        <text x="100" y="52" text-anchor="middle" font-family="Cinzel,serif" font-weight="700" font-size="7.4" letter-spacing="1.8" fill="#3b210b">IRONREACH</text>
+        <rect x="79" y="60" width="42" height="15" rx="2" fill="#160d07" stroke="#9a6a24" stroke-width="1.2"/>
+        <text id="gTime" x="100" y="71.6" text-anchor="middle" font-family="Cinzel,serif" font-weight="700" font-size="11" fill="#f2d48a" letter-spacing=".5">3:00</text>
+        <rect x="71" y="119" width="58" height="40" rx="4" fill="url(#gBrass)" stroke="#2a1606" stroke-width="1" filter="url(#gSh)"/>
+        <rect x="74" y="122" width="52" height="34" rx="2.5" fill="none" stroke="#3b210b" stroke-width=".5"/>
+        <text id="gLbl" x="100" y="129" text-anchor="middle" font-family="Cinzel,serif" font-weight="700" font-size="4.8" letter-spacing="1.4" fill="#2a1606">IN PORT</text>
+        <text id="gNum" x="100" y="153" text-anchor="middle" font-family="'Cinzel Decorative',serif" font-weight="900" font-size="25" fill="#2a1606">1</text>
+        <text x="100" y="169" text-anchor="middle" font-family="Cinzel,serif" font-weight="700" font-size="4.8" letter-spacing="2" fill="#6b4517">MINUTES</text>
+        <text x="100" y="176" text-anchor="middle" font-family="Cinzel,serif" font-size="3.6" letter-spacing="1.4" fill="#6b4517">BRASSHAVEN WORKS</text>
+        <!-- needle -->
+        <g id="gTremble"><g id="gNeedle">
+          <circle cx="100" cy="117" r="5.5" fill="url(#gSteel)" stroke="#0c1118" stroke-width=".6"/>
+          <path d="M97.6 112 L102.4 112 L101.1 34 L100 25 L98.9 34 Z" fill="url(#gSteel)" stroke="#0c1118" stroke-width=".5"/>
+          <circle cx="100" cy="52" r="3.2" fill="none" stroke="url(#gSteel)" stroke-width="1.6"/>
+        </g></g>
+        <circle cx="100" cy="100" r="8" fill="url(#gBrass)" stroke="#2a1606" stroke-width="1" filter="url(#gSh)"/>
+        <circle cx="100" cy="100" r="3.4" fill="#3b210b"/><path d="M97.6 100 h4.8" stroke="#d9a957" stroke-width=".9"/>
+        <!-- glass -->
+        <circle cx="100" cy="100" r="86" fill="url(#gGlass)"/>
+        <path d="M30 70 A75 75 0 0 1 95 22" stroke="#fff" stroke-opacity=".35" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="steam" aria-hidden="true"><i></i><i></i><i></i></div>
   </div>
   <div class="kick" style="margin-top:.6vh">Order of Access</div>
   <div class="rail" id="rail"></div>
@@ -214,6 +294,7 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
       <button class="ghost" id="mShorter">Calls −15 s</button>
       <button class="ghost" id="mLonger">Calls +15 s</button>
       <div class="wide sub" id="mInfo" style="font-size:17px"></div>
+      <button class="ghost wide" id="mDial">Switch dial</button>
       <button class="ghost" id="mEndYear">End the year now</button>
       <button class="ghost" id="mReset">New Decade</button>
       <button class="brass wide" id="mClose">Close</button>
@@ -235,10 +316,11 @@ const CUES = {
   10: 'Proclamation VI, Year Ten. No shipping, and no new card.'
 };
 const KEY = 'ie-yearclock-v1';
-let S = { phase:'setup', players:6, callSec:180, settleSec:60, pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false };
+let S = { phase:'setup', players:6, callSec:180, settleSec:60, dial:'gauge', pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false };
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
 try { const v = JSON.parse(localStorage.getItem(KEY)||'null'); if (v && v.phase) S = Object.assign(S, v); } catch(e){}
 if (S.settleSec===undefined) S.settleSec = 60;
+if (!S.dial) S.dial = 'gauge';
 const startTone = () => gateTone();
 
 /* ---------- sound: synthesised brass bell ---------- */
@@ -290,6 +372,37 @@ $('rivets').innerHTML = Array.from({length:24},(_,i)=>{ const a=i/24*Math.PI*2, 
   return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="1.05" fill="#fff1c4" stroke="#3b210b" stroke-width=".35"/>`; }).join('');
 const C = 2*Math.PI*44; $('burn').style.strokeDasharray = C;
 
+/* ---------- steam gauge ---------- */
+const P = (r,a) => { const t = a*Math.PI/180; return [100 + r*Math.sin(t), 100 - r*Math.cos(t)]; };
+const arc = (r,a0,a1) => { const [x0,y0]=P(r,a0), [x1,y1]=P(r,a1); return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${a1-a0>180?1:0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`; };
+let gT = 0;
+function drawScale(T){
+  gT = T; const ang = sec => -135 + 270*sec/T; let h = '';
+  h += `<path d="${arc(79,-135,135)}" stroke="#3b210b" stroke-width=".8" fill="none"/>`;
+  h += `<path d="${arc(73,-135,ang(Math.min(30,T)))}" stroke="#b5372e" stroke-width="7" fill="none" opacity=".85"/>`;
+  for (let sec=0; sec<=T+0.01; sec+=15){
+    const maj = sec%60===0, mid = !maj && sec%30===0, a = ang(sec);
+    const [x0,y0]=P(79,a), [x1,y1]=P(maj?69:mid?73:75.5,a);
+    h += `<line x1="${x0.toFixed(2)}" y1="${y0.toFixed(2)}" x2="${x1.toFixed(2)}" y2="${y1.toFixed(2)}" stroke="#2a1606" stroke-width="${maj?1.8:mid?1.1:.7}"/>`;
+    if (maj) { const [lx,ly]=P(59,a); h += `<text x="${lx.toFixed(2)}" y="${(ly+3.4).toFixed(2)}" text-anchor="middle" font-family="Cinzel,serif" font-weight="700" font-size="10" fill="#2a1606">${sec/60}</text>`; }
+  }
+  $('gScale').innerHTML = h;
+}
+$('gScrews').innerHTML = [20,80,140,200,260,320].map(a=>{ const [x,y]=P(93.6,a);
+  return `<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${a*1.7})"><circle r="2.6" fill="url(#gBrass)" stroke="#2a1606" stroke-width=".6"/><path d="M-1.8 0 h3.6" stroke="#2a1606" stroke-width=".8"/></g>`; }).join('');
+function gaugeSet(left, T){
+  if (T !== gT) drawScale(T);
+  const f = Math.max(0, Math.min(1, left/T));
+  $('gNeedle').style.transform = `rotate(${(-135 + 270*f).toFixed(2)}deg)`;
+  $('gTime').textContent = fmt(left);
+}
+function applyDial(){
+  document.body.classList.toggle('dial-gauge', S.dial==='gauge');
+  document.querySelectorAll('[data-dial]').forEach(b=>b.classList.toggle('on', b.dataset.dial===S.dial));
+}
+document.querySelectorAll('[data-dial]').forEach(b=>b.addEventListener('click',()=>{ S.dial=b.dataset.dial; save(); applyDial(); }));
+applyDial();
+
 /* ---------- setup ---------- */
 function renderSetup(){ $('oPlayers').textContent=S.players; $('oCall').textContent=fmt(S.callSec); $('oSettle').textContent=fmt(S.settleSec); $('oYear').textContent=S.year; }
 document.querySelectorAll('[data-adj]').forEach(b=>b.addEventListener('click',()=>{
@@ -339,6 +452,8 @@ function renderRun(deal){
   $('rCall').textContent = settling ? 'Settling · Call 1 next' : 'Call ' + (S.idx+1) + ' of ' + S.players;
   $('rLbl').textContent = settling ? 'First to the Gate' : 'In Port';
   $('rNum').textContent = S.order[S.idx];
+  $('gNum').textContent = S.order[S.idx];
+  $('gLbl').textContent = settling ? 'FIRST TO THE GATE' : 'IN PORT';
   renderRail(deal);
   tick();
 }
@@ -384,6 +499,7 @@ function tick(){
   if (S.phase==='settle' && left <= 0) { startCalls(); return; }
   if (S.phase==='call' && left <= 0) { advance(false); return; }
   $('rTime').textContent = fmt(left);
+  gaugeSet(left, isSettle() ? Math.max(1,S.settleSec) : S.callSec);
   if (isSettle()) {
     $('burn').style.strokeDashoffset = C * (1 - Math.max(0,left)/Math.max(1,S.settleSec));
     $('sRun').classList.remove('warn'); nextBanner(true); return;
@@ -425,6 +541,7 @@ function openMenu(){
 }
 const closeMenu = () => $('oMenu').classList.remove('on');
 $('mClose').addEventListener('click', closeMenu);
+$('mDial').addEventListener('click',()=>{ S.dial = S.dial==='gauge' ? 'ring' : 'gauge'; save(); applyDial(); closeMenu(); });
 $('mPause').addEventListener('click',()=>{
   if (S.phase==='call' || S.phase==='settle') { S.left = (S.endAt-Date.now())/1000; S.pausedFrom=S.phase; S.phase='paused'; $('sRun').classList.add('paused'); }
   else if (S.phase==='paused') { S.endAt = Date.now()+S.left*1000; S.phase=S.pausedFrom||'call'; $('sRun').classList.remove('paused'); }
@@ -445,7 +562,7 @@ $('mRestart').addEventListener('click',()=>{
 $('mShorter').addEventListener('click',()=>{ S.callSec=Math.max(60,S.callSec-15); save(); openMenu(); });
 $('mLonger').addEventListener('click',()=>{ S.callSec=Math.min(600,S.callSec+15); save(); openMenu(); });
 $('mEndYear').addEventListener('click',()=>{ closeMenu(); endTone(); if (!isSettle()) portOpen(S.order[S.idx], null); endYear(); });
-$('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', players:S.players, callSec:S.callSec, settleSec:S.settleSec, pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false }; $('iPin').value=''; save(); render(); });
+$('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', players:S.players, callSec:S.callSec, settleSec:S.settleSec, dial:S.dial, pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false }; $('iPin').value=''; save(); render(); });
 
 /* ---------- render ---------- */
 function render(deal){
