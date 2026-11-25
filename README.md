@@ -6,7 +6,7 @@ A steampunk social-deduction and negotiation game for up to 10 Industrialists an
 
 | Piece | Device | Status |
 |---|---|---|
-| **Year Clock** (`app/index.html`) | iPad in the Negotiation Chamber | First version |
+| **Year Clock** (`app/index.html`) | iPad in the Negotiation Chamber | Rev 1.6 (see [CHANGELOG](CHANGELOG.md)) |
 | Chairman's control centre | Chairman's phone | Planned |
 | Industrialist handhelds | Players' phones | Planned |
 
@@ -22,3 +22,5 @@ A single web page that runs the rhythm of the Decade on the Chamber's iPad:
 - Keeps the screen awake where the browser allows, and survives a reload.
 
 **Run it on the iPad:** enable GitHub Pages for this repository (Settings → Pages → Deploy from branch → `main`, folder `/root`). Open `https://llewfran.github.io/Industry-and-Espionage/` in Safari (it goes straight to the Year Clock), then Share → **Add to Home Screen** so it opens full screen. Tap any button once so the iPad allows sound, and turn off the side switch's silent mode.
+
+**Updates:** every change gets a revision number, listed in [CHANGELOG.md](CHANGELOG.md). The clock shows its Rev in the bottom-left corner; if the iPad has an older copy cached, the setup screen offers to reload the newer revision.

@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
+<meta name="ie-revision" content="1.6">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -153,6 +154,17 @@ body.dial-gauge .steam{display:block}
 .seg button.on{background:linear-gradient(180deg,#f6dc96,#c99a45 50%,#8d5e1f);color:#2a1606}
 @media (prefers-reduced-motion:reduce){.warn #gTremble,.warn .steam i{animation:none}}
 
+.rev{position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));z-index:4;
+  font:600 12px "Cinzel",serif;letter-spacing:.14em;color:var(--brass);opacity:.6;pointer-events:none}
+#sSetup{overflow-y:auto;justify-content:flex-start}
+#sSetup>.kick{margin-top:auto}
+#sSetup>.card{margin-bottom:auto}
+.card .field{padding:10px 0}
+.card h1{margin-bottom:2px}
+.card .revline{text-align:center;font:600 13px "Cinzel",serif;letter-spacing:.12em;color:#6b4517;margin-top:14px}
+.update{display:none;margin-top:12px;text-align:center}
+.update.on{display:block}
+.update button{min-height:46px;font-size:15px}
 @media (orientation:portrait){.dialwrap{width:min(78vw,560px)}}
 @media (max-height:620px){.dialwrap{width:min(48vmin,400px)}.rail .tok{width:46px}}
 @media (prefers-reduced-motion:reduce){.next .n,.tok.nxt,.deal .tok{animation:none}}
@@ -183,6 +195,8 @@ body.dial-gauge .steam{display:block}
       <button class="ghost" id="bTest">Test the bells</button>
       <button class="brass" id="bOpen">Seal the clock</button>
     </div>
+    <div class="update" id="update"><button class="brass" id="bReload">A newer revision is ready · reload</button></div>
+    <div class="revline" id="revLine"></div>
   </div>
 </section>
 
@@ -271,6 +285,7 @@ body.dial-gauge .steam{display:block}
 <div class="open" id="open" aria-live="assertive"><div class="gate l"></div><div class="gate r"></div>
   <div class="msg"><div class="t">The Port is open</div><div class="who" id="openWho"></div></div></div>
 <div class="next" id="next" aria-live="assertive"><span class="t" id="nextT">Stand ready at the Iron Gate</span><span class="n" id="nextN">4</span></div>
+<div class="rev" id="revTag" aria-hidden="true"></div>
 <button class="gear ghost" id="bGear" aria-label="Chairman's controls" style="display:none">⚙</button>
 
 <!-- PIN PAD -->
@@ -306,6 +321,9 @@ body.dial-gauge .steam{display:block}
 <script>
 {
 const $ = id => document.getElementById(id);
+/* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
+const REV = '1.6';
+const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
   1: 'Before the Welcome, then Proclamation I, The Welcome. Year One runs in number order.',
@@ -437,6 +455,21 @@ function applyDial(){
 }
 document.querySelectorAll('[data-dial]').forEach(b=>b.addEventListener('click',()=>{ S.dial=b.dataset.dial; save(); applyDial(); }));
 applyDial();
+
+/* ---------- revision ---------- */
+$('revTag').textContent = 'Rev ' + REV;
+$('revLine').textContent = 'Year Clock · Rev ' + REV + ' · ' + REV_DATE;
+const newer = (a,b) => { const x=a.split('.').map(Number), y=b.split('.').map(Number); for (let i=0;i<Math.max(x.length,y.length);i++){ if((x[i]||0)!==(y[i]||0)) return (x[i]||0)>(y[i]||0); } return false; };
+async function checkUpdate(){
+  try {
+    if (!/^https?:/.test(location.protocol)) return;
+    const r = await fetch(location.pathname + '?check=' + Date.now(), {cache:'no-store'});
+    const m = (await r.text()).match(/const REV = '([\d.]+)'/);
+    if (m && newer(m[1], REV)) { $('bReload').textContent = 'Rev ' + m[1] + ' is ready · reload'; $('update').classList.add('on'); }
+  } catch(e){}
+}
+$('bReload').addEventListener('click',()=>{ location.replace(location.pathname + '?rev=' + Date.now()); });
+checkUpdate();
 
 /* ---------- setup ---------- */
 function renderSetup(){ $('oPlayers').textContent=S.players; $('oCall').textContent=fmt(S.callSec); $('oSettle').textContent=fmt(S.settleSec); $('oYear').textContent=S.year; }
@@ -571,7 +604,7 @@ function openMenu(){
   $('mPause').textContent = S.phase==='paused' ? 'Resume' : 'Pause';
   $('mSkip').textContent = isSettle() ? 'Begin Call 1 now' : 'Next Call';
   $('mRestart').textContent = isSettle() ? 'Restart settling' : 'Restart this Call';
-  $('mInfo').textContent = 'Calls last ' + fmt(S.callSec) + ' · settling ' + fmt(S.settleSec) + ' · ' + S.players + ' Industrialists · Year ' + WORDS[Math.min(S.year,10)];
+  $('mInfo').textContent = 'Rev ' + REV + ' · Calls last ' + fmt(S.callSec) + ' · settling ' + fmt(S.settleSec) + ' · ' + S.players + ' Industrialists · Year ' + WORDS[Math.min(S.year,10)];
   $('oMenu').classList.add('on');
 }
 const closeMenu = () => $('oMenu').classList.remove('on');
