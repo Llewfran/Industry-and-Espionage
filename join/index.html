@@ -117,7 +117,7 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
   color:#2a1606;background:linear-gradient(#f6dc96,#c99a45 45%,#8d5e1f);border:2px solid #3b210b;box-shadow:0 4px 14px #000}
 .notice{position:fixed;inset:0;z-index:30;background:rgba(10,5,2,.9);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
 .notice>div{display:flex;flex-direction:column;align-items:center;gap:14px}
-#sWatch{background:radial-gradient(ellipse at 50% 35%,#2e1b0c,#0d0703 75%);gap:10px;justify-content:center;overflow-y:auto}
+#sWatch{background:radial-gradient(ellipse at 50% 35%,#2e1b0c,#0d0703 75%);gap:10px;justify-content:safe center;overflow-y:auto}
 #sWatch .token{width:min(44vw,180px)}
 #sWatch.armed:not(.inport) .token .cog{animation:breathe 3.2s ease-in-out infinite}
 @keyframes breathe{50%{filter:drop-shadow(0 0 16px rgba(255,200,110,.75)) drop-shadow(0 8px 18px #000)}}
@@ -136,8 +136,31 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
 .badge{display:inline-block;min-width:22px;padding:1px 6px;margin-left:6px;border-radius:11px;background:#b5372e;color:#fff;font:700 13px "Cinzel",serif}
 .atimer{font:900 46px/1 "Cinzel Decorative",serif;color:#2a1606}
 .alarm.title{background:radial-gradient(circle at 50% 40%,#fff1c4,#d9a957 45%,#4d300c 100%)}
-.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 70px);transform:translateX(-50%);z-index:35;padding:12px 18px;border-radius:12px;
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 70px);transform:translateX(-50%);z-index:45;padding:12px 18px;border-radius:12px;
   background:linear-gradient(#f6dc96,#c99a45 45%,#8d5e1f);color:#2a1606;border:2px solid #3b210b;font:700 15px "Cinzel",serif;box-shadow:0 8px 24px #000;text-align:center;max-width:88vw}
+.ledger{position:fixed;inset:0;z-index:37;background:#120a05;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 20px)}
+.addcard{width:100%;margin-bottom:12px}
+.cardgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.cardgrid .cd{position:relative;border-radius:8px;overflow:hidden;box-shadow:0 4px 12px #000;animation:cin .35s ease-out}
+.cardgrid img{width:100%;display:block}
+.cardgrid .x{position:absolute;right:4px;top:4px;width:34px;height:34px;min-height:0;padding:0;border-radius:50%;border:2px solid #3b210b;background:rgba(20,10,4,.82);color:#f2d48a;font:700 18px/1 "Cinzel",serif;cursor:pointer}
+@keyframes cin{from{opacity:0;transform:translateY(-14px) scale(.96)}}
+.lgempty{margin:18px auto;font-size:15px}
+.trade{display:flex;flex-direction:column;gap:8px}
+.trade .tr{display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid #4d300c;border-radius:10px;background:rgba(201,151,63,.06)}
+.trade img{width:38px;height:51px;object-fit:cover;border-radius:4px;flex:none}
+.trade .nm{flex:1;font:700 14px "Cinzel",serif;color:var(--brass-l);letter-spacing:.03em}
+.trade select{appearance:none;-webkit-appearance:none;width:52px;height:44px;border-radius:10px;border:2px solid #6b4517;background:#2a1606;color:#f2d48a;font:900 18px "Cinzel Decorative",serif;text-align:center;text-align-last:center}
+.trade select.set{background:radial-gradient(circle at 35% 30%,#fbe7aa,#c99a45 60%,#6b4517);color:#2a1606;border-color:#3b210b}
+.picker2{position:fixed;inset:0;z-index:2;background:#0d0703;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 20px)}
+.picker2 .land{margin:14px 0 8px;font:700 13px "Cinzel",serif;letter-spacing:.24em;text-transform:uppercase;color:var(--brass);border-bottom:1px solid #4d300c;padding-bottom:4px}
+.picker2 .pg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.picker2 .pg button{padding:0;border:0;border-radius:6px;overflow:hidden;background:none;cursor:pointer;box-shadow:0 3px 8px #000;position:relative}
+.picker2 .pg img{width:100%;display:block}
+.picker2 .pg button.flash::after{content:"+1";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(242,212,138,.55);color:#2a1606;font:900 30px "Cinzel Decorative",serif;animation:fl .7s forwards}
+@keyframes fl{to{opacity:0}}
+.lgrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.lgrow .btn{min-height:50px;padding:0 14px;font-size:15px}
 .codex{position:fixed;inset:0;z-index:38;background:#120a05;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 14px)}
 .chead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .chead .btn{min-height:46px;padding:0 18px;font-size:16px}
@@ -227,6 +250,7 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
   <div class="facts" id="wFacts"><div><b id="fBefore">–</b><span id="fBeforeL">Calls before yours</span></div><div><b id="fLeft">10</b><span>Calls left in the Decade</span></div></div>
   <button class="btn" id="bArm">Begin the watch</button>
   <div class="row"><button class="btn ghost" id="bRemind">Hold to remind me</button><button class="btn ghost" id="bCodex">The Codex <span class="badge" id="cBadge" hidden></span></button></div>
+  <div class="lgrow" id="lgRow"><button class="btn ghost" id="bStock">In Stock</button><button class="btn ghost" id="bOrder">On Order</button><button class="btn ghost" id="bTrade">Trade Register</button></div>
   <div class="lnk" id="wLink"></div>
   <button class="textbtn" id="bWFly">Fly to my Warehouse</button>
 </section>
@@ -238,6 +262,22 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
   <p class="how" id="aText">Your appointment in Ironreach is next.</p>
   <button class="btn" id="bAlarm">On my way</button>
 </div></div>
+<div class="ledger" id="ledger" hidden>
+  <div class="chead"><div><div class="kick" id="lgKick">Your private register</div><div class="t" style="font-size:20px" id="lgTitle">In Stock</div></div><button class="btn ghost" id="bLgClose">Close</button></div>
+  <div id="lgCards">
+    <button class="btn addcard" id="bAddCard">+ Add a card</button>
+    <div class="cardgrid" id="lgGrid"></div>
+    <p class="how lgempty" id="lgEmpty">No cards yet. Add what you like: this register is yours alone, true or not.</p>
+  </div>
+  <div id="lgTrade" hidden>
+    <p class="how" style="font-size:15px;margin:0 auto 10px">Who deals in what? Two guesses each, if you are unsure.</p>
+    <div class="trade" id="lgTradeList"></div>
+  </div>
+  <div class="picker2" id="picker2" hidden>
+    <div class="chead"><div><div class="kick">Choose a card</div><div class="t" style="font-size:18px" id="pkTitle">Add to In Stock</div></div><button class="btn" id="bPkDone">Done</button></div>
+    <div id="pkBody"></div>
+  </div>
+</div>
 <div class="toast" id="toast" hidden></div>
 <div class="codex" id="codex" hidden>
   <div class="chead"><div><div class="kick">The Herald's Codex</div><div class="t" style="font-size:20px">Your pages</div></div><button class="btn ghost" id="bCodexClose">Close</button></div>
@@ -315,7 +355,7 @@ function taDa(){
 }
 
 /* ---------- stages ---------- */
-const REV = '0.8';
+const REV = '0.9';
 const show = id => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === id));
 let players = 6, mine = 4;
 const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
@@ -514,6 +554,10 @@ function renderWatch(){
   $('bCodex').firstChild.textContent = n ? 'The Codex · ' + n + ' pages ' : 'The Codex ';
   $('cBadge').hidden = !unseen; $('cBadge').textContent = unseen;
   $('bCodex').disabled = !n;
+  const reg = k.started >= 1 || myPages().length > 0;
+  $('lgRow').hidden = !reg;
+  $('bStock').textContent = 'In Stock' + (lgList('stock').length ? ' · ' + lgList('stock').length : '');
+  $('bOrder').textContent = 'On Order' + (lgList('order').length ? ' · ' + lgList('order').length : '');
   $('wLink').textContent = linkState() ? 'Linked to the Port' : 'Reaching the Port…'; $('wLink').classList.toggle('live', linkState());
 }
 
@@ -567,8 +611,8 @@ function alarm(kind){
 }
 $('bAlarm').addEventListener('click', () => { const kind = $('alarm').dataset.kind; $('alarm').hidden = true; clearTimeout(alarmTimer); if (kind === 'title') openCodex(); });
 let toastT = null;
-function toast(t){ $('toast').textContent = t; $('toast').hidden = false; clearTimeout(toastT); toastT = setTimeout(() => $('toast').hidden = true, 6000); renderWatch(); }
-$('toast').addEventListener('click', () => { $('toast').hidden = true; openCodex(); });
+function toast(t){ $('toast').dataset.undo = ''; $('toast').textContent = t; $('toast').hidden = false; clearTimeout(toastT); toastT = setTimeout(() => $('toast').hidden = true, 6000); renderWatch(); }
+$('toast').addEventListener('click', () => { $('toast').hidden = true; if ($('toast').dataset.undo) { $('toast').dataset.undo = ''; undoRemove(); } else openCodex(); });
 
 async function stayAwake(){ try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => wakeLock = null); } } catch(e){} }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (armed) stayAwake(); hello(); } });
@@ -612,6 +656,66 @@ $('bCodexClose').addEventListener('click', () => { $('codex').hidden = true; ren
 let sx = null;
 $('cImg').addEventListener('touchstart', e => { if (e.touches.length === 1) sx = e.touches[0].clientX; }, { passive: true });
 $('cImg').addEventListener('touchend', e => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; sx = null; if (Math.abs(dx) > 60) viewPage(cAt + (dx < 0 ? 1 : -1)); });
+
+/* ---------- the player's private register: In Stock, On Order, and the Trade Register ----------
+   Kept only on this phone, cleared with a new Decade. Nothing is checked or worked out: it holds what the player puts in. */
+const LANDS = [
+  ['Ocean · Sapphire Coast', ['trade-agriculture','trade-medicine','influence-agriculture','influence-medicine']],
+  ['Mountain · Argent Peaks', ['ore-weaponry','ore-currency','gold-weaponry','gold-currency']],
+  ['Fields · Verdant Expanse', ['food-agriculture','food-literacy','citizens-agriculture','citizens-literacy']],
+  ['Forest · Umberwild', ['timber-literacy','timber-weaponry','textile-literacy','textile-weaponry']],
+  ['Desert · Ember Wastes', ['oil-currency','oil-medicine','exotics-currency','exotics-medicine']],
+  ['Boom Time', ['boom-time']]];
+const INDUSTRIES = [['Banking','i_banking'],['Cruise Lines','i_cruise'],['Fashion','i_fashion'],['Food Retail','i_retail'],['Hotels','i_hotels'],
+  ['Industrial Wonder','i_wonder'],['International Trade','i_trade'],['Newspapers','i_news'],['Oil & Gas','i_oil'],['Philanthropist','i_phil'],
+  ['Politics','i_politics'],['Property Development','i_property'],['Weapons Manufacture','i_weapons']];
+const cardName = c => c.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' · ');
+let lgMode = 'stock', lastRemoved = null;
+const lgKey = m => gkey(m === 'stock' ? 'ie-stock' : 'ie-order');
+const lgList = m => store.get(lgKey(m)) || [];
+function openLedger(mode){
+  lgMode = mode; $('ledger').hidden = false; $('picker2').hidden = true; $('ledger').scrollTop = 0;
+  $('lgTitle').textContent = mode === 'stock' ? 'In Stock' : mode === 'order' ? 'On Order' : 'Trade Register';
+  $('lgCards').hidden = mode === 'trade'; $('lgTrade').hidden = mode !== 'trade';
+  if (mode === 'trade') renderTrade(); else renderCards();
+}
+function renderCards(){
+  const l = lgList(lgMode);
+  $('lgTitle').textContent = (lgMode === 'stock' ? 'In Stock' : 'On Order') + (l.length ? ' · ' + l.length : '');
+  $('lgGrid').innerHTML = l.map(e => `<div class="cd"><img src="cards/${e.c}.jpg" alt="${cardName(e.c)}"><button class="x" data-id="${e.id}" aria-label="Remove ${cardName(e.c)}">✕</button></div>`).join('');
+  $('lgEmpty').hidden = l.length > 0;
+}
+function addCard(c){ const l = lgList(lgMode); l.unshift({ id: IE.Link.newId(), c }); store.set(lgKey(lgMode), l); renderCards(); renderWatch(); }
+$('lgGrid').addEventListener('click', e => {
+  const b = e.target.closest('.x'); if (!b) return;
+  const l = lgList(lgMode), i = l.findIndex(x => x.id === b.dataset.id); if (i < 0) return;
+  lastRemoved = { mode: lgMode, i, e: l[i] }; l.splice(i, 1); store.set(lgKey(lgMode), l); renderCards(); renderWatch();
+  $('toast').innerHTML = 'Removed · <u>Undo</u>'; $('toast').hidden = false; $('toast').dataset.undo = '1';
+  clearTimeout(toastT); toastT = setTimeout(() => { $('toast').hidden = true; $('toast').dataset.undo = ''; }, 5000);
+});
+function undoRemove(){ if (!lastRemoved) return; const r = lastRemoved; lastRemoved = null; const l = lgList(r.mode); l.splice(r.i, 0, r.e); store.set(lgKey(r.mode), l); if (lgMode === r.mode) renderCards(); renderWatch(); }
+$('bAddCard').addEventListener('click', () => {
+  $('pkTitle').textContent = 'Add to ' + (lgMode === 'stock' ? 'In Stock' : 'On Order');
+  $('pkBody').innerHTML = LANDS.map(([land, cs]) => `<div class="land">${land}</div><div class="pg">${cs.map(c => `<button data-c="${c}" aria-label="${cardName(c)}"><img loading="lazy" src="cards/${c}.jpg" alt=""></button>`).join('')}</div>`).join('');
+  $('picker2').hidden = false; $('picker2').scrollTop = 0;
+});
+$('pkBody').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; addCard(b.dataset.c); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); });
+$('bPkDone').addEventListener('click', () => { $('picker2').hidden = true; $('ledger').scrollTop = 0; });
+function renderTrade(){
+  const t = store.get(gkey('ie-trade')) || {}, n = (held() || {}).players || 10;
+  const opts = v => ['?'].concat(Array.from({length: n}, (_, i) => String(i + 1))).map(o => `<option${o === (v || '?') ? ' selected' : ''}>${o}</option>`).join('');
+  $('lgTradeList').innerHTML = INDUSTRIES.map(([nm, img]) => { const v = t[nm] || ['?','?'];
+    return `<div class="tr"><img src="cards/${img}.jpg" alt=""><span class="nm">${nm}</span>`
+      + [0,1].map(k => `<select data-ind="${nm}" data-k="${k}" aria-label="${nm}, guess ${k+1}" class="${v[k] && v[k] !== '?' ? 'set' : ''}">${opts(v[k])}</select>`).join('') + `</div>`; }).join('');
+}
+$('lgTradeList').addEventListener('change', e => { const s = e.target; if (s.tagName !== 'SELECT') return;
+  const t = store.get(gkey('ie-trade')) || {}, v = t[s.dataset.ind] || ['?','?']; v[+s.dataset.k] = s.value; t[s.dataset.ind] = v; store.set(gkey('ie-trade'), t);
+  s.classList.toggle('set', s.value !== '?'); });
+$('bLgClose').addEventListener('click', () => { $('ledger').hidden = true; renderWatch(); });
+$('bStock').addEventListener('click', () => openLedger('stock'));
+$('bOrder').addEventListener('click', () => openLedger('order'));
+$('bTrade').addEventListener('click', () => openLedger('trade'));
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { $('ledger').hidden = true; $('codex').hidden = true; } });
 
 /* the number shows only while the player holds the Reminder button, so no one reads it by accident or guile */
 let hideT = null;

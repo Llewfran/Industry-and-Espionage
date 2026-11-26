@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="2.7">
+<meta name="ie-revision" content="2.8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -114,6 +114,8 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
   background:radial-gradient(circle at 35% 30%,#fbe7aa,#c99a45 55%,#6b4517);border:2px solid #3b210b;box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 0 0 2px #f7e3ad;
   transition:opacity .4s,transform .4s,filter .4s}
 .tok.done{opacity:.28;filter:grayscale(.7)}
+/* from Year Two, after the Cardinal Rule is proclaimed: Even numbers in steel, Odd numbers in brass */
+.tok.even{color:#0f1a24;background:radial-gradient(circle at 35% 30%,#f4f8fb,#9fb4c6 55%,#3d5266);border-color:#141c26;box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 0 0 2px #e6eef5}
 .tok.cur{transform:scale(1.18);box-shadow:0 0 0 4px var(--brass-l),0 0 24px rgba(255,210,120,.8)}
 .tok.nxt{animation:pulse .8s ease-in-out infinite alternate}
 .warn .tok.nxt{box-shadow:0 0 0 4px var(--seal-l),0 0 26px rgba(255,90,60,.9)}
@@ -379,7 +381,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '2.7';
+const REV = '2.8';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -638,7 +640,7 @@ function renderRail(deal){
   const r = $('rail');
   r.classList.toggle('deal', !!deal);
   const st = isSettle();
-  r.innerHTML = S.order.map((n,i)=>`<div class="tok ${i<S.idx?'done':''} ${i===S.idx&&!st?'cur':''} ${(st?i===0:i===S.idx+1)?'nxt':''}" style="animation-delay:${deal?i*0.18:0}s">${n}</div>`).join('');
+  r.innerHTML = S.order.map((n,i)=>`<div class="tok ${S.year>=2 ? (n%2?'odd':'even') : ''} ${i<S.idx?'done':''} ${i===S.idx&&!st?'cur':''} ${(st?i===0:i===S.idx+1)?'nxt':''}" style="animation-delay:${deal?i*0.18:0}s">${n}</div>`).join('');
   placeRail();
 }
 function renderRun(deal){
