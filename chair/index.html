@@ -105,6 +105,16 @@ details p{padding:0 14px 12px}
 .sc th{font:700 11px "Cinzel",serif;color:var(--brass);letter-spacing:.1em}
 .sc td.s{font:900 20px "Cinzel Decorative",serif;color:var(--brass-l);text-align:right}
 .sc tr.torch td{background:rgba(242,212,138,.12)}
+/* the two prompts of every Call: the In-Hand check (first 15 s) and the draw (last 15 s) */
+.prompt{position:fixed;inset:0;z-index:25;background:radial-gradient(ellipse at 50% 30%,#3a2210,#0b0603 80%);overflow-y:auto;padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 20px);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.prompt .pbar{position:sticky;top:0;width:100%;height:6px;border-radius:3px;background:rgba(201,151,63,.2);overflow:hidden;flex:none}
+.prompt .pbar i{display:block;height:100%;background:var(--brass-l);transform-origin:left;transition:transform .25s linear}
+.prompt .pw{font:900 clamp(40px,12vw,64px)/1 "Cinzel Decorative",serif;color:var(--brass-l)}
+.prompt .pc{width:min(62vw,260px);border-radius:12px;box-shadow:0 10px 30px #000}
+.prompt .pr{display:flex;gap:12px;width:100%;max-width:520px}
+.prompt .pr .btn{flex:1;min-height:76px;font-size:20px}
+.prompt .grid{width:100%;max-width:640px}
+.prompt .grid img{border-radius:6px}
 /* pairing */
 .pair{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:24px}
 .dots{display:flex;gap:14px;justify-content:center}
@@ -187,6 +197,8 @@ details p{padding:0 14px 12px}
   <button class="on" data-tab="tabPort">The Call</button><button data-tab="tabClock">Clock</button>
   <button data-tab="tabPacts">Pacts</button><button data-tab="tabReveal">Reveal</button><button data-tab="tabRules">Rulings</button>
 </nav>
+
+<div class="prompt" id="prompt" hidden></div>
 
 <!-- card picker for the draw and the ledger -->
 <div class="pair" id="pick" hidden style="position:fixed;inset:0;z-index:20;background:#0d0703;display:block;overflow-y:auto;text-align:left;padding:calc(env(safe-area-inset-top) + 12px) 14px 30px">
@@ -403,6 +415,58 @@ $('aAdd').onclick = () => {
   $('aErr').textContent = ''; d.P.push({ a: Math.min(a, b), b: Math.max(a, b), y: year() }); saveD(d); render();
 };
 $('aList').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || R().closed) return; const d = D(); d.P.splice(+b.dataset.i, 1); saveD(d); render(); });
+
+/* ---------- the two prompts of every Call ----------
+   First 15 seconds: the In-Hand check, full screen. Last 15 seconds: the draw, full screen (unless already recorded).
+   Each closes when answered, or the check by itself after its 15 seconds; The Call page is always there underneath. */
+let shownCheck = '', shownDraw = '', promptT = null, promptKind = '', pSeat = 0, pYear = 0;
+const callKey = () => ST ? ST.year + '-' + ST.idx : '';
+function closePrompt(){ $('prompt').hidden = true; promptKind = ''; clearInterval(promptT); render(); }
+function promptCheck(){
+  const s = ST.inPort, y = year(), d = D(), prev = y > 1 ? handed(d, s, y - 1) : undefined;
+  if (y === 1) return;
+  pSeat = s; pYear = y;                                        // Year One: nothing to check
+  seat = s; follow = true; $('pFollow').checked = true;
+  let body;
+  if (prev === undefined || prev === null) body = `<p class="muted">No card was recorded at their last Call. Check as best you can.</p>
+      <div class="pr"><button class="btn" data-v="ok">✓ It matches</button><button class="btn red" data-v="bad">✗ Wrong or missing</button></div>`;
+  else if (prev === 'P' || prev === FIRE) body = `<p class="t" style="font-size:20px">No In-Hand card</p><p class="muted">${prev === FIRE ? 'FIRE! took it last year.' : 'Last year was a penalty year: no card was given.'}</p>
+      <div class="pr"><button class="btn" data-v="x">Understood</button></div>`;
+  else body = `<div class="muted">They should be holding</div><img class="pc" src="${img(prev)}" alt=""><div class="t" style="font-size:20px">${nameOf(prev)}</div>
+      <div class="pr"><button class="btn" data-v="ok">✓ It matches</button><button class="btn red" data-v="bad">✗ Wrong or missing</button></div>`;
+  showPrompt('check', `<div class="kick">The In-Hand check</div><div class="pw">Warehouse ${s}</div>` + body, 15);
+}
+function promptDraw(){
+  const s = ST.inPort, y = year(); pSeat = s; pYear = y;
+  seat = s; follow = true; $('pFollow').checked = true;
+  showPrompt('draw', `<div class="kick">At the Iron Gate · the draw</div><div class="pw">Warehouse ${s}</div><p class="muted">Hand over the top card as they leave, then tap it.</p>`
+    + GROUPS.map(([g, cs]) => `<div class="land" style="width:100%;max-width:640px;text-align:left">${g}</div><div class="grid">${cs.map(c => `<button data-c="${c}"><img src="${img(c)}" alt="${nameOf(c)}"></button>`).join('')}</div>`).join('')
+    + `<div class="pr" style="margin-top:6px"><button class="btn ghost" data-v="x">Later</button></div>`, 0);
+}
+function showPrompt(kind, html, secs){
+  promptKind = kind; const p = $('prompt'); p.innerHTML = (secs ? '<div class="pbar"><i id="pBar"></i></div>' : '') + html; p.hidden = false; p.scrollTop = 0;
+  try { navigator.vibrate && navigator.vibrate(180); } catch(e){}
+  clearInterval(promptT);
+  if (secs) { const t0 = Date.now(); promptT = setInterval(() => { const k = Math.max(0, 1 - (Date.now() - t0)/(secs*1000)); const b = $('pBar'); if (b) b.style.transform = 'scaleX(' + k + ')'; if (k <= 0) closePrompt(); }, 250); }
+}
+$('prompt').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.v === 'ok' || b.dataset.v === 'bad') { const d = D(); d.K[pSeat] = { y: pYear, v: b.dataset.v };
+    if (b.dataset.v === 'bad') setHanded(d, pSeat, pYear, 'P'); saveD(d); closePrompt(); return; }
+  if (b.dataset.v === 'x') { closePrompt(); return; }
+  if (b.dataset.c !== undefined) { const d = D(); setHanded(d, pSeat, pYear, +b.dataset.c); saveD(d); closePrompt(); }
+});
+function watchPrompts(){
+  if (!ST || ST.phase !== 'call' || ST.paused || !ST.inPort || $('app').hidden) return;
+  const key = callKey(), left = leftNow(), d = D(), y = year();
+  // the draw page stays open across the changeover (the card is handed as they leave); the next check waits for it
+  if (shownCheck !== key && left > ST.callSec - 15 && promptKind !== 'draw') { shownCheck = key; promptCheck(); }
+  const needDraw = y < 10 && checkOf(d, ST.inPort, y) !== 'bad' && (handed(d, ST.inPort, y) === undefined || handed(d, ST.inPort, y) === null);
+  if (shownDraw !== key && left <= 15 && left > 0) { shownDraw = key; if (promptKind === 'check') closePrompt(); if (needDraw) promptDraw(); }
+  if (promptKind === 'check' && shownCheck === key && left <= ST.callSec - 15) closePrompt();
+  if (promptKind === 'check' && shownCheck !== key) closePrompt();   // the Call moved on
+}
+setInterval(watchPrompts, 250);
 
 /* ---------- the Great Reveal ----------
    Pacts closed → each Warehouse revealed (Industry, line card by card, the Warehouse) → Complete shows only pass or fail →
