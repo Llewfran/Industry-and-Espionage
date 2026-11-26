@@ -187,16 +187,17 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
 <!-- 2c. THE WATCH: the phone waits for its appointment in Ironreach -->
 <section class="stage" id="sWatch">
   <div class="kick" id="wKick">Your appointment in Ironreach</div>
-  <div class="token" id="wToken"><svg class="cog" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#gearShape"/><circle r="31" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><circle r="27" fill="none" stroke="#f7e3ad" stroke-width=".8" opacity=".7"/></svg><span id="wNum">?</span></div>
-  <div class="t" style="font-size:24px" id="wTitle">Warehouse</div>
+  <div class="token" id="wToken"><svg class="cog" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#gearShape"/><circle r="31" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><circle r="27" fill="none" stroke="#f7e3ad" stroke-width=".8" opacity=".7"/><path id="wKey" d="M0-15a8 8 0 0 1 5 14.2L9 17H-9l4-17.8A8 8 0 0 1 0-15z" fill="#2a1606"/></svg><span id="wNum" hidden>?</span></div>
+  <div class="t" style="font-size:24px" id="wTitle">Your Warehouse</div>
   <p class="how" id="wMsg">Keep this page open, phone face up and unlocked. Thirty seconds before your Call, it will chime, glow and stir.</p>
   <button class="btn" id="bArm">Begin the watch</button>
+  <button class="btn ghost" id="bRemind">Hold to remind me</button>
   <div class="lnk" id="wLink"></div>
   <button class="btn ghost" id="bWFly">Fly to my Warehouse</button>
 </section>
 <div class="alarm" id="alarm" hidden><div>
   <div class="kick">Your Call is next</div>
-  <div class="anum" id="aNum">3</div>
+  <div class="token acog" aria-hidden="true"><svg class="cog" viewBox="-50 -50 100 100"><use href="#gearShape"/><circle r="31" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><path d="M0-15a8 8 0 0 1 5 14.2L9 17H-9l4-17.8A8 8 0 0 1 0-15z" fill="#2a1606"/></svg></div>
   <div class="t" style="font-size:25px;line-height:1.2">Stand ready<br>at the Iron Gate</div>
   <p class="how">Your appointment in Ironreach is next.</p>
   <button class="btn" id="bAlarm">On my way</button>
@@ -270,7 +271,7 @@ function taDa(){
 }
 
 /* ---------- stages ---------- */
-const REV = '0.6';
+const REV = '0.7';
 const show = id => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === id));
 let players = 6, mine = 4;
 const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
@@ -402,7 +403,7 @@ let armed = false, wakeLock = null, alarmTimer = null;
 const linkState = () => LINK && LINK.status === 'live';
 function renderWatch(){
   const h = held(); if (!h) return;
-  $('wNum').textContent = h.seat; $('wTitle').textContent = 'Warehouse ' + h.seat;
+  $('wNum').textContent = h.seat;
   $('wKick').textContent = (h.year && h.year > 1 ? 'Industrialist' : 'Initiate') + ' · your appointment in Ironreach';
   $('sWatch').classList.toggle('armed', armed); $('bArm').hidden = armed;
   $('wMsg').textContent = armed ? 'On watch. Keep this page open, phone unlocked. Thirty seconds before your Call, it will chime, glow and stir.'
@@ -425,12 +426,20 @@ function callMe(m){
   const h = held(); if (!h || m.seat !== h.seat) return;
   if (m._at && Date.now() - m._at > 45000) return;          // an old reminder replayed after a reconnect
   if (m.year) store.set('ie-seat', Object.assign({}, h, { year: m.year }));
-  $('aNum').textContent = h.seat; $('alarm').hidden = false;
+  $('alarm').hidden = false;
   softChime(false); setTimeout(() => softChime(false), 2600);
   try { navigator.vibrate && navigator.vibrate([400, 200, 400, 200, 800]); } catch(e){}
   clearTimeout(alarmTimer); alarmTimer = setTimeout(() => $('alarm').hidden = true, 40000);
 }
 $('bAlarm').addEventListener('click', () => { $('alarm').hidden = true; clearTimeout(alarmTimer); });
+/* the number shows only while the player holds the Reminder button, so no one reads it by accident or guile */
+let hideT = null;
+const reveal = on => { const h = held(); clearTimeout(hideT);
+  $('wNum').hidden = !on; $('wKey').style.display = on ? 'none' : ''; $('wTitle').textContent = on && h ? 'Warehouse ' + h.seat : 'Your Warehouse'; };
+$('bRemind').addEventListener('pointerdown', e => { e.preventDefault(); reveal(true); });
+['pointerup','pointerleave','pointercancel'].forEach(ev => $('bRemind').addEventListener(ev, () => { hideT = setTimeout(() => reveal(false), 300); }));
+$('bRemind').addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('visibilitychange', () => reveal(false));
 window.__warn = seat => callMe({ seat, _at: Date.now() });   // test hook
 $('bRestart').addEventListener('click', () => { $('sFly').classList.remove('arrived','flying'); $('sIntro').classList.remove('opened'); show('sIntro'); FLY.on = false; });
 

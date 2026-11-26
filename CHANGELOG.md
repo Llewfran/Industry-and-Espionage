@@ -8,6 +8,7 @@ Every update to the apps gets a revision number. The Year Clock shows its revisi
 
 | Rev | Date | Changes |
 |---|---|---|
+| 2.6 | 26 Nov 2026 | Two PINs: the Herald's PIN opens each year (after the Codex reading; the Chairman's PIN works too as a fallback) and the Chairman's PIN alone opens the Chairman's controls (pause and more). Steam gauge: the needle's hub is now a small brass cog with a slotted steel cap that turns with the needle |
 | 2.5 | 26 Nov 2026 | Private reminder: at every 30-second warning (and when a year opens, for the first to be called) the clock signals the phone holding the next number. The iPad display is unchanged |
 | 2.4 | 26 Nov 2026 | Secret numbers: the iPad never shows which Pass a phone holds, only how many Initiates have reported (plain brass studs); Year One's Order of Access is now drawn at random like every other year; players are called Initiates until Year One is over; Passes may be rescanned until the Chairman opens a year, which seals them; Chairman's controls → Join screen can unseal them; Herald's cue for Year One updated |
 | 2.3 | 26 Nov 2026 | Live joining: sealing the clock creates tonight's game key; the locked screen shows a "Join" QR code with the seats (filled as phones claim their Order Pass) and a link light; tap the QR for a full-screen join screen; Chairman's controls → "Join screen · seats" lets the Chairman release a seat (tap twice); a soft clank when a phone joins; New Decade makes a new key |
@@ -28,6 +29,7 @@ The Rev 1.0–1.1 brass-ring version is kept on the `v1-brass-ring` branch.
 
 | Rev | Date | Changes |
 |---|---|---|
+| 0.7 | 26 Nov 2026 | The watch never shows the number: a keyhole gear and "Your Warehouse" instead. The number appears only while the player holds "Hold to remind me". The 30-second alarm no longer shows the number either |
 | 0.6 | 26 Nov 2026 | The watch: after the reveal, "Keep watch" keeps the phone awake on a small Warehouse screen; at the 30-second warning before its Call it plays a soft low chime, glows brass with its number and "Stand ready at the Iron Gate", and vibrates (Android). Every year, all Decade. Reopening the page goes straight to the watch |
 | 0.5 | 26 Nov 2026 | Fix: a scan that opens in a tab already showing the Port page now reloads it and reads the new code (before, nothing happened) |
 | 0.4 | 26 Nov 2026 | The number stays secret until the roof reveals it: Pass codes carry a hidden token (`#t=…`) instead of a number, and are wiped from the address bar; scanning a Pass goes straight through the Iron Gate into the fly-over, no button; "Initiate" wording; "Your first secret" after the reveal; rescanning allowed until the year opens (the latest phone to present a Pass takes it, and the other phone is told); "Tap for sound" when the camera opened the page; demo now at `join/#demo`; Pass sheet prints QR codes only, with the number on a trim-off tab |
