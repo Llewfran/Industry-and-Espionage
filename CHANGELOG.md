@@ -20,3 +20,9 @@ Every update to the apps gets a revision number. The Year Clock shows its revisi
 | 1.0 | 25 Nov 2026 | First Year Clock: random Order of Access (number order in Year One), adjustable Call timer, 30-second warning, PIN lock at the end of each year, Herald's cues, Chairman's controls |
 
 The Rev 1.0–1.1 brass-ring version is kept on the `v1-brass-ring` branch.
+
+## Joining prototype (phones)
+
+| Rev | Date | Changes |
+|---|---|---|
+| 0.1 | 26 Nov 2026 | `join/`: standalone prototype of a player's arrival. Brass gates and fanfare ("Welcome to Brasshaven"), "Present your Order Pass" (number picker until the camera is added), then a 3D fly-over of the Port of Ironreach at dusk built from the folded warehouse art, ending above the player's own roof. No live link yet |

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Enter the Port · Industry &amp; Espionage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<style>
+/* VOICE: ceremonial arrival — a fanfare, then a quiet, awed flight over the Port at dusk.
+   IDEA: the player's phone becomes a spyglass over the Port of Ironreach.
+   PICTURE: brass gates that swing open; then a real 3D fly-over of the folded warehouses, ending above the player's own roof.
+   COLOUR and TYPE: mahogany night, brass, lamplight amber, steam white. Cinzel and Crimson Text.
+   LAYOUT: full-screen phone stages; text at the bottom so the scene owns the screen. */
+:root{--bg:#120a05;--brass:#c9973f;--brass-l:#f2d48a;--ink:#f3e3bd;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--ink);overflow:hidden;font:18px/1.45 "Crimson Text",Georgia,serif;user-select:none;-webkit-user-select:none}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+.stage{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:calc(env(safe-area-inset-top) + 24px) 24px calc(env(safe-area-inset-bottom) + 28px)}
+.stage.on{display:flex}
+.t{font-family:"Cinzel",serif;font-weight:700;letter-spacing:.06em;color:var(--brass-l)}
+.kick{font:700 13px "Cinzel",serif;letter-spacing:.34em;text-transform:uppercase;color:var(--brass)}
+.btn{font:700 19px "Cinzel",serif;letter-spacing:.08em;min-height:60px;padding:0 30px;border-radius:14px;cursor:pointer;color:#2a1606;
+  background:linear-gradient(180deg,#f6dc96,#c99a45 45%,#8d5e1f);border:2px solid #3b210b;
+  box-shadow:inset 0 0 0 2px #f7e3ad,0 6px 18px rgba(0,0,0,.6)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:rgba(201,151,63,.12);color:var(--brass-l);border-color:#6b4517;box-shadow:none}
+/* ---------- intro: the gates ---------- */
+#sIntro{background:radial-gradient(ellipse at 50% 40%,#3a2210,#0d0703 75%);perspective:1400px;overflow:hidden}
+.reveal{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:14px;opacity:0;transform:scale(.92);transition:opacity 1.2s .9s,transform 1.6s .9s cubic-bezier(.2,1,.3,1)}
+.opened .reveal{opacity:1;transform:none}
+.reveal h1{font:900 clamp(34px,10vw,64px)/1.02 "Cinzel Decorative",serif;color:var(--brass-l);text-shadow:0 0 26px rgba(255,200,110,.45),0 3px 0 #3b210b}
+.reveal p{font-style:italic;font-size:20px;color:#e6cf9c;max-width:22em}
+.gate{position:absolute;top:0;bottom:0;width:50.5%;z-index:3;transition:transform 2.4s cubic-bezier(.6,0,.25,1);
+  background:repeating-linear-gradient(90deg,#3a2412 0 34px,#2a170b 34px 38px);
+  box-shadow:inset 0 0 0 8px #8d5e1f,inset 0 0 0 12px #3b210b,inset 0 0 80px #000}
+.gate.l{left:0;transform-origin:left center}.gate.r{right:0;transform-origin:right center}
+.opened .gate.l{transform:rotateY(-104deg)}.opened .gate.r{transform:rotateY(104deg)}
+.gate .band{position:absolute;left:0;right:0;height:22px;background:linear-gradient(#c99a45,#6b4517);box-shadow:0 2px 0 #2a1606}
+.gate .band.a{top:18%}.gate .band.b{bottom:18%}
+.gate .band::after{content:"";position:absolute;inset:6px 10px;background:radial-gradient(circle,#fff1c4 0 2px,transparent 3px) 0 0/28px 10px}
+.seal{position:absolute;top:42%;left:50%;width:min(46vw,230px);aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);z-index:4;
+  background:radial-gradient(circle at 38% 30%,#fbe7aa,#c99a45 50%,#6b4517);border:4px solid #3b210b;box-shadow:0 10px 30px rgba(0,0,0,.7),inset 0 0 0 4px #f7e3ad;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;color:#2a1606;transition:transform .9s cubic-bezier(.5,0,.3,1),opacity .9s}
+.opened .seal{transform:translate(-50%,-50%) scale(1.5) rotate(25deg);opacity:0}
+.seal b{font:900 clamp(15px,4.6vw,22px)/1.05 "Cinzel Decorative",serif}
+.seal i{font:600 italic 14px "Crimson Text",serif;margin-top:4px}
+.intro-ui{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 34px);z-index:6;display:flex;flex-direction:column;align-items:center;gap:12px;transition:opacity .6s}
+.opened .intro-ui{opacity:0;pointer-events:none}
+.gear{position:absolute;z-index:5;opacity:.85;filter:drop-shadow(0 4px 8px #000)}
+.gear.g1{top:-60px;left:-60px;width:200px;animation:spin 14s linear infinite}
+.gear.g2{top:70px;left:90px;width:110px;animation:spin 8s linear infinite reverse}
+.gear.g3{bottom:-70px;right:-50px;width:220px;animation:spin 16s linear infinite reverse}
+.opened .gear{animation-duration:3s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.puff{position:absolute;width:160px;height:160px;border-radius:50%;z-index:5;pointer-events:none;opacity:0;
+  background:radial-gradient(circle,rgba(255,250,240,.8),rgba(255,250,240,0) 68%)}
+.opened .puff{animation:burst 2.6s ease-out forwards}
+@keyframes burst{0%{opacity:0;transform:scale(.3)}15%{opacity:.95}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(3)}}
+.next-ui{position:relative;z-index:1;margin-top:26px;opacity:0;transition:opacity 1s 3s}
+.opened .next-ui{opacity:1}
+/* ---------- scan ---------- */
+#sScan{background:radial-gradient(ellipse at 50% 35%,#2e1b0c,#0d0703 75%);gap:18px}
+.glass{position:relative;width:min(78vw,340px);aspect-ratio:1;border-radius:22px;overflow:hidden;
+  background:radial-gradient(circle at 50% 45%,#1c120a,#060302);border:6px solid #8d5e1f;box-shadow:inset 0 0 0 3px #f2d48a,0 0 0 4px #3b210b,0 16px 40px #000}
+.glass::before{content:"";position:absolute;inset:16%;border:3px dashed rgba(242,212,138,.45);border-radius:12px}
+.glass .line{position:absolute;left:10%;right:10%;height:3px;background:linear-gradient(90deg,transparent,#ffd27a,transparent);box-shadow:0 0 16px #ffb84a;animation:scan 2.2s ease-in-out infinite alternate}
+@keyframes scan{from{top:14%}to{top:84%}}
+.glass .hint{position:absolute;left:0;right:0;bottom:14px;font:600 italic 15px "Crimson Text",serif;color:#cfb27a}
+.picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:min(86vw,360px)}
+.picker button{aspect-ratio:1;border-radius:50%;font:900 22px "Cinzel Decorative",serif;color:#2a1606;cursor:pointer;
+  background:radial-gradient(circle at 35% 30%,#fbe7aa,#c99a45 55%,#6b4517);border:2px solid #3b210b;box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 0 0 2px #f7e3ad}
+.picker button:disabled{opacity:.25}
+.small{font-size:15px;color:#b99a66}
+.stepper{display:flex;align-items:center;gap:12px;font:700 15px "Cinzel",serif;color:var(--brass)}
+.stepper button{width:44px;height:44px;border-radius:10px;font:700 22px "Cinzel",serif;color:#2a1606;background:linear-gradient(#f6dc96,#8d5e1f);border:2px solid #3b210b}
+/* ---------- fly-over overlay ---------- */
+#sFly{justify-content:flex-end;pointer-events:none;background:linear-gradient(to top,rgba(10,6,3,.85),rgba(10,6,3,0) 38%)}
+#sFly .card{opacity:0;transform:translateY(20px);transition:opacity 1.2s,transform 1.2s cubic-bezier(.2,1,.3,1);display:flex;flex-direction:column;align-items:center;gap:8px}
+#sFly.arrived .card{opacity:1;transform:none;pointer-events:auto}
+#sFly .num{font:900 clamp(30px,9vw,54px)/1 "Cinzel Decorative",serif;color:var(--brass-l);text-shadow:0 0 22px rgba(255,200,110,.5)}
+#sFly .line1{font:600 italic 22px "Crimson Text",serif;color:#f0dcae}
+#sFly .line2{font-size:16px;color:#cdb07c;max-width:24em}
+#sFly .row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+#sFly .caption{position:absolute;top:calc(env(safe-area-inset-top) + 20px);left:0;right:0;opacity:0;transition:opacity 1.2s}
+#sFly.flying .caption{opacity:1}
+.fallback{display:none}
+.demo-note{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom) + 6px);font:600 11px "Cinzel",serif;letter-spacing:.12em;color:#7a5a2c;z-index:9}
+@media (prefers-reduced-motion:reduce){.gear,.glass .line{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<!-- 1. INTRO: the brass gates -->
+<section class="stage on" id="sIntro">
+  <svg class="gear g1" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#gearShape"/></svg>
+  <svg class="gear g2" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#gearShape"/></svg>
+  <svg class="gear g3" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#gearShape"/></svg>
+  <div class="reveal">
+    <div class="kick">The Port of Ironreach is open</div>
+    <h1>Welcome to<br>Brasshaven</h1>
+    <p>Tonight the great houses gather. Ten years of industry, and one Brass Torch.</p>
+    <div class="next-ui"><button class="btn" id="bToPass">Present your Order Pass</button></div>
+  </div>
+  <div class="gate l"><div class="band a"></div><div class="band b"></div></div>
+  <div class="seal"><b>Industry<br>&amp;<br>Espionage</b><i>by invitation</i></div>
+  <div class="gate r"><div class="band a"></div><div class="band b"></div></div>
+  <div class="puff" style="left:-40px;top:30%;--dx:-60px;--dy:-120px"></div>
+  <div class="puff" style="right:-40px;top:45%;--dx:60px;--dy:-140px"></div>
+  <div class="puff" style="left:40%;bottom:-60px;--dx:20px;--dy:-220px"></div>
+  <div class="intro-ui">
+    <div class="kick">You have been invited</div>
+    <button class="btn" id="bEnter">Enter the Port</button>
+    <div class="small">Sound on, if you dare</div>
+  </div>
+</section>
+
+<!-- 2. PRESENT YOUR ORDER PASS -->
+<section class="stage" id="sScan">
+  <div class="kick">At the Iron Gate</div>
+  <div class="t" style="font-size:26px">Present your Order Pass</div>
+  <div class="glass"><div class="line"></div><div class="hint">Hold the back of your Pass to the glass</div></div>
+  <div class="small">Prototype: the camera comes in the live version.<br>Choose the number on your Pass:</div>
+  <div class="picker" id="picker"></div>
+  <div class="stepper"><button id="pm" aria-label="Fewer">−</button><span id="pn">Industrialists tonight: 6</span><button id="pp" aria-label="More">+</button></div>
+</section>
+
+<!-- 3. THE FLY-OVER -->
+<section class="stage" id="sFly">
+  <div class="caption kick">The Port of Ironreach · dusk</div>
+  <div class="card">
+    <div class="kick">Your Warehouse</div>
+    <div class="num" id="fNum">Warehouse 4</div>
+    <div class="line1">is yours, Industrialist.</div>
+    <div class="line2">Guard your Order Pass. When your number is first called, surrender it at the Iron Gate.</div>
+    <div class="row"><button class="btn ghost" id="bReplay">Fly again</button><button class="btn" id="bRestart">Start over</button></div>
+    <div class="fallback small" id="fallback">This phone can’t show the 3D Port, but your Warehouse is ready.</div>
+  </div>
+</section>
+<div class="demo-note">Prototype · Rev 0.1</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <radialGradient id="gb" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fbe7aa"/><stop offset=".5" stop-color="#c99a45"/><stop offset="1" stop-color="#5a3a14"/></radialGradient>
+  <g id="gearShape"><path id="gp" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><circle r="12" fill="#2a1606"/><circle r="7" fill="url(#gb)"/></g>
+</defs></svg>
+
+<script>
+{
+const $ = id => document.getElementById(id);
+/* gear outline */
+(() => { let d = ''; const N = 14;
+  for (let i = 0; i < N; i++) { const a0 = i/N*Math.PI*2, a1 = a0 + Math.PI/N*0.5, a2 = a0 + Math.PI/N, a3 = a2 + Math.PI/N*0.5;
+    const p = (r,a) => (r*Math.cos(a)).toFixed(2)+','+(r*Math.sin(a)).toFixed(2);
+    d += (i ? 'L' : 'M') + p(36,a0) + 'L' + p(46,a1) + 'L' + p(46,a2) + 'L' + p(36,a3); }
+  $('gp').setAttribute('d', d + 'Z'); })();
+
+/* ---------- sound ---------- */
+let AC = null;
+const ac = () => { try { if (!AC) AC = new (window.AudioContext||window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch(e){} return AC; };
+function tone(type, f, at, dur, vol, glideTo){
+  const a = ac(); if (!a) return; const t = a.currentTime + at;
+  const o = a.createOscillator(), g = a.createGain(), lp = a.createBiquadFilter();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t + dur);
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(f*2, t); lp.frequency.linearRampToValueAtTime(f*6, t + .08);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .04); g.gain.setValueAtTime(vol, t + dur*.7); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(lp); lp.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + .05);
+}
+function noise(at, dur, vol, freq, q){
+  const a = ac(); if (!a) return; const t = a.currentTime + at, len = Math.floor(a.sampleRate*dur);
+  const b = a.createBuffer(1, len, a.sampleRate), d = b.getChannelData(0); for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
+  const s = a.createBufferSource(); s.buffer = b; const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || .8;
+  const g = a.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .15); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(a.destination); s.start(t);
+}
+function bell(f, at, dur, vol){ [[1,1],[2.76,.4],[5.4,.2]].forEach(([m,g]) => tone('sine', f*m, at, dur, vol*g)); }
+function fanfare(){
+  [0,.04].forEach(dt => { tone('sawtooth',261.6,dt,.32,.16); tone('sawtooth',329.6,.34+dt,.32,.16); tone('sawtooth',392,.68+dt,.32,.16);
+    tone('sawtooth',523.3,1.02+dt,1.6,.18); tone('sawtooth',392,1.02+dt,1.6,.12); tone('sawtooth',329.6,1.02+dt,1.6,.12); });
+  for (let i=0;i<8;i++) tone('sine', 62, 1.0 + i*.06, .5, .25 - i*.02);
+  noise(.9, 2.6, .35, 2600, .6); bell(784, 2.6, 3, .2);
+}
+const flySound = () => { noise(0, 9, .06, 500, .4); noise(1.5, 3, .08, 3000, .7); noise(5, 3, .07, 2800, .7); };
+const arriveSound = () => { bell(523.3, 0, 3.5, .28); bell(659.3, .25, 3.5, .22); bell(784, .5, 4, .22); tone('sawtooth', 130.8, 0, 2.6, .07); };
+
+/* ---------- stages ---------- */
+const show = id => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === id));
+let players = 6, mine = 4;
+$('bEnter').addEventListener('click', () => { ac(); fanfare(); $('sIntro').classList.add('opened'); });
+$('bToPass').addEventListener('click', () => { show('sScan'); renderPicker(); });
+function renderPicker(){
+  $('pn').textContent = 'Industrialists tonight: ' + players;
+  $('picker').innerHTML = Array.from({length:10}, (_,i) => `<button data-n="${i+1}" ${i+1>players?'disabled':''}>${i+1}</button>`).join('');
+}
+$('pm').addEventListener('click', () => { players = Math.max(4, players-1); renderPicker(); });
+$('pp').addEventListener('click', () => { players = Math.min(10, players+1); renderPicker(); });
+$('picker').addEventListener('click', e => { const n = +e.target.dataset.n; if (!n) return; mine = n; ac(); bell(988, 0, 1.2, .18); noise(0, .7, .12, 3500, 1); startFly(); });
+$('bReplay').addEventListener('click', () => startFly());
+$('bRestart').addEventListener('click', () => { $('sFly').classList.remove('arrived','flying'); $('sIntro').classList.remove('opened'); show('sIntro'); FLY.on = false; });
+
+/* =====================================================================
+   A small WebGL engine: textured boxes, lighting, fog, sprites
+   ===================================================================== */
+const cv = $('gl');
+const gl = cv.getContext('webgl', { antialias: true, alpha: false }) || cv.getContext('experimental-webgl');
+const FLY = { on: false };
+const H = 0.30, GAP = 1.55;
+
+const m4 = {
+  persp(fov, asp, n, f){ const t = 1/Math.tan(fov/2), r = 1/(n-f); return [t/asp,0,0,0, 0,t,0,0, 0,0,(n+f)*r,-1, 0,0,2*n*f*r,0]; },
+  look(e, c, u){ let z = norm(sub(e,c)), x = norm(cross(u,z)), y = cross(z,x);
+    return [x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0, -dot(x,e),-dot(y,e),-dot(z,e),1]; },
+  mul(a,b){ const o = new Array(16); for (let i=0;i<4;i++) for (let j=0;j<4;j++){ let s=0; for (let k=0;k<4;k++) s += a[k*4+j]*b[i*4+k]; o[i*4+j]=s; } return o; }
+};
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]], add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], mulv=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2], cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const norm=a=>{ const l=Math.hypot(a[0],a[1],a[2])||1; return [a[0]/l,a[1]/l,a[2]/l]; }, lerp=(a,b,t)=>a+(b-a)*t, lerpv=(a,b,t)=>[lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)];
+
+let ready = false, P, S, buf = {}, tex = {}, sprites = [], skyline = [];
+if (gl) init(); else $('fallback').style.display = 'block';
+
+function shader(vs, fs){
+  const mk = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(o); return o; };
+  const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+  const u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS); for (let i=0;i<n;i++){ const k = gl.getActiveUniform(p,i).name; u[k] = gl.getUniformLocation(p,k); }
+  const a = {}, na = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES); for (let i=0;i<na;i++){ const k = gl.getActiveAttrib(p,i).name; a[k] = gl.getAttribLocation(p,k); }
+  return { p, u, a };
+}
+function init(){
+  /* mesh shader: diffuse sun + warm sky ambient + rim, exp2 fog, optional water shimmer */
+  P = shader(`
+    attribute vec3 pos; attribute vec3 nor; attribute vec2 uv;
+    uniform mat4 vp; uniform vec3 off; uniform vec2 uvs;
+    varying vec3 vN; varying vec2 vUv; varying vec3 vW;
+    void main(){ vec3 w = pos + off; vW = w; vN = nor; vUv = uv*uvs; gl_Position = vp*vec4(w,1.0); }`,
+   `precision mediump float;
+    uniform sampler2D tx; uniform vec3 tint, sun, sunCol, amb, fogCol, cam; uniform float fogD, glow, water, time;
+    varying vec3 vN; varying vec2 vUv; varying vec3 vW;
+    void main(){
+      vec3 base = texture2D(tx, vUv).rgb * tint;
+      vec3 n = normalize(vN);
+      float d = max(dot(n, normalize(sun)), 0.0);
+      float sky = 0.55 + 0.45*n.y;
+      vec3 col = base*(amb*sky + sunCol*d) + base*glow;
+      if (water > 0.5) {
+        float w = sin(vW.x*3.0 + time*0.9)*sin(vW.z*4.0 - time*1.3) + sin((vW.x+vW.z)*7.0 + time*2.0)*0.4;
+        vec3 v = normalize(cam - vW); float spec = pow(max(dot(reflect(-normalize(sun), vec3(w*0.06,1.0,w*0.05)), v), 0.0), 40.0);
+        col = mix(vec3(0.02,0.05,0.06), vec3(0.05,0.10,0.11), 0.5+0.5*w) + sunCol*spec*0.9;
+      }
+      float f = exp(-pow(fogD*distance(cam, vW), 2.0));
+      gl_FragColor = vec4(mix(fogCol, col, f), 1.0);
+    }`);
+  /* sprite shader: billboards (steam, lantern glow) and flat decals (shadows, highlight ring) */
+  S = shader(`
+    attribute vec2 cor; uniform mat4 vp; uniform vec3 ctr, ax, ay; uniform float size;
+    varying vec2 vC; varying vec3 vW;
+    void main(){ vC = cor; vec3 w = ctr + (ax*cor.x + ay*cor.y)*size; vW = w; gl_Position = vp*vec4(w,1.0); }`,
+   `precision mediump float;
+    uniform vec4 col; uniform float kind, fogD; uniform vec3 fogCol, cam;
+    varying vec2 vC; varying vec3 vW;
+    void main(){
+      float r = length(vC), a;
+      if (kind < 0.5) a = smoothstep(1.0, 0.0, r);                       // soft blob
+      else if (kind < 1.5) a = pow(max(1.0 - r, 0.0), 2.2);              // glow
+      else a = smoothstep(0.08, 0.0, abs(r - 0.82)) + 0.25*smoothstep(1.0, 0.6, r)*smoothstep(0.5, 0.8, r); // ring
+      float f = exp(-pow(fogD*distance(cam, vW), 2.0));
+      gl_FragColor = vec4(col.rgb, col.a*a*f);
+    }`);
+  const mk = (arr) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.STATIC_DRAW); return { b, n: arr.length/8 }; };
+  const quad = (p0, p1, p2, p3, n) => [ ...p0,...n,0,0, ...p1,...n,1,0, ...p2,...n,1,1, ...p0,...n,0,0, ...p2,...n,1,1, ...p3,...n,0,1 ];
+  const h = .5;
+  // faces of a warehouse (uv: 0,0 bottom-left of image)
+  buf.roof  = mk(quad([-h,H,h],[h,H,h],[h,H,-h],[-h,H,-h],[0,1,0]));
+  buf.front = mk(quad([-h,0,h],[h,0,h],[h,H,h],[-h,H,h],[0,0,1]));
+  buf.back  = mk(quad([h,0,-h],[-h,0,-h],[-h,H,-h],[h,H,-h],[0,0,-1]));
+  buf.right = mk(quad([h,0,h],[h,0,-h],[h,H,-h],[h,H,h],[1,0,0]));
+  buf.left  = mk(quad([-h,0,-h],[-h,0,h],[-h,H,h],[-h,H,-h],[-1,0,0]));
+  buf.ground= mk(quad([-40,0,2.6],[40,0,2.6],[40,0,-30],[-40,0,-30],[0,1,0]));
+  buf.water = mk(quad([-40,-.08,60],[40,-.08,60],[40,-.08,2.6],[-40,-.08,2.6],[0,1,0]));
+  buf.quay  = mk(quad([-40,-.08,2.6],[40,-.08,2.6],[40,0,2.6],[-40,0,2.6],[0,0,1]));
+  buf.cube  = mk([].concat(
+    quad([-h,0,h],[h,0,h],[h,1,h],[-h,1,h],[0,0,1]), quad([h,0,-h],[-h,0,-h],[-h,1,-h],[h,1,-h],[0,0,-1]),
+    quad([h,0,h],[h,0,-h],[h,1,-h],[h,1,h],[1,0,0]), quad([-h,0,-h],[-h,0,h],[-h,1,h],[-h,1,-h],[-1,0,0]),
+    quad([-h,1,h],[h,1,h],[h,1,-h],[-h,1,-h],[0,1,0])));
+  buf.spr = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf.spr);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, 1,1, -1,-1, 1,1, -1,1]), gl.STATIC_DRAW);
+  // textures
+  const blank = c => { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(c)); return t; };
+  tex.white = blank([255,255,255,255]);
+  const load = (name, src, rep) => { const t = blank([90,60,30,255]); tex[name] = t; const im = new Image();
+    im.onload = () => { gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, im); gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      const w = rep ? gl.REPEAT : gl.CLAMP_TO_EDGE; gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, w); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, w);
+      const ext = gl.getExtension('EXT_texture_filter_anisotropic'); if (ext) gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, 8); };
+    im.src = src; };
+  ['front','back','left','right'].forEach(k => load('w_'+k, 'img/wall_'+k+'.jpg'));
+  for (let i = 1; i <= 10; i++) load('roof'+i, 'img/roof'+i+'.jpg');
+  // dock planks, drawn on a canvas
+  const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
+  x.fillStyle = '#2b1a0d'; x.fillRect(0,0,256,256);
+  for (let i = 0; i < 8; i++) { x.fillStyle = `hsl(28,${30+Math.random()*15}%,${10+Math.random()*7}%)`; x.fillRect(0, i*32+1, 256, 30);
+    for (let k = 0; k < 40; k++) { x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(Math.random()*256, i*32+2+Math.random()*28, 30+Math.random()*60, 1); }
+    x.fillStyle = '#120a04'; x.fillRect(((i*97)%256), i*32, 3, 32); }
+  for (let i = 0; i < 60; i++) { x.fillStyle = 'rgba(160,120,60,.25)'; x.beginPath(); x.arc(Math.random()*256, Math.random()*256, 1.2, 0, 7); x.fill(); }
+  const tg = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tg); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT); tex.ground = tg;
+  // distant skyline of chimneys and sheds
+  skyline = Array.from({length: 46}, (_, i) => ({ x: -26 + i*1.15 + Math.random()*.6, z: -7 - Math.random()*12, w: .5 + Math.random()*1.4, h: .6 + Math.random()*(Math.random() < .3 ? 4 : 1.6) }));
+  ready = true;
+  addEventListener('resize', resize); resize();
+  requestAnimationFrame(frame);
+}
+function resize(){ const r = Math.min(devicePixelRatio || 1, 2); cv.width = innerWidth*r; cv.height = innerHeight*r; gl.viewport(0,0,cv.width,cv.height); }
+
+/* ---------- the fly-over ---------- */
+const xOf = i => (i - (players-1)/2) * GAP;
+const chimneys = [[.28,-.40],[.36,-.06],[-.44,-.44]];
+function catmull(p, t){ const n = p.length - 1, s = Math.min(n - 1e-6, t*n), i = Math.floor(s), u = s - i;
+  const a = p[Math.max(i-1,0)], b = p[i], c = p[i+1], d = p[Math.min(i+2,n)];
+  return [0,1,2].map(k => .5*((2*b[k]) + (-a[k]+c[k])*u + (2*a[k]-5*b[k]+4*c[k]-d[k])*u*u + (-a[k]+3*b[k]-3*c[k]+d[k])*u*u*u)); }
+const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+function startFly(){
+  show('sFly'); $('sFly').classList.remove('arrived'); $('sFly').classList.add('flying');
+  $('fNum').textContent = 'Warehouse ' + mine;
+  if (!ready) { $('sFly').classList.add('arrived'); return; }
+  const x0 = xOf(0), x1 = xOf(players-1), xp = xOf(mine-1);
+  const asp = innerWidth/innerHeight, fov = 50*Math.PI/180;
+  const hFinal = Math.max(1.05, .64/(Math.tan(fov/2)*Math.min(asp, 1)));
+  FLY.pos = [[x0-5,2.8,7.5],[x0-1.6,1.2,3.4],[lerp(x0,xp,.5)-.6,.78,2.25],[xp-.9,.72,1.95],[xp+.4,1.5,1.3],[xp,hFinal*.8,.25],[xp,hFinal,.02]];
+  FLY.tgt = [[x0+1,.2,0],[x0+1.5,.2,0],[xp+1.8,.18,0],[xp+.6,.2,0],[xp,.22,0],[xp,.2,0],[xp,.2,0]];
+  FLY.dur = Math.min(15, 9 + Math.abs(xp - x0)*.45); FLY.t0 = performance.now(); FLY.on = true; FLY.arr = false;
+  sprites = [];
+  flySound();
+}
+function camAt(now){
+  const t = Math.min(1, (now - FLY.t0)/(FLY.dur*1000)), e = ease(t);
+  let eye = catmull(FLY.pos, e), tgt = catmull(FLY.tgt, e);
+  const k = Math.max(0, (e - .62)/.38), up = norm(lerpv([0,1,0], [0,.02,-1], ease(k)));
+  if (t >= 1) { if (!FLY.arr) { FLY.arr = true; $('sFly').classList.add('arrived'); arriveSound(); }
+    const b = (now - FLY.t0)/1000; eye = add(eye, [Math.sin(b*.7)*.02, Math.sin(b*1.1)*.03, 0]); }
+  return { eye, tgt, up };
+}
+
+/* ---------- draw ---------- */
+const FOG = [.13,.085,.05], SUN = norm([-.55,.75,.6]), SUNC = [1.25,.92,.56], AMB = [.46,.37,.29];
+function frame(now){
+  requestAnimationFrame(frame);
+  if (!FLY.on) { gl.clearColor(.07,.04,.02,1); gl.clear(gl.COLOR_BUFFER_BIT); return; }
+  const { eye, tgt, up } = camAt(now), time = now/1000;
+  const vp = m4.mul(m4.persp(50*Math.PI/180, cv.width/cv.height, .05, 80), m4.look(eye, tgt, up));
+  gl.clearColor(FOG[0], FOG[1], FOG[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.depthMask(true);
+  gl.useProgram(P.p);
+  gl.uniformMatrix4fv(P.u.vp, false, vp); gl.uniform3fv(P.u.sun, SUN); gl.uniform3fv(P.u.sunCol, SUNC); gl.uniform3fv(P.u.amb, AMB);
+  gl.uniform3fv(P.u.fogCol, FOG); gl.uniform3fv(P.u.cam, eye); gl.uniform1f(P.u.fogD, .085); gl.uniform1f(P.u.time, time);
+  const draw = (b, t, off, o = {}) => {
+    gl.bindBuffer(gl.ARRAY_BUFFER, b.b);
+    gl.enableVertexAttribArray(P.a.pos); gl.vertexAttribPointer(P.a.pos, 3, gl.FLOAT, false, 32, 0);
+    gl.enableVertexAttribArray(P.a.nor); gl.vertexAttribPointer(P.a.nor, 3, gl.FLOAT, false, 32, 12);
+    gl.enableVertexAttribArray(P.a.uv);  gl.vertexAttribPointer(P.a.uv, 2, gl.FLOAT, false, 32, 24);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, t); gl.uniform1i(P.u.tx, 0);
+    gl.uniform3fv(P.u.off, off); gl.uniform2fv(P.u.uvs, o.uvs || [1,1]); gl.uniform3fv(P.u.tint, o.tint || [1,1,1]);
+    gl.uniform1f(P.u.glow, o.glow || 0); gl.uniform1f(P.u.water, o.water ? 1 : 0);
+    gl.drawArrays(gl.TRIANGLES, 0, b.n);
+  };
+  draw(buf.ground, tex.ground, [0,0,0], { uvs: [26,12], tint: [.95,.85,.75] });
+  draw(buf.quay, tex.ground, [0,0,0], { uvs: [26,.06], tint: [.6,.5,.4] });
+  draw(buf.water, tex.white, [0,0,0], { water: true });
+  for (const s of skyline) drawBox(s, vp, eye);
+  gl.useProgram(P.p);
+  const pulse = .5 + .5*Math.sin(time*3);
+  for (let i = 0; i < players; i++) {
+    const off = [xOf(i), 0, 0], me = i === mine-1, g = me && FLY.arr ? .12 + .18*pulse : 0;
+    draw(buf.roof, tex['roof'+(i+1)], off, { glow: g });
+    draw(buf.front, tex.w_front, off, { glow: g*.6 }); draw(buf.back, tex.w_back, off);
+    draw(buf.left, tex.w_left, off); draw(buf.right, tex.w_right, off);
+  }
+  // transparent pass
+  gl.enable(gl.BLEND); gl.depthMask(false); gl.useProgram(S.p);
+  gl.uniformMatrix4fv(S.u.vp, false, vp); gl.uniform3fv(S.u.fogCol, FOG); gl.uniform3fv(S.u.cam, eye); gl.uniform1f(S.u.fogD, .085);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf.spr); gl.enableVertexAttribArray(S.a.cor); gl.vertexAttribPointer(S.a.cor, 2, gl.FLOAT, false, 0, 0);
+  const fwd = norm(sub(tgt, eye)), right = norm(cross(fwd, up)), upv = cross(right, fwd);
+  const spr = (ctr, size, col, kind, flat) => {
+    gl.uniform3fv(S.u.ctr, ctr); gl.uniform1f(S.u.size, size); gl.uniform4fv(S.u.col, col); gl.uniform1f(S.u.kind, kind);
+    gl.uniform3fv(S.u.ax, flat ? [1,0,0] : right); gl.uniform3fv(S.u.ay, flat ? [0,0,-1] : upv); gl.drawArrays(gl.TRIANGLES, 0, 6); };
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  for (let i = 0; i < players; i++) spr([xOf(i), .004, .03], .82, [0,0,0,.6], 0, true);       // contact shadows
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+  if (FLY.arr) spr([xOf(mine-1), .006, 0], .98 + .05*pulse, [1,.75,.35,.55 + .35*pulse], 2, true); // highlight ring
+  for (let i = 0; i < players; i++) {                                                           // lanterns and their pools of light
+    const x = xOf(i), fl = .85 + .15*Math.sin(time*7 + i*2.3);
+    spr([x-.317, .18, .52], .09, [1,.62,.25,.9*fl], 1); spr([x+.24, .18, .52], .09, [1,.62,.25,.9*fl], 1);
+    spr([x-.04, .004, .75], .42, [1,.55,.2,.16*fl], 1, true);
+  }
+  // steam: spawn and age particles
+  if (Math.random() < .55) for (let i = 0; i < players; i++) if (Math.random() < .5) {
+    const c = chimneys[(Math.random()*3)|0];
+    sprites.push({ p: [xOf(i)+c[0], H+.03, c[1]], v: [.02+Math.random()*.03, .16+Math.random()*.1, -.01], t: now, life: 3.2 + Math.random()*1.6, s: .05 + Math.random()*.03 });
+  }
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  sprites = sprites.filter(p => (now - p.t)/1000 < p.life);
+  for (const p of sprites) { const a = (now - p.t)/1000, k = a/p.life;
+    const q = add(p.p, mulv(p.v, a)), near = Math.min(1, Math.max(0, (Math.hypot(q[0]-eye[0],q[1]-eye[1],q[2]-eye[2]) - .25)/.6));
+    spr(q, p.s + a*.12, [.92,.88,.82, .32*Math.sin(Math.PI*k)*near], 0); }
+  gl.depthMask(true); gl.disable(gl.BLEND);
+}
+function drawBox(s, vp, eye){
+  // a dark distant building: draw the unit cube scaled by stretching via the offset trick (scale baked per draw)
+  gl.useProgram(P.p);
+  const b = boxBuf(s);
+  gl.bindBuffer(gl.ARRAY_BUFFER, b.b);
+  gl.enableVertexAttribArray(P.a.pos); gl.vertexAttribPointer(P.a.pos, 3, gl.FLOAT, false, 32, 0);
+  gl.enableVertexAttribArray(P.a.nor); gl.vertexAttribPointer(P.a.nor, 3, gl.FLOAT, false, 32, 12);
+  gl.enableVertexAttribArray(P.a.uv);  gl.vertexAttribPointer(P.a.uv, 2, gl.FLOAT, false, 32, 24);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex.white);
+  gl.uniform3fv(P.u.off, [s.x, 0, s.z]); gl.uniform2fv(P.u.uvs, [1,1]); gl.uniform3fv(P.u.tint, [.16,.11,.07]);
+  gl.uniform1f(P.u.glow, 0); gl.uniform1f(P.u.water, 0);
+  gl.drawArrays(gl.TRIANGLES, 0, b.n);
+}
+function boxBuf(s){
+  if (s.buf) return s.buf;
+  const w = s.w/2, h = s.h, q = (p0,p1,p2,p3,n) => [...p0,...n,0,0, ...p1,...n,1,0, ...p2,...n,1,1, ...p0,...n,0,0, ...p2,...n,1,1, ...p3,...n,0,1];
+  const a = [].concat(q([-w,0,w],[w,0,w],[w,h,w],[-w,h,w],[0,0,1]), q([w,0,w],[w,0,-w],[w,h,-w],[w,h,w],[1,0,0]),
+    q([-w,0,-w],[-w,0,w],[-w,h,w],[-w,h,-w],[-1,0,0]), q([-w,h,w],[w,h,w],[w,h,-w],[-w,h,-w],[0,1,0]));
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(a), gl.STATIC_DRAW);
+  return s.buf = { b, n: a.length/8 };
+}
+}
+</script>
+</body>
+</html>

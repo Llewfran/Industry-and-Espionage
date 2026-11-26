@@ -7,6 +7,7 @@ A steampunk social-deduction and negotiation game for up to 10 Industrialists an
 | Piece | Device | Status |
 |---|---|---|
 | **Year Clock** (`app/index.html`) | iPad in the Negotiation Chamber | Rev 2.2 (see [CHANGELOG](CHANGELOG.md)) |
+| Joining prototype (`join/`) | Players' phones | Prototype 0.1 |
 | Chairman's control centre | Chairman's phone | Planned |
 | Industrialist handhelds | Players' phones | Planned |
 
