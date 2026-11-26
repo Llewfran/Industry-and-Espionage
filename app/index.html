@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="2.8">
+<meta name="ie-revision" content="2.9">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -355,6 +355,17 @@ body.dial-gauge .steam{display:block}
   </div>
 </div>
 
+<!-- CHAIRMAN'S DEVICE -->
+<div class="overlay" id="oChair">
+  <div class="jbox">
+    <div class="kick">For the Chairman's eyes only</div>
+    <div class="t" style="font-size:26px">The Chairman's device</div>
+    <div class="qr big" id="chQr" style="width:min(44vh,400px)"></div>
+    <p class="sub" id="chTxt"></p>
+    <div class="row"><button class="ghost" id="chRelease">Release the Chairman's device</button><button class="brass" id="chClose">Close</button></div>
+  </div>
+</div>
+
 <!-- CHAIRMAN MENU -->
 <div class="overlay" id="oMenu">
   <div>
@@ -369,6 +380,7 @@ body.dial-gauge .steam{display:block}
       <div class="wide sub" id="mInfo" style="font-size:17px"></div>
       <button class="ghost wide" id="mDial">Switch dial</button>
       <button class="ghost wide" id="mJoin">Join screen · seats</button>
+      <button class="ghost wide" id="mChair">Chairman's device</button>
       <button class="ghost" id="mEndYear">End the year now</button>
       <button class="ghost" id="mReset">New Decade</button>
       <button class="brass wide" id="mClose">Close</button>
@@ -381,7 +393,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '2.8';
+const REV = '2.9';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -400,6 +412,8 @@ try { const v = JSON.parse(localStorage.getItem(KEY)||'null'); if (v && v.phase)
 if (S.settleSec===undefined) S.settleSec = 60;
 if (!S.dial) S.dial = 'gauge';
 if (!S.hpin) S.hpin = S.pin;
+if (S.cdev === undefined) S.cdev = '';
+if (S.phase !== 'setup' && S.game && !S.ckey && window.IE) S.ckey = IE.Link.newKey();
 if (!S.seats) S.seats = {}; if (!S.seen) S.seen = [];
 const startTone = () => gateSound();
 
@@ -769,8 +783,8 @@ $('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', pla
    again (a phone may change Pass, and the latest phone to present a Pass takes it). Opening a year seals them. */
 const joinUrl = () => new URL('../join/', location.origin + location.pathname).href + '#g=' + S.game;
 const titleOf = () => S.year > 1 ? 'Industrialists' : 'Initiates';
-function newGame(){ S.game = window.IE ? IE.Link.newKey() : ''; S.seats = {}; S.seen = []; S.seatLock = false; startLink(); }
-let LINK = null, linkState = 'off', fresh = false, joinAdmin = false;
+function newGame(){ S.game = window.IE ? IE.Link.newKey() : ''; S.ckey = window.IE ? IE.Link.newKey() : ''; S.cdev = ''; S.cblob = ''; S.seats = {}; S.seen = []; S.seatLock = false; startLink(); }
+let LINK = null, CLINK = null, linkState = 'off', fresh = false, joinAdmin = false;
 async function startLink(){
   if (LINK && LINK.key === S.game) return;
   if (LINK) { LINK.close(); LINK = null; }
@@ -779,7 +793,52 @@ async function startLink(){
   const key = S.game;
   try { const l = await IE.Link.open(key, onLink, { since: '15m', onStatus: st => { linkState = st; renderSeats(); } });
     if (S.game !== key) { l.close(); return; } l.key = key; LINK = l; } catch(e){ linkState = 'off'; renderSeats(); }
+  startChairLink();
 }
+/* ---------- the Chairman's device: its own key, locked to the first device that pairs with the PIN ---------- */
+async function startChairLink(){
+  if (CLINK && CLINK.key === S.ckey) return;
+  if (CLINK) { CLINK.close(); CLINK = null; }
+  if (!S.ckey || !window.IE) return;
+  const key = S.ckey;
+  try { const l = await IE.Link.open(key, onChair, { since: '2m' }); if (S.ckey !== key) { l.close(); return; } l.key = key; CLINK = l; } catch(e){}
+}
+async function pinProof(pin){ const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ie-chair|' + S.ckey + '|' + pin)); return Array.from(new Uint8Array(d), x => x.toString(16).padStart(2,'0')).join(''); }
+const seenC = new Set();
+async function onChair(m){
+  if (!CLINK || seenC.has(m._id)) return; seenC.add(m._id);
+  if (m._at && Date.now() - m._at > 60000 && m.t !== 'backup') return;     // stale commands replayed after a reload
+  if (m.t === 'pair') {
+    const ok = m.proof === await pinProof(S.pin);
+    let why = ''; if (!ok) why = 'pin'; else if (S.cdev && S.cdev !== m.dev) why = 'locked';
+    if (!why) { S.cdev = m.dev; save(); renderChair(); }
+    CLINK.send({ t: 'paired', dev: m.dev, nonce: m.nonce, ok: !why, why, blob: !why ? (S.cblob || '') : '' });
+    if (!why) stateSoon(true);
+    return;
+  }
+  if (!S.cdev || m.dev !== S.cdev) return;                                 // only the Chairman's device
+  if (m.t === 'hello') { stateSoon(true); return; }
+  if (m.t === 'backup') { S.cblob = m.blob; save(); return; }
+  if (m.t === 'cmd') {
+    const run = S.phase === 'call' || S.phase === 'paused' || S.phase === 'settle';
+    if (m.op === 'open' && S.phase === 'locked') openYear();
+    else if (m.op === 'shorter') { S.callSec = Math.max(60, S.callSec - 15); save(); }
+    else if (m.op === 'longer') { S.callSec = Math.min(600, S.callSec + 15); save(); }
+    else if (run && { pause:1, plus:1, skip:1, restart:1, endyear:1 }[m.op]) { const b = $({ pause:'mPause', plus:'mPlus', skip:'mSkip', restart:'mRestart', endyear:'mEndYear' }[m.op]); b.disabled = false; b.click(); }
+    stateSoon(true);
+  }
+}
+function renderChair(){
+  if (!S.ckey) return;
+  const url = new URL('../chair/', location.origin + location.pathname).href + '#c=' + S.ckey;
+  if ($('chQr').dataset.url !== url) { $('chQr').innerHTML = IE.QR.svg(url, { margin: 2, dark: '#2a1606', light: '#f3e3bd' }); $('chQr').dataset.url = url; }
+  $('chTxt').textContent = S.cdev ? 'A Chairman\'s device is paired and locked to this Decade. To move to another device, release it first.'
+                                  : 'Scan with the Chairman\'s phone or iPad, then enter the Chairman\'s PIN on it. The first device to pair is locked to this Decade.';
+  $('chRelease').style.display = S.cdev ? '' : 'none';
+}
+$('mChair').addEventListener('click', () => { closeMenu(); renderChair(); $('oChair').classList.add('on'); });
+$('chClose').addEventListener('click', () => $('oChair').classList.remove('on'));
+$('chRelease').addEventListener('click', () => { S.cdev = ''; save(); renderChair(); });
 function onLink(m){
   if (m.t === 'hello' && LINK) { if (Date.now() - lastHello > 3000) { lastHello = Date.now(); stateSoon(true); } return; }
   if (m.t !== 'claim' || !LINK) return;
@@ -810,6 +869,7 @@ function stateMsg(){
   const pausedRun = S.phase === 'paused', ph = pausedRun ? (S.pausedFrom || 'call') : S.phase;
   const left = pausedRun ? S.left : Math.max(0, (S.endAt - Date.now())/1000);
   return { t: 'state', year: S.year, phase: ph, paused: pausedRun, order: S.order, idx: S.idx, players: S.players, callSec: S.callSec,
+           joined: Object.keys(S.seats || {}).length, settleSec: S.settleSec,
            inPort: ph === 'call' ? S.order[S.idx] || 0 : 0, left: (ph === 'call' || ph === 'settle') ? Math.round(left*10)/10 : 0 };
 }
 function stateSoon(force){
@@ -818,7 +878,7 @@ function stateSoon(force){
     if (!LINK || !S.game) return;
     const m = stateMsg(), sig = [m.year, m.phase, m.paused, m.idx, m.inPort, Math.round(S.endAt/1000), Math.round(S.left||0), (m.order||[]).join('')].join('|');
     if (!force && sig === lastSig) return;
-    lastSig = sig; LINK.send(m);
+    lastSig = sig; LINK.send(m); if (CLINK) CLINK.send(m);
   }, 250);
 }
 function callPhone(seat){ if (LINK && seat) LINK.send({ t: 'warn', seat, year: S.year }); }

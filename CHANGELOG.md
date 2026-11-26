@@ -8,6 +8,7 @@ Every update to the apps gets a revision number. The Year Clock shows its revisi
 
 | Rev | Date | Changes |
 |---|---|---|
+| 2.9 | 26 Nov 2026 | The Chairman's device: Chairman's controls → "Chairman's device" shows a code only the Chairman sees. The first device that scans it and enters the Chairman's PIN is locked to the Decade ("Release the Chairman's device" frees it). The clock obeys its remote commands, sends it the year's state, and keeps its sealed backup |
 | 2.8 | 26 Nov 2026 | From Year Two (after the Cardinal Rule is proclaimed) the Order of Access shows Even numbers in steel and Odd numbers in brass |
 | 2.7 | 26 Nov 2026 | The clock tells the phones the state of the year whenever it changes (a Call starts, a pause, +30 s, a year opens or ends), and answers any phone that says hello |
 | 2.6 | 26 Nov 2026 | Two PINs: the Herald's PIN opens each year (after the Codex reading; the Chairman's PIN works too as a fallback) and the Chairman's PIN alone opens the Chairman's controls (pause and more). Steam gauge: the needle's hub is now a small brass cog with a slotted steel cap that turns with the needle |
@@ -40,3 +41,9 @@ The Rev 1.0–1.1 brass-ring version is kept on the `v1-brass-ring` branch.
 | 0.3 | 26 Nov 2026 | Live joining: scanning the Port clock's QR stores tonight's game key and plays the gates and fanfare; the phone's own camera scans the Order Pass (`join/#p=N`), which opens the Iron Gate screen; the claim goes to the clock over the encrypted relay; accepted → the fly-over, refused → the reason (Pass held by another phone, not in play tonight, this phone already holds a Pass, clock not answering); "Scan it here" on browsers that can, "Type the number" fallback; demo mode kept when opened with no code; Order Pass QR test sheet (`join/passes.html`) |
 | 0.2 | 26 Nov 2026 | The fly-over now crosses a lamp-lit games table: the game box and both books (Chairman's Story on the Herald's Codex) in 3D, a miniature industrial district with brick factories, smoking chimneys and gasholders, and a river with an iron bridge in front of the warehouses. Even camera pace. Sounds: high bells removed; fanfare, steam and deep tones kept; a brass "ta-da" when the warehouse is revealed |
 | 0.1 | 26 Nov 2026 | `join/`: standalone prototype of a player's arrival. Brass gates and fanfare ("Welcome to Brasshaven"), "Present your Order Pass" (number picker until the camera is added), then a 3D fly-over of the Port of Ironreach at dusk built from the folded warehouse art, ending above the player's own roof. No live link yet |
+
+## The Chairman's device (`chair/`)
+
+| Rev | Date | Changes |
+|---|---|---|
+| 0.1 | 26 Nov 2026 | First version. Pairing by the iPad's Chairman code and the Chairman's PIN, locked to the Decade. **The Call**: who is In Port (follows the clock, or pick a Warehouse), the In-Hand check against the card handed at their last Call with the penalty spelled out, the Cardinal Rule as the Warehouses they may ship to, this year's duties, and recording the card handed at the Iron Gate. **Clock**: pause, +30 s, next Call, restart, Call length, open the year (Herald absent), end the year. **Ledger**: every card handed out, by Warehouse and year. **Pacts**: Iron Pacts recorded as they are made, one handshake each. **Rulings**: the quick rulings. Records backed up, sealed, on the clock and restored to a replacement device |

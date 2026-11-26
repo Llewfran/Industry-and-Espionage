@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>The Chairman · Industry &amp; Espionage</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<style>
+/* The Chairman's device: a private ledger and remote, carried into Ironreach. Mahogany, brass, steel. */
+:root{--bg:#120a05;--brass:#c9973f;--brass-l:#f2d48a;--brass-d:#6b4517;--ink:#f3e3bd;--seal:#b5372e;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;background:radial-gradient(ellipse at 50% 0%,#3a2210,var(--bg) 70%) fixed;color:var(--ink);font:17px/1.45 "Crimson Text",Georgia,serif}
+.t{font-family:"Cinzel",serif;font-weight:700;letter-spacing:.05em;color:var(--brass-l)}
+.kick{font:700 12px "Cinzel",serif;letter-spacing:.28em;text-transform:uppercase;color:var(--brass)}
+.btn{font:700 16px "Cinzel",serif;letter-spacing:.06em;min-height:50px;padding:0 18px;border-radius:12px;cursor:pointer;color:#2a1606;
+  background:linear-gradient(180deg,#f6dc96,#c99a45 45%,#8d5e1f);border:2px solid #3b210b;box-shadow:inset 0 0 0 2px #f7e3ad,0 4px 12px rgba(0,0,0,.6)}
+.btn.ghost{background:rgba(201,151,63,.12);color:var(--brass-l);border-color:#6b4517;box-shadow:none}
+.btn.red{background:linear-gradient(#e0705f,#b5372e 50%,#6e1a14);color:#fff;border-color:#3b0d0a;box-shadow:none}
+.btn:disabled{opacity:.35}
+[hidden]{display:none!important}
+.wrap{max-width:720px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 86px)}
+/* top bar: the clock at a glance */
+.top{position:sticky;top:0;z-index:5;margin:0 -14px 12px;padding:calc(env(safe-area-inset-top) + 8px) 14px 10px;background:linear-gradient(#1c100799,#120a05);backdrop-filter:blur(6px);border-bottom:1px solid #4d300c;display:flex;align-items:center;gap:12px}
+.top .yr{flex:1}
+.top .yr .t{font-size:18px}
+.top .st{font-size:14px;color:#cfb27a}
+.top .cd{font:900 30px/1 "Cinzel Decorative",serif;color:var(--brass-l);min-width:92px;text-align:right}
+.top .cd.late{color:#ff8a62}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7a5a2c;margin-right:6px}
+.dot.live{background:#7fc27a;box-shadow:0 0 8px #7fc27a}
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:#1a0f07;border-top:1px solid #6b4517;padding:6px 6px calc(env(safe-area-inset-bottom) + 6px)}
+.tabs button{flex:1;min-height:52px;border:0;background:none;color:#b48a45;font:700 12px "Cinzel",serif;letter-spacing:.08em;cursor:pointer;border-radius:10px}
+.tabs button.on{background:rgba(201,151,63,.16);color:var(--brass-l)}
+.tab{display:none}.tab.on{display:block}
+.box{border:1px solid #5a3a14;border-radius:14px;background:rgba(201,151,63,.06);padding:14px;margin-bottom:12px}
+.box h3{font:700 13px "Cinzel",serif;letter-spacing:.2em;text-transform:uppercase;color:var(--brass);margin-bottom:8px}
+.big{font:900 38px/1 "Cinzel Decorative",serif;color:var(--brass-l)}
+.muted{color:#b99a66;font-size:15px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seats{display:flex;gap:6px;flex-wrap:wrap}
+.seats button{width:44px;height:44px;border-radius:50%;border:2px solid #6b4517;background:transparent;color:#d8b97a;font:900 18px "Cinzel Decorative",serif;cursor:pointer}
+.seats button.on{background:radial-gradient(circle at 35% 30%,#fbe7aa,#c99a45 55%,#6b4517);color:#2a1606;border-color:#3b210b}
+.seats button.port{box-shadow:0 0 0 3px #7fc27a}
+.seats button.even{border-color:#6a84a0}
+.card{width:120px;border-radius:8px;box-shadow:0 4px 12px #000;display:block}
+.exp{display:flex;gap:14px;align-items:center}
+.pen{border:2px solid var(--seal);border-radius:12px;padding:12px;background:rgba(181,55,46,.12);margin-top:10px}
+.pen b{color:#ff9a84;font-family:"Cinzel",serif}
+.ship{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.ship span{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:900 17px "Cinzel Decorative",serif;color:#2a1606;
+  background:radial-gradient(circle at 35% 30%,#fbe7aa,#c99a45 55%,#6b4517);border:2px solid #3b210b}
+.ship span.even{color:#0f1a24;background:radial-gradient(circle at 35% 30%,#f4f8fb,#9fb4c6 55%,#3d5266);border-color:#141c26}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.grid button{padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;background:none;cursor:pointer}
+.grid button.sel{border-color:var(--brass-l);box-shadow:0 0 12px rgba(255,200,110,.8)}
+.grid img{width:100%;display:block}
+.land{margin:12px 0 6px;font:700 12px "Cinzel",serif;letter-spacing:.22em;text-transform:uppercase;color:var(--brass);border-bottom:1px solid #4d300c;padding-bottom:3px}
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ctl .wide{grid-column:1/-1}
+.order{display:flex;gap:6px;flex-wrap:wrap}
+.order span{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:900 17px "Cinzel Decorative",serif;border:2px solid #6b4517;color:#d8b97a}
+.order span.done{opacity:.3}.order span.cur{background:var(--brass-l);color:#2a1606}.order span.nxt{box-shadow:0 0 0 3px #ff7a52}
+table.lg{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+table.lg th,table.lg td{border:1px solid #4d300c;padding:2px;text-align:center}
+table.lg th{font:700 11px "Cinzel",serif;color:var(--brass)}
+table.lg img{width:30px;border-radius:3px;display:block;margin:auto}
+table.lg .p{color:#ff9a84;font:700 11px "Cinzel",serif}
+.pact{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #5a3a14;border-radius:10px;margin-top:8px}
+.pact b{font:900 20px "Cinzel Decorative",serif;color:var(--brass-l)}
+select{appearance:none;-webkit-appearance:none;height:48px;min-width:64px;border-radius:10px;border:2px solid #6b4517;background:#2a1606;color:#f2d48a;font:900 20px "Cinzel Decorative",serif;text-align:center;text-align-last:center}
+details{border:1px solid #5a3a14;border-radius:12px;margin-bottom:8px;background:rgba(201,151,63,.05)}
+summary{padding:12px 14px;font:700 15px "Cinzel",serif;color:var(--brass-l);cursor:pointer}
+details p{padding:0 14px 12px}
+/* pairing */
+.pair{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:24px}
+.dots{display:flex;gap:14px;justify-content:center}
+.dots i{width:18px;height:18px;border-radius:50%;border:2px solid var(--brass);display:block}
+.dots i.f{background:var(--brass-l)}
+.keys{display:grid;grid-template-columns:repeat(3,72px);gap:12px}
+.keys button{height:72px;border-radius:50%;font:700 26px "Cinzel",serif}
+.err{color:#ff9a84;min-height:1.4em}
+.shake{animation:sh .4s}@keyframes sh{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+</style>
+</head>
+<body>
+
+<!-- PAIRING -->
+<section class="pair" id="pPair" hidden>
+  <div class="kick">The Chairman's device</div>
+  <div class="t" style="font-size:26px">Enter the Chairman's PIN</div>
+  <p class="muted" id="pTxt">This device will be locked to tonight's Decade.</p>
+  <div class="dots" id="pDots"><i></i><i></i><i></i><i></i></div>
+  <div class="keys" id="pKeys"></div>
+  <div class="err" id="pErr"></div>
+</section>
+<section class="pair" id="pNone" hidden>
+  <div class="kick">The Chairman's device</div>
+  <div class="t" style="font-size:24px">Not paired</div>
+  <p class="muted">On the iPad, open the Chairman's controls and choose <b>Chairman's device</b>. Scan its code with this device's camera.</p>
+</section>
+
+<!-- THE APP -->
+<div class="wrap" id="app" hidden>
+  <div class="top">
+    <div class="yr"><div class="t" id="tYear">Year One</div><div class="st"><span class="dot" id="tDot"></span><span id="tStat">Reaching the clock…</span></div></div>
+    <div class="cd" id="tCd">–</div>
+  </div>
+
+  <!-- THE CALL -->
+  <section class="tab on" id="tabPort">
+    <div class="box">
+      <h3>In Port</h3>
+      <div class="row" style="justify-content:space-between"><div class="big" id="pSeat">–</div><label class="muted"><input type="checkbox" id="pFollow" checked> Follow the clock</label></div>
+      <div class="seats" id="pSeats" style="margin-top:10px"></div>
+    </div>
+    <div class="box" id="bxCheck"><h3>The In-Hand check</h3><div id="pCheck"></div></div>
+    <div class="box"><h3>The Cardinal Rule</h3><div id="pShip"></div></div>
+    <div class="box"><h3>This year</h3><div id="pDuty"></div></div>
+    <div class="box" id="bxDraw"><h3>At the Iron Gate · the draw</h3><div id="pDraw"></div></div>
+  </section>
+
+  <!-- THE CLOCK -->
+  <section class="tab" id="tabClock">
+    <div class="box"><h3>Order of Access</h3><div class="order" id="cOrder"></div><p class="muted" id="cInfo" style="margin-top:8px"></p></div>
+    <div class="ctl">
+      <button class="btn" id="kPause">Pause</button><button class="btn" id="kPlus">+30 seconds</button>
+      <button class="btn ghost" id="kSkip">Next Call</button><button class="btn ghost" id="kRestart">Restart this Call</button>
+      <button class="btn ghost" id="kShorter">Calls −15 s</button><button class="btn ghost" id="kLonger">Calls +15 s</button>
+      <button class="btn wide" id="kOpen">Open the year (Herald absent)</button>
+      <button class="btn red wide" id="kEnd">End the year now</button>
+    </div>
+    <p class="muted" style="margin-top:10px" id="kNote"></p>
+  </section>
+
+  <!-- THE LEDGER -->
+  <section class="tab" id="tabLedger">
+    <div class="box"><h3>Cards handed at the Iron Gate</h3><div style="overflow-x:auto"><table class="lg" id="lTable"></table></div>
+      <p class="muted" style="margin-top:8px">P = penalty year (no card). Tap a cell to change it.</p></div>
+  </section>
+
+  <!-- THE IRON PACTS -->
+  <section class="tab" id="tabPacts">
+    <div class="box"><h3>Record an Iron Pact</h3>
+      <p class="muted">Declared by handshake in the Port. One binding handshake each; validity is decided at the Great Reveal.</p>
+      <div class="row" style="margin-top:10px"><select id="aA"></select><span class="t">&amp;</span><select id="aB"></select><button class="btn" id="aAdd">Record</button></div>
+      <div class="err" id="aErr"></div>
+      <div id="aList"></div>
+    </div>
+  </section>
+
+  <!-- RULINGS -->
+  <section class="tab" id="tabRules"><div id="rList"></div></section>
+</div>
+
+<nav class="tabs" id="tabs" hidden>
+  <button class="on" data-tab="tabPort">The Call</button><button data-tab="tabClock">Clock</button>
+  <button data-tab="tabLedger">Ledger</button><button data-tab="tabPacts">Pacts</button><button data-tab="tabRules">Rulings</button>
+</nav>
+
+<!-- card picker for the draw and the ledger -->
+<div class="pair" id="pick" hidden style="position:fixed;inset:0;z-index:20;background:#0d0703;display:block;overflow-y:auto;text-align:left;padding:calc(env(safe-area-inset-top) + 12px) 14px 30px">
+  <div class="row" style="justify-content:space-between"><div><div class="kick">Record the card</div><div class="t" id="pkT">Warehouse</div></div><button class="btn ghost" id="pkX">Cancel</button></div>
+  <div id="pkB"></div>
+</div>
+
+<script src="../shared/link.js"></script>
+<script>
+{
+const $ = id => document.getElementById(id);
+const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
+const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
+const CARDS = ['trade-agriculture','trade-medicine','influence-agriculture','influence-medicine','ore-weaponry','ore-currency','gold-weaponry','gold-currency',
+  'food-agriculture','food-literacy','citizens-agriculture','citizens-literacy','timber-literacy','timber-weaponry','textile-literacy','textile-weaponry',
+  'oil-currency','oil-medicine','exotics-currency','exotics-medicine','boom-time','theft','espionage','war','depression','fire'];
+const FIRE = 25;
+const img = c => c < 21 ? '../join/cards/' + CARDS[c] + '.jpg' : 'img/' + CARDS[c] + '.jpg';
+const nameOf = c => CARDS[c].split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' · ').replace('Fire', 'FIRE!');
+const GROUPS = [['Ocean', [0,1,2,3]], ['Mountain', [4,5,6,7]], ['Fields', [8,9,10,11]], ['Forest', [12,13,14,15]], ['Desert', [16,17,18,19]],
+  ['Boom Time', [20]], ['Calamities', [21,22,23,24,25]]];
+
+/* ---------- pairing: the code from the iPad, then the PIN; the first device to pair is locked to the Decade ---------- */
+const hash = new URLSearchParams(location.hash.slice(1));
+let C = store.get('ie-chair');
+if (hash.get('c') && (!C || C.ckey !== hash.get('c'))) { C = { ckey: hash.get('c'), dev: (C && C.dev) || IE.Link.newId(), paired: false }; store.set('ie-chair', C); }
+if (hash.get('c')) history.replaceState(null, '', location.pathname + location.search);
+let LINK = null, ST = null, stAt = 0, waitPair = null;
+const D = () => store.get('ie-chair-data-' + (C && C.ckey)) || { L: {}, K: {}, P: [], at: 0 };   // L ledger, K checks, P pacts
+const saveD = d => { d.at = Date.now(); store.set('ie-chair-data-' + C.ckey, d); backupSoon(); };
+
+async function bakKey(pin){ const raw = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ie-cbak|' + C.ckey + '|' + pin));
+  return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt','decrypt']); }
+const b64 = { to: b => btoa(String.fromCharCode(...new Uint8Array(b))), from: s => Uint8Array.from(atob(s), c => c.charCodeAt(0)) };
+let BK = null;   // the backup key: made from the Chairman's code and PIN, kept on this device only
+async function seal(obj){ const iv = crypto.getRandomValues(new Uint8Array(12)); const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, BK, new TextEncoder().encode(JSON.stringify(obj))); return b64.to(new Uint8Array([...iv, ...new Uint8Array(ct)])); }
+async function unseal(s){ const b = b64.from(s); return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name:'AES-GCM', iv: b.slice(0,12) }, BK, b.slice(12)))); }
+let bakT = null;
+function backupSoon(){ clearTimeout(bakT); bakT = setTimeout(async () => { if (!LINK || !BK) return; LINK.send({ t: 'backup', dev: C.dev, blob: await seal(D()) }); }, 1200); }
+
+async function proof(pin){ const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ie-chair|' + C.ckey + '|' + pin)); return Array.from(new Uint8Array(d), x => x.toString(16).padStart(2,'0')).join(''); }
+function onLink(m){
+  if (m.t === 'paired' && waitPair && m.nonce === waitPair.nonce) { const w = waitPair; waitPair = null; w.done(m); }
+  if (m.t === 'state') { if (ST && m._at && ST._at && m._at < ST._at) return; ST = m; stAt = (m._at && Math.abs(Date.now() - m._at) < 5000) ? m._at : Date.now(); render(); }
+}
+async function connect(){
+  if (LINK || !C) return;
+  LINK = await IE.Link.open(C.ckey, onLink, { since: '2m', onStatus: st => { render(); if (st === 'live' && C.paired) LINK.send({ t: 'hello', dev: C.dev }); } });
+}
+let pinBuf = '';
+$('pKeys').innerHTML = [1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => k === '' ? '<span></span>' : `<button class="btn ${k === '⌫' ? 'ghost' : ''}" data-k="${k}">${k}</button>`).join('');
+const dots = () => [...$('pDots').children].forEach((d, i) => d.classList.toggle('f', i < pinBuf.length));
+$('pKeys').addEventListener('click', async e => {
+  const k = e.target.dataset && e.target.dataset.k; if (k === undefined) return;
+  if (k === '⌫') pinBuf = pinBuf.slice(0, -1); else if (pinBuf.length < 4) pinBuf += k;
+  dots(); if (pinBuf.length < 4) return;
+  const pin = pinBuf; $('pErr').textContent = 'The clock checks your PIN…';
+  await connect();
+  const nonce = IE.Link.newId(), pr = await proof(pin);
+  const r = await new Promise(res => { let n = 0; waitPair = { nonce, done: res };
+    const send = () => { if (!waitPair || waitPair.nonce !== nonce) return; if (n++ >= 5) { waitPair = null; res({ ok: false, why: 'timeout' }); return; }
+      LINK.send({ t: 'pair', dev: C.dev, proof: pr, nonce }); setTimeout(send, 4000); }; send(); });
+  if (r.ok) {
+    BK = await bakKey(pin); C.paired = true; C.bk = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ie-cbak|' + C.ckey + '|' + pin))));
+    store.set('ie-chair', C);
+    if (r.blob) { try { const b = await unseal(r.blob); if (b && b.at > D().at) store.set('ie-chair-data-' + C.ckey, b); } catch(e){} }
+    start(); return;
+  }
+  pinBuf = ''; dots(); $('pDots').classList.remove('shake'); void $('pDots').offsetWidth; $('pDots').classList.add('shake');
+  $('pErr').textContent = { pin: 'That is not the Chairman\'s PIN.', locked: 'This Decade already has a Chairman\'s device. Release it in the iPad\'s Chairman\'s controls first.',
+    timeout: 'The clock did not answer. Is the iPad showing the Port clock?' }[r.why] || 'The clock refused.';
+});
+
+/* ---------- the app ---------- */
+async function start(){
+  $('pPair').hidden = true; $('pNone').hidden = true; $('app').hidden = false; $('tabs').hidden = false;
+  if (!BK && C.bk) BK = await crypto.subtle.importKey('raw', new Uint8Array(C.bk), 'AES-GCM', false, ['encrypt','decrypt']);
+  await connect(); LINK.send({ t: 'hello', dev: C.dev });
+  try { if ('wakeLock' in navigator) navigator.wakeLock.request('screen'); } catch(e){}
+  renderRules(); render();
+}
+if (!C) $('pNone').hidden = false;
+else if (!C.paired) { $('pPair').hidden = false; connect(); }
+else start();
+
+document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === b.dataset.tab)); render(); window.scrollTo(0, 0);
+}));
+
+const players = () => (ST && ST.players) || 6;
+const year = () => (ST ? Math.min(ST.year, 10) : 1);
+const leftNow = () => !ST ? 0 : ST.paused ? ST.left : Math.max(0, ST.left - (Date.now() - stAt)/1000);
+const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s/60) + ':' + String(s % 60).padStart(2, '0'); };
+let seat = 0, follow = true;
+$('pFollow').addEventListener('change', e => { follow = e.target.checked; render(); });
+$('pSeats').addEventListener('click', e => { const n = +e.target.dataset.s; if (!n) return; seat = n; follow = false; $('pFollow').checked = false; render(); });
+
+function render(){
+  if ($('app').hidden) return;
+  const live = LINK && LINK.status === 'live';
+  $('tDot').classList.toggle('live', !!live);
+  const y = year();
+  $('tYear').textContent = ST ? (ST.phase === 'done' ? 'The Decade is over' : 'Year ' + WORDS[y]) : 'The Chairman';
+  let st = !live ? 'Reaching the clock…' : !ST ? 'Waiting for the clock' : ST.paused ? 'Paused' : ST.phase === 'settle' ? 'Settling · first: ' + (ST.order || [])[0]
+    : ST.phase === 'call' ? 'In Port: ' + ST.inPort + (ST.idx < ST.players - 1 ? ' · next: ' + ST.order[ST.idx + 1] : ' · last Call') : ST.phase === 'locked' ? 'Waiting for the Herald to open the year' : '';
+  $('tStat').textContent = st;
+  const open = ST && (ST.phase === 'call' || ST.phase === 'settle');
+  $('tCd').textContent = open ? fmt(leftNow()) : '–'; $('tCd').classList.toggle('late', open && ST.phase === 'call' && leftNow() <= 30);
+  if (follow && ST && ST.phase === 'call' && ST.inPort) seat = ST.inPort;
+  if (!seat && ST && (ST.order || []).length) seat = ST.order[0];
+  renderPort(); renderClock(); renderLedger(); renderPacts();
+}
+setInterval(() => { if (ST && !ST.paused && (ST.phase === 'call' || ST.phase === 'settle')) { $('tCd').textContent = fmt(leftNow()); $('tCd').classList.toggle('late', ST.phase === 'call' && leftNow() <= 30); } }, 250);
+
+/* ---------- the Call ---------- */
+function renderPort(){
+  const n = players(), y = year(), d = D();
+  $('pSeat').textContent = seat ? 'Warehouse ' + seat : '–';
+  $('pSeats').innerHTML = Array.from({length: n}, (_, i) => i + 1).map(s => `<button data-s="${s}" class="${s === seat ? 'on' : ''} ${ST && ST.phase === 'call' && ST.inPort === s ? 'port' : ''}">${s}</button>`).join('');
+  if (!seat) return;
+  const L = d.L[seat] || [], K = d.K[seat] || [];
+  // the In-Hand check: the card handed at the Iron Gate at their last Call
+  let h = '';
+  const prev = y > 1 ? L[y - 2] : undefined, chk = K[y - 1];
+  if (y === 1) h = '<p class="muted">Year One: they arrive empty-handed. Take their Order Pass; fix the Pin in silence.</p>';
+  else if (prev === undefined || prev === null) h = '<p class="muted">No card was recorded at their last Call. Check by memory or the paper ledger.</p>';
+  else if (prev === 'P') h = '<p class="muted">No In-Hand card: last year was a penalty year, and no card was given.</p>';
+  else if (prev === FIRE) h = '<p class="muted">No In-Hand card: FIRE! took it last year.</p>';
+  else h = `<div class="exp"><img class="card" src="${img(prev)}" alt=""><div><div class="muted">They should be holding</div><div class="t" style="font-size:17px">${nameOf(prev)}</div>
+    <p class="muted" style="font-size:14px;margin-top:4px">Theft or Espionage may already have been played from the hand.</p></div></div>
+    <div class="row" style="margin-top:10px"><button class="btn ${chk === 'ok' ? '' : 'ghost'}" id="ckOk">✓ It matches</button><button class="btn ${chk === 'bad' ? 'red' : 'ghost'}" id="ckBad">✗ Wrong or missing</button></div>`;
+  if (chk === 'bad') h += `<div class="pen"><b>The In-Hand penalty</b><p>Confiscate the card they show and remove it from the game. This year they may <b>not</b> Ship Through and may <b>not</b> ship from the Warehouse. Production only. <b>No new card</b> at the Iron Gate.</p></div>`;
+  $('pCheck').innerHTML = h;
+  if ($('ckOk')) { $('ckOk').onclick = () => setCheck('ok'); $('ckBad').onclick = () => setCheck('bad'); }
+  // the Cardinal Rule
+  const to = Array.from({length: n}, (_, i) => i + 1).filter(s => s % 2 !== seat % 2);
+  $('pShip').innerHTML = y >= 10 ? '<p class="muted">Year Ten: no Ship Through and no shipping.</p>' : chk === 'bad' ? '<p class="muted">Penalty year: no shipping at all.</p>'
+    : `<p class="muted">${seat % 2 ? 'Odd' : 'Even'} ships only to ${seat % 2 ? 'Even' : 'Odd'}, never to its own Warehouse:</p><div class="ship">${to.map(s => `<span class="${s % 2 ? '' : 'even'}">${s}</span>`).join('')}</div>`
+      + (y === 1 ? '<p class="muted" style="margin-top:6px">Year One: never explain. Refuse with only, “The conveyors will not carry that.”</p>' : '');
+  // this year's duties
+  const duty = y === 1 ? 'Ship Through, open the Warehouse, the draw. Take the Order Pass and fix the Pin in silence.'
+    : y < 5 ? 'Ship Through, open the Warehouse, the draw.'
+    : y === 5 ? 'Ship Through, open the Warehouse, then the <b>Production Line: place 5 cards</b> (or all they have), Land-side up, in order. Then the draw.'
+    : y < 10 ? 'Ship Through, open the Warehouse, then <b>place exactly 1 card</b> in the Production Line. Then the draw.' + (y === 9 ? ' <b>The last draw of the Decade.</b>' : '')
+    : '<b>No Ship Through, no shipping.</b> Open the Warehouse; the In-Hand card goes inside. Place <b>1 compulsory</b> card, then any optional cards. <b>No draw.</b>';
+  $('pDuty').innerHTML = `<p>${duty}</p>` + (y >= 6 ? '<p class="muted" style="margin-top:6px">No legal card? Check the Warehouse yourself; if it holds no Resource or Boom Time, none is placed and there is no penalty.</p>' : '');
+  // the draw
+  const cur = L[y - 1];
+  let dr = '';
+  if (y >= 10) dr = '<p class="muted">Year Ten: no draw.</p>';
+  else if (chk === 'bad' || cur === 'P') dr = '<p class="muted">Penalty year: no new card.</p>';
+  else if (cur !== undefined && cur !== null) dr = `<div class="exp"><img class="card" src="${img(cur)}" alt=""><div><div class="muted">Handed over</div><div class="t" style="font-size:17px">${nameOf(cur)}</div>
+      ${cur === FIRE ? '<p class="muted" style="font-size:14px">FIRE! goes straight into the Warehouse. They leave with no In-Hand card.</p>' : ''}
+      <button class="btn ghost" style="margin-top:8px" id="drCh">Change</button></div></div>`;
+  else dr = '<p class="muted">As they leave, hand them the top card at the Iron Gate, then record it.</p><button class="btn" style="margin-top:8px" id="drRec">Record the card</button>';
+  $('pDraw').innerHTML = dr;
+  const openPick = () => pick('Warehouse ' + seat + ' · Year ' + WORDS[y], c => { const d2 = D(); (d2.L[seat] = d2.L[seat] || [])[y - 1] = c; saveD(d2); render(); });
+  if ($('drRec')) $('drRec').onclick = openPick; if ($('drCh')) $('drCh').onclick = openPick;
+}
+function setCheck(v){ const d = D(), y = year(); (d.K[seat] = d.K[seat] || [])[y - 1] = v;
+  const L = (d.L[seat] = d.L[seat] || []); if (v === 'bad') L[y - 1] = 'P'; else if (L[y - 1] === 'P') L[y - 1] = null;
+  saveD(d); render(); }
+
+/* the card picker */
+let pickCb = null;
+function pick(title, cb){
+  pickCb = cb; $('pkT').textContent = title;
+  $('pkB').innerHTML = GROUPS.map(([g, cs]) => `<div class="land">${g}</div><div class="grid">${cs.map(c => `<button data-c="${c}"><img loading="lazy" src="${img(c)}" alt="${nameOf(c)}"></button>`).join('')}</div>`).join('')
+    + '<div class="land">Other</div><div class="row"><button class="btn ghost" data-c="P">P · penalty year, no card</button><button class="btn ghost" data-c="X">Clear</button></div>';
+  $('pick').hidden = false; $('pick').scrollTop = 0;
+}
+$('pkB').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const v = b.dataset.c;
+  $('pick').hidden = true; if (pickCb) pickCb(v === 'P' ? 'P' : v === 'X' ? null : +v); });
+$('pkX').addEventListener('click', () => { $('pick').hidden = true; });
+
+/* ---------- the clock remote ---------- */
+const cmd = op => { if (LINK) LINK.send({ t: 'cmd', dev: C.dev, op }); };
+$('kPause').onclick = () => cmd('pause'); $('kPlus').onclick = () => cmd('plus'); $('kSkip').onclick = () => cmd('skip'); $('kRestart').onclick = () => cmd('restart');
+$('kShorter').onclick = () => cmd('shorter'); $('kLonger').onclick = () => cmd('longer'); $('kOpen').onclick = () => cmd('open');
+let endAsk = 0;
+$('kEnd').onclick = () => { if (Date.now() - endAsk < 4000) { endAsk = 0; cmd('endyear'); $('kEnd').textContent = 'End the year now'; } else { endAsk = Date.now(); $('kEnd').textContent = 'Tap again to end the year'; setTimeout(() => $('kEnd').textContent = 'End the year now', 4000); } };
+function renderClock(){
+  const run = ST && (ST.phase === 'call' || ST.phase === 'settle');
+  ['kPause','kPlus','kSkip','kRestart','kEnd'].forEach(id => $(id).disabled = !run);
+  $('kOpen').disabled = !(ST && ST.phase === 'locked');
+  $('kPause').textContent = ST && ST.paused ? 'Resume' : 'Pause';
+  $('kSkip').textContent = ST && ST.phase === 'settle' ? 'Begin Call 1 now' : 'Next Call';
+  const o = (ST && run) ? ST.order : [];
+  $('cOrder').innerHTML = o.length ? o.map((n, i) => `<span class="${ST.phase === 'call' && i < ST.idx ? 'done' : ''} ${ST.phase === 'call' && i === ST.idx ? 'cur' : ''} ${(ST.phase === 'settle' ? i === 0 : i === ST.idx + 1) ? 'nxt' : ''}">${n}</span>`).join('') : '<span class="muted" style="width:auto;border:0">Drawn when the year opens</span>';
+  $('cInfo').textContent = ST ? 'Calls last ' + fmt(ST.callSec) + ' · ' + ST.players + ' players · ' + (ST.joined || 0) + ' phones reported' : '';
+  $('kNote').textContent = 'The Herald opens each year with the Herald\'s PIN. Use “Open the year” only if the Herald is absent.';
+}
+
+/* ---------- the ledger ---------- */
+function renderLedger(){
+  const n = players(), d = D();
+  let h = '<tr><th>Wh</th>' + Array.from({length: 9}, (_, i) => `<th>${i + 1}</th>`).join('') + '</tr>';
+  for (let s = 1; s <= n; s++) {
+    h += `<tr><th>${s}</th>` + Array.from({length: 9}, (_, i) => { const v = (d.L[s] || [])[i];
+      return `<td data-s="${s}" data-y="${i + 1}">${v === 'P' ? '<span class="p">P</span>' : (v === undefined || v === null) ? '' : `<img src="${img(v)}" alt="${nameOf(v)}">`}</td>`; }).join('') + '</tr>';
+  }
+  $('lTable').innerHTML = h;
+}
+$('lTable').addEventListener('click', e => { const td = e.target.closest('td'); if (!td) return; const s = +td.dataset.s, y = +td.dataset.y;
+  pick('Warehouse ' + s + ' · Year ' + WORDS[y], c => { const d = D(); (d.L[s] = d.L[s] || [])[y - 1] = c; saveD(d); render(); }); });
+
+/* ---------- the Iron Pacts ---------- */
+function renderPacts(){
+  const n = players(), opt = Array.from({length: n}, (_, i) => `<option>${i + 1}</option>`).join('');
+  if ($('aA').options.length !== n) { $('aA').innerHTML = opt; $('aB').innerHTML = opt; $('aB').value = '2'; }
+  const P = D().P;
+  $('aList').innerHTML = P.length ? P.map((p, i) => `<div class="pact"><b>${p.a}</b><span class="t">&amp;</span><b>${p.b}</b><span class="muted" style="flex:1">Year ${WORDS[p.y] || p.y}</span><button class="btn ghost" data-i="${i}" style="min-height:40px">✕</button></div>`).join('')
+    : '<p class="muted" style="margin-top:10px">No Iron Pacts recorded.</p>';
+}
+$('aAdd').onclick = () => {
+  const a = +$('aA').value, b = +$('aB').value, d = D();
+  if (a === b) { $('aErr').textContent = 'A Warehouse cannot shake its own hand.'; return; }
+  const used = d.P.find(p => p.a === a || p.b === a || p.a === b || p.b === b);
+  if (used) { $('aErr').textContent = 'Each Industrialist has one binding handshake only. ' + (used.a === a || used.b === a ? a : b) + ' already has one.'; return; }
+  $('aErr').textContent = ''; d.P.push({ a: Math.min(a, b), b: Math.max(a, b), y: year() }); saveD(d); render();
+};
+$('aList').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const d = D(); d.P.splice(+b.dataset.i, 1); saveD(d); render(); });
+
+/* ---------- quick rulings ---------- */
+const RULES = [
+  ['The In-Hand check', 'Missing or wrong makes no difference. The wrong card is confiscated and removed from the game. That year: no Ship Through, no shipping from the Warehouse; production only; no new In-Hand card.'],
+  ['The Cardinal Rule', 'Odd ships only to Even, Even only to Odd, never to its own Warehouse. Applies from the first shipment. In Year One it is never explained: “The conveyors will not carry that.”'],
+  ['Theft', 'Played during Ship Through, from hand or their own Landside, onto one opposite-parity Landside. They take one card blind (by its Land back); it goes to their own Landside, usable next year. On an empty Landside nothing is stolen. The victim may play it on their own turn; if their turn has passed, it is swept into their Warehouse. Stuck in a Warehouse: −1.'],
+  ['Espionage', 'Played from hand on their own turn, before Ship Through, by showing it to you. They see one other Warehouse\'s Landside or Production Line face side. Then it is discarded. Stuck in a Warehouse: no penalty.'],
+  ['FIRE!', 'Arrives only as the end-of-Call draw: straight into the Warehouse; they leave with no In-Hand card. It never moves. No points penalty.'],
+  ['War and Depression', 'Move by hand or Landside like any card; once inside a Warehouse they never move. At scoring: War −2 (+2 for Weapons Manufacture), Depression −3.'],
+  ['The Production Line', 'Land-side up, in order, permanent. Legal: Resources and Boom Time; never Force Majeure. Year Five: 5 cards. Years Six to Nine: exactly 1. Year Ten: 1 compulsory, then any optional. No legal card: check the Warehouse; none placed, no penalty.'],
+  ['Landsides and the sweep', 'Cards on a Landside are never usable in the year they arrive. After the last Call you alone move every Landside into its Warehouse.'],
+  ['The draw', 'Hand the top card over at the Iron Gate as they leave, so they never see the card beneath. The top card\'s Land may be seen inside Ironreach.'],
+  ['Counsel', 'In the Chamber you speak only for all to hear. A private question may be put in the Port, on their own Call; answer at your discretion: “Is this allowed?”, never “Is this wise?”'],
+  ['The Silent Procession', 'Silence, hands at rest, keep walking. An offender is sent back alone; the Herald names them on the return.'],
+  ['Iron Pacts', 'One binding handshake each, open declarations in any order until you close the ledger. Both partners receive the combined total after calamities; if either is at 0, both score 0.'],
+  ['The Brass Torch', 'Iron Pact partners at the top share it. An individual beats an equal Pact. Individuals tied: fewest cards (Warehouse + Production Line), then a show of hands by the others; you do not vote.']];
+function renderRules(){ $('rList').innerHTML = RULES.map(([t, p]) => `<details><summary>${t}</summary><p>${p}</p></details>`).join(''); }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && LINK && C && C.paired) LINK.send({ t: 'hello', dev: C.dev }); });
+}
+</script>
+</body>
+</html>
