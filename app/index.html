@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="2.1">
+<meta name="ie-revision" content="2.2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -331,7 +331,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '2.1';
+const REV = '2.2';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -456,31 +456,45 @@ function drawScale(T){
 $('gScrews').innerHTML = [20,80,140,200,260,320].map(a=>{ const [x,y]=P(93.6,a);
   return `<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${a*1.7})"><circle r="2.6" fill="url(#gBrass)" stroke="#2a1606" stroke-width=".6"/><path d="M-1.8 0 h3.6" stroke="#2a1606" stroke-width=".8"/></g>`; }).join('');
 const stepOf = T => T > 300 ? 10 : 5;
-let gA = null;
+let gA = null, gKey = '', gBusy = false;
+const rot = x => `rotate(${x}deg)`;
+function needleStep(n, from, to){
+  const d = Math.sign(to - from) || -1;
+  n.style.transition = 'none';
+  if (n.animate) n.animate([
+    { transform: rot(from) },
+    { transform: rot(from - d*2.6), offset: .22, easing: 'cubic-bezier(.2,0,.4,1)' },
+    { transform: rot(to + d*3.2), offset: .55, easing: 'cubic-bezier(.3,0,.6,1)' },
+    { transform: rot(to - d*1.1), offset: .74 },
+    { transform: rot(to + d*.4), offset: .88 },
+    { transform: rot(to) }
+  ], { duration: 520, easing: 'linear' });
+  n.style.transform = rot(to);
+}
+function needleSweep(n, to, secs){ n.style.transition = `transform ${secs}s cubic-bezier(.45,0,.25,1)`; n.style.transform = rot(to); }
 function gaugeSet(left, T){
   if (T !== gT) drawScale(T);
-  const st = stepOf(T), q = Math.min(T, Math.ceil(Math.max(0,left)/st - 1e-6)*st);
+  const st = stepOf(T), stepDeg = 270*st/T;
+  const q = Math.min(T, Math.ceil(Math.max(0,left)/st - 1e-6)*st);
   const a = +(-135 + 270*q/T).toFixed(2);
-  if (a !== gA) {
-    const n = $('gNeedle');
-    if (gA === null || Math.abs(a-gA) > 20 || !n.animate) {
-      n.style.transition = 'transform .9s cubic-bezier(.45,0,.2,1)';
-      n.style.transform = `rotate(${a}deg)`;
-    } else {
-      const d = Math.sign(a - gA), r = x => `rotate(${x}deg)`;
-      n.style.transition = 'none';
-      n.animate([
-        { transform: r(gA) },
-        { transform: r(gA - d*2.6), offset: .22, easing: 'cubic-bezier(.2,0,.4,1)' },
-        { transform: r(a + d*3.2), offset: .55, easing: 'cubic-bezier(.3,0,.6,1)' },
-        { transform: r(a - d*1.1), offset: .74 },
-        { transform: r(a + d*.4), offset: .88 },
-        { transform: r(a) }
-      ], { duration: 520, easing: 'linear' });
-      n.style.transform = r(a);
-    }
-    gA = a;
+  const key = S.year + ':' + S.idx + ':' + (isSettle() ? 's' : 'c');
+  const n = $('gNeedle');
+  if (gBusy) { gKey = key; return; }
+  if (gA === null) { needleSweep(n, a, .9); gA = a; gKey = key; return; }
+  if (key !== gKey && a > gA) {
+    // a new Call: tick down to the last mark, then sweep back to the start while the horn blows
+    gKey = key; gBusy = true;
+    const zero = -135, wait = gA > zero + .01 ? 700 : 80;
+    if (gA > zero + .01) needleStep(n, gA, zero);
+    gA = zero;
+    setTimeout(()=>{ needleSweep(n, a, 3.6); gA = a; setTimeout(()=>{ gBusy = false; }, 3700); }, wait);
+    return;
   }
+  gKey = key;
+  if (a === gA) return;
+  if (Math.abs(a - gA) <= stepDeg*1.5) needleStep(n, gA, a);
+  else needleSweep(n, a, .9);
+  gA = a;
 }
 function applyDial(){
   document.body.classList.toggle('dial-gauge', S.dial==='gauge');

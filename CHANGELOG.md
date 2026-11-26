@@ -8,6 +8,7 @@ Every update to the apps gets a revision number. The Year Clock shows its revisi
 
 | Rev | Date | Changes |
 |---|---|---|
+| 2.2 | 26 Nov 2026 | Steam gauge: the mechanical step now also works during the settling minute; at the end of every Call (and of the settling minute) the needle ticks down to the last mark at zero, then sweeps back to the start while the whistle blows |
 | 2.1 | 26 Nov 2026 | Steam gauge only: digital time window removed and the In Port number plate moved up into its place; no numbers on the marks except the timer setting (e.g. 3:00, or 1:00 while settling) at the start of the scale; "IRONREACH CLOCK" and *Time is of the Essence* set much larger below the hub (Brasshaven Works removed); mechanical needle step: a kick back, a jump past the new mark, and a settle |
 | 2.0 | 26 Nov 2026 | New layout: Order of Access tokens staggered in a zigzag down the left (all 10 fit), clock right of centre and as large as the screen allows; at 30 s a large red panel over the left side reads "Stand ready at the Iron Gate" with the next number flashing; steam gauge needle steps every 5 s like an old station clock (10 s on Calls over 5 minutes), no shake, with a mark for every step; player number moved up inside the plate; "MINUTES" replaced by *Time is of the Essence* (Brasshaven Works kept). Applies to both dials |
 | 1.6 | 26 Nov 2026 | Revision numbers on every screen; CHANGELOG; update notice on the setup screen; cache-busting link from the site root |
