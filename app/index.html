@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="3.0">
+<meta name="ie-revision" content="3.1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -175,6 +175,10 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 @keyframes flick{to{transform:translateX(-50%) scale(1.06,.94) rotate(2deg)}}
 .reg .sparks i{position:absolute;width:6px;height:6px;border-radius:50%;background:#ffd27a;box-shadow:0 0 10px #ffb84a;animation:spark 2.4s linear infinite;opacity:0}
 @keyframes spark{0%{opacity:0;transform:translateY(0)}10%{opacity:1}100%{opacity:0;transform:translateY(-70vh) translateX(var(--dx))}}
+.paired{font:700 20px "Cinzel",serif;color:#2a1606;background:linear-gradient(#f6dc96,#c99a45);border:2px solid #3b210b;border-radius:10px;padding:8px 18px;animation:arrive .9s cubic-bezier(.2,1.4,.4,1)}
+#oChair .qr.done{opacity:.25;filter:grayscale(1)}
+#oChair .jbox{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;max-height:100%;overflow:auto;padding:12px}
+#oChair .row{display:flex;gap:12px;justify-content:center}
 /* pin pad */
 .overlay{position:fixed;inset:0;background:rgba(10,5,2,.82);display:none;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
 .overlay.on{display:flex}
@@ -274,6 +278,7 @@ body.dial-gauge .steam{display:block}
   </div>
   <div class="plaque brass" id="lCue"><div class="t">The Herald's cue</div><p id="lCueText"></p></div>
   <button class="brass" id="bUnlock" style="margin-top:1vh">Herald: open the year</button>
+  <button class="ghost" id="bChairDev" style="min-height:44px;font-size:15px">Chairman's device</button>
 </section>
 
 <!-- RUNNING -->
@@ -389,11 +394,13 @@ body.dial-gauge .steam{display:block}
 <!-- CHAIRMAN'S DEVICE -->
 <div class="overlay" id="oChair">
   <div class="jbox">
-    <div class="kick">For the Chairman's eyes only</div>
+    <div class="kick" id="chKick">For the Chairman's eyes only</div>
     <div class="t" style="font-size:26px">The Chairman's device</div>
+    <div class="paired" id="chOk" hidden>✓ Paired and locked to this Decade</div>
     <div class="qr big" id="chQr" style="width:min(44vh,400px)"></div>
     <p class="sub" id="chTxt"></p>
     <div class="row"><button class="ghost" id="chRelease">Release the Chairman's device</button><button class="brass" id="chClose">Close</button></div>
+    <button class="ghost" id="chSkip" hidden style="min-height:44px;font-size:15px">Pair it later (Chairman's controls)</button>
   </div>
 </div>
 
@@ -424,7 +431,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '3.0';
+const REV = '3.1';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -632,6 +639,7 @@ $('bOpen').addEventListener('click',()=>{
   if (!/^\d{4}$/.test(p) || !/^\d{4}$/.test(h)) { $('setupErr').textContent = 'Choose a four-digit PIN for the Chairman and one for the Herald.'; return; }
   if (p === h) { $('setupErr').textContent = 'The Chairman and the Herald need different PINs.'; return; }
   audio(); S.pin = p; S.hpin = h; S.phase='locked'; S.order=[]; S.idx=0; newGame(); save(); render(); keepAwake();
+  setTimeout(() => showChair(true), 300);   // setup, step 2: pair the Chairman's device straight away
 });
 
 /* ---------- locked ---------- */
@@ -876,7 +884,7 @@ async function onChair(m){
   if (m.t === 'pair') {
     const ok = m.proof === await pinProof(S.pin);
     let why = ''; if (!ok) why = 'pin'; else if (S.cdev && S.cdev !== m.dev) why = 'locked';
-    if (!why) { S.cdev = m.dev; save(); renderChair(); }
+    if (!why) { S.cdev = m.dev; save(); renderChair(); if ($('oChair').classList.contains('on')) clank(0, .8); }
     CLINK.send({ t: 'paired', dev: m.dev, nonce: m.nonce, ok: !why, why, blob: !why ? (S.cblob || '') : '' });
     if (!why) stateSoon(true);
     return;
@@ -894,16 +902,26 @@ async function onChair(m){
     stateSoon(true);
   }
 }
+let chSetup = false;   // true while the pairing step of the setup is showing
 function renderChair(){
   if (!S.ckey) return;
   const url = new URL('../chair/', location.origin + location.pathname).href + '#c=' + S.ckey;
   if ($('chQr').dataset.url !== url) { $('chQr').innerHTML = IE.QR.svg(url, { margin: 2, dark: '#2a1606', light: '#f3e3bd' }); $('chQr').dataset.url = url; }
-  $('chTxt').textContent = S.cdev ? 'A Chairman\'s device is paired and locked to this Decade. To move to another device, release it first.'
-                                  : 'Scan with the Chairman\'s phone or iPad, then enter the Chairman\'s PIN on it. The first device to pair is locked to this Decade.';
-  $('chRelease').style.display = S.cdev ? '' : 'none';
+  $('chKick').textContent = chSetup ? 'Setup · step 2 of 2 · for the Chairman\'s eyes only' : 'For the Chairman\'s eyes only';
+  $('chOk').hidden = !S.cdev; $('chQr').classList.toggle('done', !!S.cdev);
+  $('chTxt').textContent = S.cdev ? (chSetup ? 'The Chairman\'s device is ready. Continue to the Decade.' : 'To move to another device, release this one first.')
+                                  : 'Scan with the Chairman\'s phone or iPad camera, then enter the Chairman\'s PIN on it. The first device to pair is locked to this Decade.';
+  $('chRelease').style.display = S.cdev && !chSetup ? '' : 'none';
+  $('chClose').textContent = chSetup ? (S.cdev ? 'Continue' : 'Waiting for the Chairman\'s device…') : 'Close';
+  $('chClose').disabled = chSetup && !S.cdev;
+  $('chSkip').hidden = !chSetup || !!S.cdev;
 }
-$('mChair').addEventListener('click', () => { closeMenu(); renderChair(); $('oChair').classList.add('on'); });
-$('chClose').addEventListener('click', () => $('oChair').classList.remove('on'));
+function showChair(setup){ chSetup = !!setup; renderChair(); $('oChair').classList.add('on'); }
+$('mChair').addEventListener('click', () => { closeMenu(); showChair(false); });
+$('bChairDev').addEventListener('click', () => askPin("Chairman's device", () => showChair(false)));
+const closeChair = () => { $('oChair').classList.remove('on'); chSetup = false; };
+$('chClose').addEventListener('click', closeChair);
+$('chSkip').addEventListener('click', closeChair);
 $('chRelease').addEventListener('click', () => { S.cdev = ''; save(); renderChair(); });
 function onLink(m){
   if (m.t === 'hello' && LINK) { if (Date.now() - lastHello > 3000) { lastHello = Date.now(); stateSoon(true); } return; }

@@ -8,6 +8,7 @@ Every update to the apps gets a revision number. The Year Clock shows its revisi
 
 | Rev | Date | Changes |
 |---|---|---|
+| 3.1 | 26 Nov 2026 | Pairing the Chairman's device is now step 2 of setup: sealing the clock opens the pairing code at once, waits for the device (✓ Paired and locked), then Continue (or pair later). The locked screen also has a "Chairman's device" button behind the Chairman's PIN |
 | 3.0 | 26 Nov 2026 | The Formal Register in the Chamber, stepped by the Chairman's device: each Warehouse with its Industry, every card recorded at the Reveal dealt onto the screen, and its score counting up; lowest to highest; then "The Port falls silent · And now the Brass Torch"; the winner with flame, sparks, fanfare and steam whistle; second place announced last |
 | 2.9 | 26 Nov 2026 | The Chairman's device: Chairman's controls → "Chairman's device" shows a code only the Chairman sees. The first device that scans it and enters the Chairman's PIN is locked to the Decade ("Release the Chairman's device" frees it). The clock obeys its remote commands, sends it the year's state, and keeps its sealed backup |
 | 2.8 | 26 Nov 2026 | From Year Two (after the Cardinal Rule is proclaimed) the Order of Access shows Even numbers in steel and Odd numbers in brass |
