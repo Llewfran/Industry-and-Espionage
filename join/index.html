@@ -117,8 +117,39 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
   color:#2a1606;background:linear-gradient(#f6dc96,#c99a45 45%,#8d5e1f);border:2px solid #3b210b;box-shadow:0 4px 14px #000}
 .notice{position:fixed;inset:0;z-index:30;background:rgba(10,5,2,.9);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
 .notice>div{display:flex;flex-direction:column;align-items:center;gap:14px}
-#sWatch{background:radial-gradient(ellipse at 50% 35%,#2e1b0c,#0d0703 75%);gap:14px}
-#sWatch.armed .token .cog{animation:spin 30s linear infinite}
+#sWatch{background:radial-gradient(ellipse at 50% 35%,#2e1b0c,#0d0703 75%);gap:10px;justify-content:center;overflow-y:auto}
+#sWatch .token{width:min(44vw,180px)}
+#sWatch.armed:not(.inport) .token .cog{animation:breathe 3.2s ease-in-out infinite}
+@keyframes breathe{50%{filter:drop-shadow(0 0 16px rgba(255,200,110,.75)) drop-shadow(0 8px 18px #000)}}
+.ringsvg{position:absolute;inset:-9%;width:118%;height:118%;transform:rotate(-90deg);display:none}
+.inport .ringsvg{display:block}
+.rtrack{fill:none;stroke:rgba(201,151,63,.22);stroke-width:3.2}
+.rburn{fill:none;stroke:#f2d48a;stroke-width:3.2;stroke-linecap:round;filter:drop-shadow(0 0 3px rgba(255,200,110,.8));transition:stroke-dashoffset .25s linear}
+.late .rburn{stroke:#ff7a52}
+.timer{font:900 clamp(44px,15vw,64px)/1 "Cinzel Decorative",serif;color:var(--brass-l);text-shadow:0 0 20px rgba(255,200,110,.45)}
+.late .timer{color:#ff8a62}
+.facts{display:flex;gap:12px}
+.facts div{min-width:120px;padding:8px 12px;border:1px solid #6b4517;border-radius:12px;background:rgba(201,151,63,.07);display:flex;flex-direction:column;align-items:center}
+.facts b{font:900 26px/1.1 "Cinzel Decorative",serif;color:var(--brass-l)}
+.facts span{font:600 11px "Cinzel",serif;letter-spacing:.1em;text-transform:uppercase;color:#b48a45;text-align:center}
+.textbtn{background:none;border:0;color:#9c7a45;font:italic 15px "Crimson Text",serif;text-decoration:underline;cursor:pointer;padding:6px}
+.badge{display:inline-block;min-width:22px;padding:1px 6px;margin-left:6px;border-radius:11px;background:#b5372e;color:#fff;font:700 13px "Cinzel",serif}
+.atimer{font:900 46px/1 "Cinzel Decorative",serif;color:#2a1606}
+.alarm.title{background:radial-gradient(circle at 50% 40%,#fff1c4,#d9a957 45%,#4d300c 100%)}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 70px);transform:translateX(-50%);z-index:35;padding:12px 18px;border-radius:12px;
+  background:linear-gradient(#f6dc96,#c99a45 45%,#8d5e1f);color:#2a1606;border:2px solid #3b210b;font:700 15px "Cinzel",serif;box-shadow:0 8px 24px #000;text-align:center;max-width:88vw}
+.codex{position:fixed;inset:0;z-index:38;background:#120a05;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 14px)}
+.chead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.chead .btn{min-height:46px;padding:0 18px;font-size:16px}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cgrid button{padding:0;border:2px solid #6b4517;border-radius:6px;background:#2a1606;cursor:pointer;position:relative;aspect-ratio:148/210;overflow:hidden}
+.cgrid img{width:100%;height:100%;object-fit:cover;display:block}
+.cgrid i{position:absolute;left:4px;top:4px;font:700 11px "Cinzel",serif;color:#fff;background:rgba(0,0,0,.6);border-radius:4px;padding:1px 5px;font-style:normal}
+.cgrid .new{border-color:#f2d48a;box-shadow:0 0 12px rgba(255,200,110,.7)}
+.cview{position:fixed;inset:0;z-index:39;background:#000;display:flex;flex-direction:column}
+.cview img{flex:1;min-height:0;width:100%;object-fit:contain;touch-action:pan-y pinch-zoom}
+.cnav{display:flex;gap:10px;align-items:center;justify-content:center;padding:10px 10px calc(env(safe-area-inset-bottom) + 10px);background:#120a05;color:#cfb27a;font:600 14px "Cinzel",serif}
+.cnav .btn{min-height:46px;padding:0 18px;font-size:18px}
 .lnk{font:600 12px "Cinzel",serif;letter-spacing:.14em;color:#8d6a35;text-transform:uppercase}
 .lnk.live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#7fc27a;margin-right:8px;box-shadow:0 0 8px #7fc27a}
 .alarm{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;
@@ -184,24 +215,37 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
   <div class="row"><button class="btn" id="bPresent" hidden>Try again</button><button class="btn ghost" id="bAlt" hidden></button></div>
 </section>
 
-<!-- 2c. THE WATCH: the phone waits for its appointment in Ironreach -->
+<!-- 2c. THE PORT SCREEN: the player's private view of their appointments in Ironreach -->
 <section class="stage" id="sWatch">
-  <div class="kick" id="wKick">Your appointment in Ironreach</div>
-  <div class="token" id="wToken"><svg class="cog" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#gearShape"/><circle r="31" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><circle r="27" fill="none" stroke="#f7e3ad" stroke-width=".8" opacity=".7"/><path id="wKey" d="M0-15a8 8 0 0 1 5 14.2L9 17H-9l4-17.8A8 8 0 0 1 0-15z" fill="#2a1606"/></svg><span id="wNum" hidden>?</span></div>
-  <div class="t" style="font-size:24px" id="wTitle">Your Warehouse</div>
-  <p class="how" id="wMsg">Keep this page open, phone face up and unlocked. Thirty seconds before your Call, it will chime, glow and stir.</p>
+  <div class="kick" id="wKick">Initiate</div>
+  <div class="token" id="wToken">
+    <svg class="ringsvg" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47" class="rtrack"/><circle cx="50" cy="50" r="47" class="rburn" id="wRing"/></svg>
+    <svg class="cog" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#gearShape"/><circle r="31" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><circle r="27" fill="none" stroke="#f7e3ad" stroke-width=".8" opacity=".7"/><path id="wKey" d="M0-15a8 8 0 0 1 5 14.2L9 17H-9l4-17.8A8 8 0 0 1 0-15z" fill="#2a1606"/></svg><span id="wNum" hidden>?</span></div>
+  <div class="t" style="font-size:22px" id="wTitle">Your Warehouse</div>
+  <div class="timer" id="wTimer" hidden>0:00</div>
+  <p class="how" id="wMsg"></p>
+  <div class="facts" id="wFacts"><div><b id="fBefore">–</b><span id="fBeforeL">Calls before yours</span></div><div><b id="fLeft">10</b><span>Calls left in the Decade</span></div></div>
   <button class="btn" id="bArm">Begin the watch</button>
-  <button class="btn ghost" id="bRemind">Hold to remind me</button>
+  <div class="row"><button class="btn ghost" id="bRemind">Hold to remind me</button><button class="btn ghost" id="bCodex">The Codex <span class="badge" id="cBadge" hidden></span></button></div>
   <div class="lnk" id="wLink"></div>
-  <button class="btn ghost" id="bWFly">Fly to my Warehouse</button>
+  <button class="textbtn" id="bWFly">Fly to my Warehouse</button>
 </section>
 <div class="alarm" id="alarm" hidden><div>
-  <div class="kick">Your Call is next</div>
+  <div class="kick" id="aKick">Your Call is next</div>
   <div class="token acog" aria-hidden="true"><svg class="cog" viewBox="-50 -50 100 100"><use href="#gearShape"/><circle r="31" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><path d="M0-15a8 8 0 0 1 5 14.2L9 17H-9l4-17.8A8 8 0 0 1 0-15z" fill="#2a1606"/></svg></div>
-  <div class="t" style="font-size:25px;line-height:1.2">Stand ready<br>at the Iron Gate</div>
-  <p class="how">Your appointment in Ironreach is next.</p>
+  <div class="t" style="font-size:25px;line-height:1.2" id="aTitle">Stand ready<br>at the Iron Gate</div>
+  <div class="atimer" id="aTimer" hidden></div>
+  <p class="how" id="aText">Your appointment in Ironreach is next.</p>
   <button class="btn" id="bAlarm">On my way</button>
 </div></div>
+<div class="toast" id="toast" hidden></div>
+<div class="codex" id="codex" hidden>
+  <div class="chead"><div><div class="kick">The Herald's Codex</div><div class="t" style="font-size:20px">Your pages</div></div><button class="btn ghost" id="bCodexClose">Close</button></div>
+  <div class="cgrid" id="cGrid"></div>
+  <p class="how" style="margin:10px auto 20px;font-size:15px">More pages open as the Decade unfolds.</p>
+  <div class="cview" id="cView" hidden><img id="cImg" alt="">
+    <div class="cnav"><button class="btn ghost" id="cPrev">‹</button><span id="cPos"></span><button class="btn ghost" id="cNext">›</button><button class="btn" id="cBack">Pages</button></div></div>
+</div>
 
 <!-- 3. THE FLY-OVER -->
 <section class="stage" id="sFly">
@@ -271,7 +315,7 @@ function taDa(){
 }
 
 /* ---------- stages ---------- */
-const REV = '0.7';
+const REV = '0.8';
 const show = id => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === id));
 let players = 6, mine = 4;
 const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
@@ -302,10 +346,11 @@ $('bSound').addEventListener('click', () => { wake(); if (FLY.on && !FLY.arr) fl
 
 /* the encrypted line to the Port clock */
 let LINK = null, waiting = null;
-const linkReady = GAME ? IE.Link.open(GAME, onLink, { since: '2m' }).then(l => LINK = l).catch(() => null) : Promise.resolve(null);
+const linkReady = GAME ? IE.Link.open(GAME, onLink, { since: '2m', onStatus: st => { if (st === 'live') setTimeout(() => { try { hello(); } catch(e){} }, 50); } }).then(l => LINK = l).catch(() => null) : Promise.resolve(null);
 function onLink(m){
   if (m.t === 'seat' && waiting && m.nonce === waiting.nonce) { const w = waiting; waiting = null; w.done(m); }
   if (m.t === 'warn') callMe(m);
+  if (m.t === 'state') onState(m);
   if (m.t === 'release' && m.dev === dev) { const h = held(); if (h && h.seat === m.seat) { store.set('ie-seat', null); $('notice').hidden = false; } }
 }
 $('bNotice').addEventListener('click', () => { $('notice').hidden = true; show('sScan'); renderPicker(); });
@@ -398,40 +443,176 @@ $('bAlt').addEventListener('click', () => { wake(); gateAlt && gateAlt.go(); });
 
 $('bReplay').addEventListener('click', () => startFly());
 
-/* ---------- the watch: a private reminder at the 30-second chime ---------- */
-let armed = false, wakeLock = null, alarmTimer = null;
+/* ---------- the Port screen: reminders, the player's own clock, and the Codex ---------- */
+const CODEX = {6:'f752f467f2f9bd',7:'8475cb96d0d5b8',8:'afce5be9c88f68',9:'d7f1d3a6f1377c',10:'09d6171adb9d7c',11:'3e12eb2e4a41a5',12:'a17336ae2d0da3',
+  13:'fb426d6240726f',14:'2714d15f0438df',15:'0838182453baa4',16:'362a64fa72ffd8',17:'8ac96484ba5bc7',18:'e630f47c475454',19:'e9cf0ae4b31d2f',
+  20:'398812195f3550',21:'61b57ebfc60c1f',22:'a686fbfe81689f',23:'4de67a219f7b65'};
+const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
+let armed = false, wakeLock = null, alarmTimer = null, ST = null, stAt = 0, firedKey = '';
 const linkState = () => LINK && LINK.status === 'live';
+const gkey = k => k + '-' + GAME;
+
+/* what this player can know from the clock's state */
+function me(){
+  const h = held(); if (!h || !ST) return { h };
+  const open = ST.phase === 'settle' || ST.phase === 'call', done = ST.phase === 'done';
+  const completed = done ? 10 : ST.year - 1, started = open ? ST.year : completed;
+  const pos = open ? (ST.order || []).indexOf(h.seat) : -1;
+  const inPort = open && ST.phase === 'call' && ST.inPort === h.seat;
+  const doneThisYear = open && pos >= 0 && ST.phase === 'call' && pos < ST.idx;
+  const before = !open || pos < 0 ? null : (ST.phase === 'settle' ? pos : pos - ST.idx);
+  const callsLeft = Math.max(0, 10 - completed - (doneThisYear ? 1 : 0));
+  const yearOneDone = completed >= 1 || (open && ST.year === 1 && doneThisYear);
+  const left = ST.paused ? ST.left : Math.max(0, ST.left - (Date.now() - stAt)/1000);
+  return { h, open, done, completed, started, pos, inPort, doneThisYear, before, callsLeft, yearOneDone, left };
+}
+function pagesFor(k){
+  const p = [];
+  if (k.started >= 1) p.push(6,7,8,9,10);
+  if (k.yearOneDone) p.push(21,22,23);
+  if (k.started >= 2) p.push(11,12,13,14,15);
+  if (k.started >= 3) p.push(16);
+  if (k.started >= 5) p.push(17);
+  if (k.completed >= 5) p.push(18);
+  if (k.started >= 10) p.push(19);
+  if (k.completed >= 10) p.push(20);
+  return p.sort((a, b) => a - b);
+}
+const myPages = () => store.get(gkey('ie-pages')) || [];
+
 function renderWatch(){
-  const h = held(); if (!h) return;
+  const k = me(), h = k.h; if (!h) return;
+  const titled = !!store.get(gkey('ie-titled'));
   $('wNum').textContent = h.seat;
-  $('wKick').textContent = (h.year && h.year > 1 ? 'Industrialist' : 'Initiate') + ' · your appointment in Ironreach';
   $('sWatch').classList.toggle('armed', armed); $('bArm').hidden = armed;
-  $('wMsg').textContent = armed ? 'On watch. Keep this page open, phone unlocked. Thirty seconds before your Call, it will chime, glow and stir.'
-                                : 'Tap below once so your phone may chime and stay awake. Keep this page open, phone unlocked.';
+  $('wKick').textContent = (titled ? 'Industrialist' : 'Initiate') + (ST ? ' · Year ' + WORDS[Math.min(ST.year, 10)] : '');
+  const inPort = !!k.inPort;
+  $('sWatch').classList.toggle('inport', inPort);
+  $('wTimer').hidden = !inPort;
+  let msg = '';
+  if (!armed) msg = 'Tap below once so your phone may chime and stay awake. Keep this page open, phone unlocked.';
+  else if (!ST) msg = 'On watch. Waiting for the Port clock.';
+  else if (k.done) msg = 'The Decade is over. Go to the Port for the Great Reveal.';
+  else if (ST.paused) msg = 'The Chairman has paused the clock.';
+  else if (!k.open) msg = 'The year is not yet open. The Herald will open it.';
+  else if (inPort) msg = 'You are In Port. Your time in Ironreach is running.';
+  else if (k.before === 0) msg = ST.phase === 'settle' ? 'You are first this year. Go and stand at the Iron Gate.' : 'Your Call is next.';
+  else if (k.doneThisYear) msg = 'Your Call this year is done.';
+  else msg = 'On watch. Thirty seconds before your Call, this phone will chime, glow and stir.';
+  $('wMsg').textContent = msg;
+  if (inPort) {
+    const t = Math.max(0, k.left), frac = ST.callSec ? Math.min(1, t / ST.callSec) : 0, C = 2*Math.PI*47;
+    $('wTimer').textContent = Math.floor(Math.ceil(t)/60) + ':' + String(Math.ceil(t) % 60).padStart(2, '0');
+    $('wRing').style.strokeDasharray = C; $('wRing').style.strokeDashoffset = C*(1 - frac);
+    $('sWatch').classList.toggle('late', t <= 30);
+  } else $('sWatch').classList.remove('late');
+  const b = k.before;
+  $('fBefore').textContent = b == null ? '–' : k.doneThisYear ? '✓' : inPort ? '⚙' : b;
+  $('fBeforeL').textContent = k.doneThisYear ? 'Done this year' : inPort ? 'In Port now' : 'Calls before yours';
+  $('fLeft').textContent = k.callsLeft == null ? 10 : k.callsLeft;
+  const n = myPages().length, unseen = myPages().filter(p => !(store.get(gkey('ie-seen')) || []).includes(p)).length;
+  $('bCodex').firstChild.textContent = n ? 'The Codex · ' + n + ' pages ' : 'The Codex ';
+  $('cBadge').hidden = !unseen; $('cBadge').textContent = unseen;
+  $('bCodex').disabled = !n;
   $('wLink').textContent = linkState() ? 'Linked to the Port' : 'Reaching the Port…'; $('wLink').classList.toggle('live', linkState());
 }
+
+/* the clock's state arrives: work out what changed for this player */
+function onState(m){
+  if (ST && m._at && ST._at && m._at < ST._at) return;               // an older state replayed late
+  const before = me(), prevST = ST;
+  ST = m; stAt = (m._at && Math.abs(Date.now() - m._at) < 5000) ? m._at : Date.now();
+  const fresh = !m._at || Date.now() - m._at < 10000, k = me(), h = k.h; if (!h) return;
+  store.set('ie-seat', Object.assign({}, h, { year: m.year, players: m.players || h.players }));
+  // the Codex: pages earned so far
+  const had = myPages(), now = pagesFor(k), add = now.filter(p => !had.includes(p));
+  if (add.length) { store.set(gkey('ie-pages'), Array.from(new Set(had.concat(add))).sort((a, b) => a - b)); if (had.length || fresh) toast(add.length === 1 ? 'A new page of the Codex is yours' : add.length + ' new pages of the Codex are yours'); }
+  // leaving the Port after Year One: the title is earned
+  if (k.yearOneDone && !store.get(gkey('ie-titled'))) {
+    store.set(gkey('ie-titled'), true);
+    if (fresh && prevST) { alarm('title'); renderWatch(); return; }
+  }
+  if (fresh && prevST) {
+    if (k.inPort && !before.inPort) alarm('enter');
+    else if (before.inPort && !k.inPort) alarm('out');
+  }
+  renderWatch();
+}
+setInterval(() => {
+  if (!$('sWatch').classList.contains('on') && $('alarm').hidden) return;
+  const k = me();
+  if (k.inPort && !ST.paused) {
+    const key = ST.year + '-' + ST.idx;
+    if (k.left <= 30 && k.left > 0 && firedKey !== key) { firedKey = key; alarm('thirty'); }
+    if (!$('alarm').hidden && $('alarm').dataset.kind === 'thirty') { const t = Math.ceil(k.left); $('aTimer').textContent = '0:' + String(Math.max(0, t)).padStart(2, '0'); }
+  }
+  renderWatch();
+}, 250);
+
+const ALARMS = {
+  next:   { kick: 'Your Call is next', title: 'Stand ready<br>at the Iron Gate', text: 'Your appointment in Ironreach is next.', btn: 'On my way', auto: 40 },
+  enter:  { kick: 'The Port is open', title: 'Enter<br>Ironreach', text: 'Your time in the Port has begun.', btn: 'I am In Port', auto: 10 },
+  thirty: { kick: 'Thirty seconds', title: 'Finish<br>and prepare to leave', text: 'Your time in Ironreach is running out.', btn: 'Understood', auto: 30, timer: true },
+  out:    { kick: 'The Port is open', title: 'Leave<br>Ironreach', text: 'Your time is up. The next to be called enters.', btn: 'Leaving', auto: 10 },
+  title:  { kick: 'The Port is open · Year One is behind you', title: 'Industrialist<br>of Brasshaven', text: 'You entered as an Initiate. You leave with the title earned. New pages of the Codex are yours.', btn: 'Open the Codex', auto: 0, cls: 'title' }
+};
+function alarm(kind){
+  const a = ALARMS[kind]; if (!a) return;
+  $('alarm').dataset.kind = kind; $('alarm').className = 'alarm' + (a.cls ? ' ' + a.cls : '');
+  $('aKick').textContent = a.kick; $('aTitle').innerHTML = a.title; $('aText').textContent = a.text; $('bAlarm').textContent = a.btn;
+  $('aTimer').hidden = !a.timer; $('alarm').hidden = false;
+  if (kind === 'title') fanfare(); else { softChime(false); setTimeout(() => softChime(false), 2600); }
+  try { navigator.vibrate && navigator.vibrate(kind === 'title' ? [200, 100, 200, 100, 600] : [400, 200, 400, 200, 800]); } catch(e){}
+  clearTimeout(alarmTimer); if (a.auto) alarmTimer = setTimeout(() => $('alarm').hidden = true, a.auto*1000);
+}
+$('bAlarm').addEventListener('click', () => { const kind = $('alarm').dataset.kind; $('alarm').hidden = true; clearTimeout(alarmTimer); if (kind === 'title') openCodex(); });
+let toastT = null;
+function toast(t){ $('toast').textContent = t; $('toast').hidden = false; clearTimeout(toastT); toastT = setTimeout(() => $('toast').hidden = true, 6000); renderWatch(); }
+$('toast').addEventListener('click', () => { $('toast').hidden = true; openCodex(); });
+
 async function stayAwake(){ try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => wakeLock = null); } } catch(e){} }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && armed) stayAwake(); });
-function toWatch(){ $('sFly').classList.remove('arrived','flying'); try { FLY.on = false; } catch(e){} show('sWatch'); renderWatch(); }
-function arm(){ wake(); armed = true; stayAwake(); softChime(true); renderWatch(); }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (armed) stayAwake(); hello(); } });
+const hello = () => { if (LINK) LINK.send({ t: 'hello' }); };
+function toWatch(){ $('sFly').classList.remove('arrived','flying'); try { FLY.on = false; } catch(e){} show('sWatch'); renderWatch(); hello(); }
+function arm(){ wake(); armed = true; stayAwake(); softChime(true); renderWatch(); hello(); }
 $('bWatch').addEventListener('click', () => { toWatch(); arm(); });
 $('bArm').addEventListener('click', arm);
 $('bWFly').addEventListener('click', () => { const h = held(); if (h) { wake(); flyTo(h.seat, h.players); } });
-setInterval(() => { if ($('sWatch').classList.contains('on')) renderWatch(); }, 2000);
 function softChime(quiet){
   const a = ac(); if (!a) return; const v = quiet ? .05 : .16;
   [[196, 0], [293.7, .45], [392, .9]].forEach(([f, at]) => { tone('sine', f, at, 2.2, v, 1.5); tone('sine', f/2, at, 2.4, v*.6, 1.5); });
 }
+/* the 30-second warning for the next player (sent by the clock to the phone holding that number) */
 function callMe(m){
   const h = held(); if (!h || m.seat !== h.seat) return;
   if (m._at && Date.now() - m._at > 45000) return;          // an old reminder replayed after a reconnect
-  if (m.year) store.set('ie-seat', Object.assign({}, h, { year: m.year }));
-  $('alarm').hidden = false;
-  softChime(false); setTimeout(() => softChime(false), 2600);
-  try { navigator.vibrate && navigator.vibrate([400, 200, 400, 200, 800]); } catch(e){}
-  clearTimeout(alarmTimer); alarmTimer = setTimeout(() => $('alarm').hidden = true, 40000);
+  alarm('next');
 }
-$('bAlarm').addEventListener('click', () => { $('alarm').hidden = true; clearTimeout(alarmTimer); });
+
+/* the Codex: only the pages this player has earned */
+let cList = [], cAt = 0;
+function openCodex(){
+  cList = myPages(); if (!cList.length) return;
+  const seen = store.get(gkey('ie-seen')) || [];
+  $('cGrid').innerHTML = cList.map((p, i) => `<button data-i="${i}" class="${seen.includes(p) ? '' : 'new'}"><img loading="lazy" src="codex/${CODEX[p]}.jpg" alt="Codex page ${p}"><i>${p}</i></button>`).join('');
+  $('codex').hidden = false; $('cView').hidden = true;
+}
+function viewPage(i){
+  cAt = Math.max(0, Math.min(cList.length - 1, i)); const p = cList[cAt];
+  $('cImg').src = 'codex/' + CODEX[p] + '.jpg'; $('cPos').textContent = 'Page ' + p + ' · ' + (cAt + 1) + ' of ' + cList.length; $('cView').hidden = false;
+  const seen = store.get(gkey('ie-seen')) || []; if (!seen.includes(p)) { seen.push(p); store.set(gkey('ie-seen'), seen); }
+  const b = $('cGrid').querySelector(`[data-i="${cAt}"]`); if (b) b.classList.remove('new');
+}
+$('bCodex').addEventListener('click', openCodex);
+$('cGrid').addEventListener('click', e => { const b = e.target.closest('button'); if (b) viewPage(+b.dataset.i); });
+$('cPrev').addEventListener('click', () => viewPage(cAt - 1));
+$('cNext').addEventListener('click', () => viewPage(cAt + 1));
+$('cBack').addEventListener('click', () => { $('cView').hidden = true; });
+$('bCodexClose').addEventListener('click', () => { $('codex').hidden = true; renderWatch(); });
+let sx = null;
+$('cImg').addEventListener('touchstart', e => { if (e.touches.length === 1) sx = e.touches[0].clientX; }, { passive: true });
+$('cImg').addEventListener('touchend', e => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; sx = null; if (Math.abs(dx) > 60) viewPage(cAt + (dx < 0 ? 1 : -1)); });
+
 /* the number shows only while the player holds the Reminder button, so no one reads it by accident or guile */
 let hideT = null;
 const reveal = on => { const h = held(); clearTimeout(hideT);

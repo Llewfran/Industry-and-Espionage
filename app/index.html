@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="2.6">
+<meta name="ie-revision" content="2.7">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -379,7 +379,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '2.6';
+const REV = '2.7';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -393,7 +393,7 @@ const CUES = {
 };
 const KEY = 'ie-yearclock-v1';
 let S = { phase:'setup', players:6, callSec:180, settleSec:60, dial:'gauge', pausedFrom:'call', year:1, pin:'', hpin:'', order:[], idx:0, endAt:0, left:0, warned:false, game:'', seats:{}, seen:[] };
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} if (typeof stateSoon === 'function') stateSoon(); };
 try { const v = JSON.parse(localStorage.getItem(KEY)||'null'); if (v && v.phase) S = Object.assign(S, v); } catch(e){}
 if (S.settleSec===undefined) S.settleSec = 60;
 if (!S.dial) S.dial = 'gauge';
@@ -779,6 +779,7 @@ async function startLink(){
     if (S.game !== key) { l.close(); return; } l.key = key; LINK = l; } catch(e){ linkState = 'off'; renderSeats(); }
 }
 function onLink(m){
+  if (m.t === 'hello' && LINK) { if (Date.now() - lastHello > 3000) { lastHello = Date.now(); stateSoon(true); } return; }
   if (m.t !== 'claim' || !LINK) return;
   if (S.seen.includes(m._id)) return;           // replayed from the relay after a reload: already answered
   S.seen.push(m._id); if (S.seen.length > 200) S.seen.splice(0, S.seen.length - 200);
@@ -800,6 +801,24 @@ function onLink(m){
   LINK.send({ t: 'seat', seat: n, dev: m.dev, nonce: m.nonce, ok, why, held: other && why === 'hold' ? +other : 0, players: S.players, year: S.year, sealed: !!S.seatLock });
 }
 // the private reminder: the phone holding this seat chimes, glows and vibrates (the iPad still shows the number to all)
+/* the state of the year for the phones: sent whenever it changes (a Call starts, a pause, +30 s, a year opens or ends)
+   and to any phone that says hello. Each phone works out its own countdown, its place in the order and its Codex pages. */
+let lastSig = '', stateT = null, lastHello = 0;
+function stateMsg(){
+  const pausedRun = S.phase === 'paused', ph = pausedRun ? (S.pausedFrom || 'call') : S.phase;
+  const left = pausedRun ? S.left : Math.max(0, (S.endAt - Date.now())/1000);
+  return { t: 'state', year: S.year, phase: ph, paused: pausedRun, order: S.order, idx: S.idx, players: S.players, callSec: S.callSec,
+           inPort: ph === 'call' ? S.order[S.idx] || 0 : 0, left: (ph === 'call' || ph === 'settle') ? Math.round(left*10)/10 : 0 };
+}
+function stateSoon(force){
+  clearTimeout(stateT);
+  stateT = setTimeout(() => {
+    if (!LINK || !S.game) return;
+    const m = stateMsg(), sig = [m.year, m.phase, m.paused, m.idx, m.inPort, Math.round(S.endAt/1000), Math.round(S.left||0), (m.order||[]).join('')].join('|');
+    if (!force && sig === lastSig) return;
+    lastSig = sig; LINK.send(m);
+  }, 250);
+}
 function callPhone(seat){ if (LINK && seat) LINK.send({ t: 'warn', seat, year: S.year }); }
 function studs(){ const c = Object.keys(S.seats).length;
   return Array.from({length:S.players}, (_,i) => `<span class="seat${i<c?' on':''}${fresh&&i===c-1?' new':''}"></span>`).join(''); }

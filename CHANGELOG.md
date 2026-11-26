@@ -8,6 +8,7 @@ Every update to the apps gets a revision number. The Year Clock shows its revisi
 
 | Rev | Date | Changes |
 |---|---|---|
+| 2.7 | 26 Nov 2026 | The clock tells the phones the state of the year whenever it changes (a Call starts, a pause, +30 s, a year opens or ends), and answers any phone that says hello |
 | 2.6 | 26 Nov 2026 | Two PINs: the Herald's PIN opens each year (after the Codex reading; the Chairman's PIN works too as a fallback) and the Chairman's PIN alone opens the Chairman's controls (pause and more). Steam gauge: the needle's hub is now a small brass cog with a slotted steel cap that turns with the needle |
 | 2.5 | 26 Nov 2026 | Private reminder: at every 30-second warning (and when a year opens, for the first to be called) the clock signals the phone holding the next number. The iPad display is unchanged |
 | 2.4 | 26 Nov 2026 | Secret numbers: the iPad never shows which Pass a phone holds, only how many Initiates have reported (plain brass studs); Year One's Order of Access is now drawn at random like every other year; players are called Initiates until Year One is over; Passes may be rescanned until the Chairman opens a year, which seals them; Chairman's controls → Join screen can unseal them; Herald's cue for Year One updated |
@@ -29,6 +30,7 @@ The Rev 1.0–1.1 brass-ring version is kept on the `v1-brass-ring` branch.
 
 | Rev | Date | Changes |
 |---|---|---|
+| 0.8 | 26 Nov 2026 | The Port screen: "Enter Ironreach" when the player's Call begins, then their own countdown with a brass ring; "Thirty seconds · Finish and prepare to leave" and "Leave Ironreach" at the end; Calls before yours and Calls left in the Decade; leaving the Port after Year One brings the title "Industrialist of Brasshaven" with a fanfare; the Herald's Codex on the phone, pages unlocking through the Decade (Year One: 6–10; after the player's Year One Call: 21–23; Year Two: 11–15; Year Three: 16; Year Five: 17; after Year Five: 18; Year Ten: 19; after Year Ten: 20) |
 | 0.7 | 26 Nov 2026 | The watch never shows the number: a keyhole gear and "Your Warehouse" instead. The number appears only while the player holds "Hold to remind me". The 30-second alarm no longer shows the number either |
 | 0.6 | 26 Nov 2026 | The watch: after the reveal, "Keep watch" keeps the phone awake on a small Warehouse screen; at the 30-second warning before its Call it plays a soft low chime, glows brass with its number and "Stand ready at the Iron Gate", and vibrates (Android). Every year, all Decade. Reopening the page goes straight to the watch |
 | 0.5 | 26 Nov 2026 | Fix: a scan that opens in a tab already showing the Port page now reloads it and reads the new code (before, nothing happened) |
