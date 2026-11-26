@@ -46,4 +46,5 @@ The Rev 1.0–1.1 brass-ring version is kept on the `v1-brass-ring` branch.
 
 | Rev | Date | Changes |
 |---|---|---|
+| 0.2 | 26 Nov 2026 | No Ledger: the device keeps only the card handed over this year, shows it for the In-Hand check at that Warehouse's next Call, and then lets it go. No history is kept |
 | 0.1 | 26 Nov 2026 | First version. Pairing by the iPad's Chairman code and the Chairman's PIN, locked to the Decade. **The Call**: who is In Port (follows the clock, or pick a Warehouse), the In-Hand check against the card handed at their last Call with the penalty spelled out, the Cardinal Rule as the Warehouses they may ship to, this year's duties, and recording the card handed at the Iron Gate. **Clock**: pause, +30 s, next Call, restart, Call length, open the year (Herald absent), end the year. **Ledger**: every card handed out, by Warehouse and year. **Pacts**: Iron Pacts recorded as they are made, one handshake each. **Rulings**: the quick rulings. Records backed up, sealed, on the clock and restored to a replacement device |
