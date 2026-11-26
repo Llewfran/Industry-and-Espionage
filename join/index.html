@@ -117,6 +117,16 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
   color:#2a1606;background:linear-gradient(#f6dc96,#c99a45 45%,#8d5e1f);border:2px solid #3b210b;box-shadow:0 4px 14px #000}
 .notice{position:fixed;inset:0;z-index:30;background:rgba(10,5,2,.9);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
 .notice>div{display:flex;flex-direction:column;align-items:center;gap:14px}
+#sWatch{background:radial-gradient(ellipse at 50% 35%,#2e1b0c,#0d0703 75%);gap:14px}
+#sWatch.armed .token .cog{animation:spin 30s linear infinite}
+.lnk{font:600 12px "Cinzel",serif;letter-spacing:.14em;color:#8d6a35;text-transform:uppercase}
+.lnk.live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#7fc27a;margin-right:8px;box-shadow:0 0 8px #7fc27a}
+.alarm{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;
+  background:radial-gradient(circle at 50% 45%,#ffc460,#c9781e 48%,#2a1204 100%);animation:glow 1.2s ease-in-out infinite alternate}
+.alarm>div{display:flex;flex-direction:column;align-items:center;gap:12px}
+.alarm .kick,.alarm .how{color:#2a1606}.alarm .t{color:#2a1606;text-shadow:0 1px 0 #f7e3ad}
+.anum{font:900 clamp(90px,34vw,160px)/1 "Cinzel Decorative",serif;color:#2a1606;text-shadow:0 2px 0 #f7e3ad,0 0 40px rgba(255,240,200,.9)}
+@keyframes glow{from{filter:brightness(.82)}to{filter:brightness(1.12)}}
 @media (prefers-reduced-motion:reduce){.gear,.glass .line{animation:none}}
 </style>
 </head>
@@ -174,6 +184,24 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
   <div class="row"><button class="btn" id="bPresent" hidden>Try again</button><button class="btn ghost" id="bAlt" hidden></button></div>
 </section>
 
+<!-- 2c. THE WATCH: the phone waits for its appointment in Ironreach -->
+<section class="stage" id="sWatch">
+  <div class="kick" id="wKick">Your appointment in Ironreach</div>
+  <div class="token" id="wToken"><svg class="cog" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#gearShape"/><circle r="31" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><circle r="27" fill="none" stroke="#f7e3ad" stroke-width=".8" opacity=".7"/></svg><span id="wNum">?</span></div>
+  <div class="t" style="font-size:24px" id="wTitle">Warehouse</div>
+  <p class="how" id="wMsg">Keep this page open, phone face up and unlocked. Thirty seconds before your Call, it will chime, glow and stir.</p>
+  <button class="btn" id="bArm">Begin the watch</button>
+  <div class="lnk" id="wLink"></div>
+  <button class="btn ghost" id="bWFly">Fly to my Warehouse</button>
+</section>
+<div class="alarm" id="alarm" hidden><div>
+  <div class="kick">Your Call is next</div>
+  <div class="anum" id="aNum">3</div>
+  <div class="t" style="font-size:25px;line-height:1.2">Stand ready<br>at the Iron Gate</div>
+  <p class="how">Your appointment in Ironreach is next.</p>
+  <button class="btn" id="bAlarm">On my way</button>
+</div></div>
+
 <!-- 3. THE FLY-OVER -->
 <section class="stage" id="sFly">
   <div class="caption kick">The Port of Ironreach · dusk</div>
@@ -183,7 +211,7 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
     <div class="line1">is yours, Initiate.</div>
     <div class="line2 demo-only" id="fLine2">Guard your Order Pass. When your number is first called, surrender it at the Iron Gate.</div>
     <div class="secret live-only" id="fSecret"></div>
-    <div class="row"><button class="btn ghost" id="bReplay">Fly again</button><button class="btn demo-only" id="bRestart">Start over</button></div>
+    <div class="row"><button class="btn live-only" id="bWatch">Keep watch</button><button class="btn ghost" id="bReplay">Fly again</button><button class="btn demo-only" id="bRestart">Start over</button></div>
     <div class="fallback small" id="fallback">This phone can’t show the 3D Port, but your Warehouse is ready.</div>
   </div>
 </section>
@@ -242,7 +270,7 @@ function taDa(){
 }
 
 /* ---------- stages ---------- */
-const REV = '0.5';
+const REV = '0.6';
 const show = id => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === id));
 let players = 6, mine = 4;
 const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
@@ -276,6 +304,7 @@ let LINK = null, waiting = null;
 const linkReady = GAME ? IE.Link.open(GAME, onLink, { since: '2m' }).then(l => LINK = l).catch(() => null) : Promise.resolve(null);
 function onLink(m){
   if (m.t === 'seat' && waiting && m.nonce === waiting.nonce) { const w = waiting; waiting = null; w.done(m); }
+  if (m.t === 'warn') callMe(m);
   if (m.t === 'release' && m.dev === dev) { const h = held(); if (h && h.seat === m.seat) { store.set('ie-seat', null); $('notice').hidden = false; } }
 }
 $('bNotice').addEventListener('click', () => { $('notice').hidden = true; show('sScan'); renderPicker(); });
@@ -367,12 +396,48 @@ $('bPresent').addEventListener('click', () => { wake(); present(gateN); });
 $('bAlt').addEventListener('click', () => { wake(); gateAlt && gateAlt.go(); });
 
 $('bReplay').addEventListener('click', () => startFly());
+
+/* ---------- the watch: a private reminder at the 30-second chime ---------- */
+let armed = false, wakeLock = null, alarmTimer = null;
+const linkState = () => LINK && LINK.status === 'live';
+function renderWatch(){
+  const h = held(); if (!h) return;
+  $('wNum').textContent = h.seat; $('wTitle').textContent = 'Warehouse ' + h.seat;
+  $('wKick').textContent = (h.year && h.year > 1 ? 'Industrialist' : 'Initiate') + ' · your appointment in Ironreach';
+  $('sWatch').classList.toggle('armed', armed); $('bArm').hidden = armed;
+  $('wMsg').textContent = armed ? 'On watch. Keep this page open, phone unlocked. Thirty seconds before your Call, it will chime, glow and stir.'
+                                : 'Tap below once so your phone may chime and stay awake. Keep this page open, phone unlocked.';
+  $('wLink').textContent = linkState() ? 'Linked to the Port' : 'Reaching the Port…'; $('wLink').classList.toggle('live', linkState());
+}
+async function stayAwake(){ try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => wakeLock = null); } } catch(e){} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && armed) stayAwake(); });
+function toWatch(){ $('sFly').classList.remove('arrived','flying'); try { FLY.on = false; } catch(e){} show('sWatch'); renderWatch(); }
+function arm(){ wake(); armed = true; stayAwake(); softChime(true); renderWatch(); }
+$('bWatch').addEventListener('click', () => { toWatch(); arm(); });
+$('bArm').addEventListener('click', arm);
+$('bWFly').addEventListener('click', () => { const h = held(); if (h) { wake(); flyTo(h.seat, h.players); } });
+setInterval(() => { if ($('sWatch').classList.contains('on')) renderWatch(); }, 2000);
+function softChime(quiet){
+  const a = ac(); if (!a) return; const v = quiet ? .05 : .16;
+  [[196, 0], [293.7, .45], [392, .9]].forEach(([f, at]) => { tone('sine', f, at, 2.2, v, 1.5); tone('sine', f/2, at, 2.4, v*.6, 1.5); });
+}
+function callMe(m){
+  const h = held(); if (!h || m.seat !== h.seat) return;
+  if (m._at && Date.now() - m._at > 45000) return;          // an old reminder replayed after a reconnect
+  if (m.year) store.set('ie-seat', Object.assign({}, h, { year: m.year }));
+  $('aNum').textContent = h.seat; $('alarm').hidden = false;
+  softChime(false); setTimeout(() => softChime(false), 2600);
+  try { navigator.vibrate && navigator.vibrate([400, 200, 400, 200, 800]); } catch(e){}
+  clearTimeout(alarmTimer); alarmTimer = setTimeout(() => $('alarm').hidden = true, 40000);
+}
+$('bAlarm').addEventListener('click', () => { $('alarm').hidden = true; clearTimeout(alarmTimer); });
+window.__warn = seat => callMe({ seat, _at: Date.now() });   // test hook
 $('bRestart').addEventListener('click', () => { $('sFly').classList.remove('arrived','flying'); $('sIntro').classList.remove('opened'); show('sIntro'); FLY.on = false; });
 
 /* where to begin */
 if (PASS) present(PASS);
 else if (BADPASS) { show('sGate'); gateView('no', 'That code is not an Order Pass of the Port.'); $('bPresent').hidden = true; }
-else if (!DEMO && !hash.get('g')) { show('sScan'); renderPicker(); }
+else if (!DEMO && !hash.get('g')) { if (held()) toWatch(); else { show('sScan'); renderPicker(); } }
 $('fSecret').innerHTML = '<b>Your first secret.</b> Tell no one your number, not by word or look, until it is called and you report to the Iron Gate.'
   + '<small>Scanned the wrong Pass? Scan the right one with your camera before the Chairman opens Year One.</small>';
 

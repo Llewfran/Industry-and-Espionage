@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="2.4">
+<meta name="ie-revision" content="2.5">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -373,7 +373,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '2.4';
+const REV = '2.5';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -595,7 +595,7 @@ function openYear(){
   S.idx = 0; S.warned=false;
   if (S.settleSec > 0) { S.phase='settle'; S.endAt = Date.now() + S.settleSec*1000; }
   else { S.phase='call'; S.endAt = Date.now() + S.callSec*1000; }
-  save(); yearTone(); keepAwake();
+  save(); yearTone(); keepAwake(); callPhone(S.order[0]);
   render(true);
 }
 
@@ -695,7 +695,7 @@ function tick(){
   $('burn').style.strokeDashoffset = C * (1 - Math.max(0,left)/S.callSec);
   const w = left <= 30;
   $('sRun').classList.toggle('warn', w);
-  if (w && !S.warned && S.phase==='call') { S.warned=true; save(); warnTone(); nextBanner(true); }
+  if (w && !S.warned && S.phase==='call') { S.warned=true; save(); warnTone(); nextBanner(true); if (S.idx < S.players-1) callPhone(S.order[S.idx+1]); }
   if (w) nextBanner(true);
 }
 setInterval(tick, 200);
@@ -791,6 +791,8 @@ function onLink(m){
   save(); renderSeats();
   LINK.send({ t: 'seat', seat: n, dev: m.dev, nonce: m.nonce, ok, why, held: other && why === 'hold' ? +other : 0, players: S.players, year: S.year, sealed: !!S.seatLock });
 }
+// the private reminder: the phone holding this seat chimes, glows and vibrates (the iPad still shows the number to all)
+function callPhone(seat){ if (LINK && seat) LINK.send({ t: 'warn', seat, year: S.year }); }
 function studs(){ const c = Object.keys(S.seats).length;
   return Array.from({length:S.players}, (_,i) => `<span class="seat${i<c?' on':''}${fresh&&i===c-1?' new':''}"></span>`).join(''); }
 function renderSeats(){
