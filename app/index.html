@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="2.2">
+<meta name="ie-revision" content="2.3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -124,6 +124,26 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 .plaque{padding:16px 30px;border-radius:12px;text-align:center;max-width:min(760px,92vw)}
 .plaque .t{color:#2a1606;font-size:14px;letter-spacing:.3em;text-transform:uppercase}
 .plaque p{font:italic 20px/1.35 "Crimson Text",serif;color:#2a1606;margin-top:4px}
+/* joining: the Port's QR and the seats */
+.joinrow{display:flex;align-items:center;gap:26px;padding:14px 20px;border-radius:14px;background:rgba(201,151,63,.08);border:2px solid rgba(141,94,31,.6);max-width:min(820px,94vw)}
+.qr{flex:none;width:min(24vh,210px);aspect-ratio:1;border-radius:10px;padding:8px;background:#f3e3bd;box-shadow:0 0 0 4px #8d5e1f,0 0 0 6px #3b210b,0 8px 20px rgba(0,0,0,.6);cursor:zoom-in}
+.qr svg{display:block;width:100%;height:100%}
+.jtext{display:flex;flex-direction:column;gap:8px;text-align:left}
+.jtext .t{text-align:left;font-size:20px}
+.jtext p{font-style:italic;color:#d9c08c;font-size:18px;line-height:1.3}
+.seats{display:flex;flex-wrap:wrap;gap:8px}
+.seat{width:46px;height:46px;min-height:0;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font:900 20px "Cinzel Decorative",serif;
+  border:2px dashed var(--brass-d);color:#8d6a35;background:transparent;box-shadow:none}
+.seat.on{border:2px solid #3b210b;color:#2a1606;background:radial-gradient(circle at 35% 30%,#fbe7aa,#c99a45 55%,#6b4517);box-shadow:0 3px 8px rgba(0,0,0,.5),inset 0 0 0 2px #f7e3ad}
+.seat.new{animation:arrive .9s cubic-bezier(.2,1.4,.4,1)}
+@keyframes arrive{from{transform:scale(2.2);box-shadow:0 0 30px #ffd27a}}
+.seat.ask{background:var(--seal);color:#fff;border-color:#3b210b}
+.lnk{font:600 13px "Cinzel",serif;letter-spacing:.14em;color:#8d6a35;text-transform:uppercase}
+.lnk.live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#7fc27a;margin-right:8px;box-shadow:0 0 8px #7fc27a}
+#oJoin .big{width:min(52vh,500px);cursor:default}
+#oJoin .jbox{max-height:100%;overflow:auto;padding:12px}
+#oJoin .jbox{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+#oJoin .seats .seat{width:58px;height:58px;font-size:24px}
 /* pin pad */
 .overlay{position:fixed;inset:0;background:rgba(10,5,2,.82);display:none;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
 .overlay.on{display:flex}
@@ -213,6 +233,12 @@ body.dial-gauge .steam{display:block}
   <div class="kick" id="lKick">The Port is being swept</div>
   <h1 id="lTitle">Year One awaits</h1>
   <p class="sub" id="lSub">The Chairman will open the year.</p>
+  <div class="joinrow" id="lJoin">
+    <div class="qr" id="lQr" role="button" aria-label="Show the join code full screen"></div>
+    <div class="jtext"><div class="t">Industrialists, enter the Port</div>
+      <p>Scan this with your phone’s camera, then scan the back of your Order Pass.</p>
+      <div class="seats" id="lSeats"></div><div class="lnk" id="lLink"></div></div>
+  </div>
   <div class="plaque brass" id="lCue"><div class="t">The Herald's cue</div><p id="lCueText"></p></div>
   <button class="brass" id="bUnlock" style="margin-top:1vh">Chairman: open the year</button>
 </section>
@@ -307,6 +333,19 @@ body.dial-gauge .steam{display:block}
   </div>
 </div>
 
+<!-- JOIN SCREEN -->
+<div class="overlay" id="oJoin">
+  <div class="jbox">
+    <div class="kick">Tonight’s Decade</div>
+    <div class="t" style="font-size:28px">Enter the Port of Ironreach</div>
+    <div class="qr big" id="jQr"></div>
+    <p class="sub">Scan with your phone’s camera, then scan the back of your Order Pass.</p>
+    <div class="seats" id="jSeats"></div>
+    <div class="lnk" id="jHint">Chairman: tap a seat twice to release it from its phone.</div>
+    <button class="brass" id="jClose">Close</button>
+  </div>
+</div>
+
 <!-- CHAIRMAN MENU -->
 <div class="overlay" id="oMenu">
   <div>
@@ -320,6 +359,7 @@ body.dial-gauge .steam{display:block}
       <button class="ghost" id="mLonger">Calls +15 s</button>
       <div class="wide sub" id="mInfo" style="font-size:17px"></div>
       <button class="ghost wide" id="mDial">Switch dial</button>
+      <button class="ghost wide" id="mJoin">Join screen · seats</button>
       <button class="ghost" id="mEndYear">End the year now</button>
       <button class="ghost" id="mReset">New Decade</button>
       <button class="brass wide" id="mClose">Close</button>
@@ -327,11 +367,12 @@ body.dial-gauge .steam{display:block}
   </div>
 </div>
 
+<script src="../shared/link.js"></script>
 <script>
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '2.2';
+const REV = '2.3';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -344,11 +385,12 @@ const CUES = {
   10: 'Proclamation VI, Year Ten. No shipping, and no new card.'
 };
 const KEY = 'ie-yearclock-v1';
-let S = { phase:'setup', players:6, callSec:180, settleSec:60, dial:'gauge', pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false };
+let S = { phase:'setup', players:6, callSec:180, settleSec:60, dial:'gauge', pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false, game:'', seats:{}, seen:[] };
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
 try { const v = JSON.parse(localStorage.getItem(KEY)||'null'); if (v && v.phase) S = Object.assign(S, v); } catch(e){}
 if (S.settleSec===undefined) S.settleSec = 60;
 if (!S.dial) S.dial = 'gauge';
+if (!S.seats) S.seats = {}; if (!S.seen) S.seen = [];
 const startTone = () => gateSound();
 
 /* ---------- sound: synthesised brass bell ---------- */
@@ -533,7 +575,7 @@ $('bTest').addEventListener('click',()=>{ audio(); warnTone(); setTimeout(gateSo
 $('bOpen').addEventListener('click',()=>{
   const p = $('iPin').value.trim();
   if (!/^\d{4}$/.test(p)) { $('setupErr').textContent = 'Choose a four-digit PIN.'; return; }
-  audio(); S.pin = p; S.phase='locked'; S.order=[]; S.idx=0; save(); render(); keepAwake();
+  audio(); S.pin = p; S.phase='locked'; S.order=[]; S.idx=0; newGame(); save(); render(); keepAwake();
 });
 
 /* ---------- locked ---------- */
@@ -544,6 +586,7 @@ function renderLock(){
   $('lSub').textContent = y===1 ? 'Calls run in number order this year.' : 'A new Order of Access will be drawn when the Chairman opens the year.';
   const c = CUES[y]; $('lCue').style.display = c ? 'block':'none'; $('lCueText').textContent = c||'';
   $('bUnlock').textContent = 'Chairman: open Year ' + WORDS[y];
+  renderSeats();
 }
 $('bUnlock').addEventListener('click',()=>askPin('Open Year '+WORDS[S.year], openYear));
 function openYear(){
@@ -685,6 +728,7 @@ function openMenu(){
 }
 const closeMenu = () => $('oMenu').classList.remove('on');
 $('mClose').addEventListener('click', closeMenu);
+$('mJoin').addEventListener('click',()=>{ closeMenu(); openJoin(true); });
 $('mDial').addEventListener('click',()=>{ S.dial = S.dial==='gauge' ? 'ring' : 'gauge'; save(); applyDial(); closeMenu(); });
 $('mPause').addEventListener('click',()=>{
   if (S.phase==='call' || S.phase==='settle') { S.left = (S.endAt-Date.now())/1000; S.pausedFrom=S.phase; S.phase='paused'; $('sRun').classList.add('paused'); }
@@ -706,7 +750,60 @@ $('mRestart').addEventListener('click',()=>{
 $('mShorter').addEventListener('click',()=>{ S.callSec=Math.max(60,S.callSec-15); save(); openMenu(); });
 $('mLonger').addEventListener('click',()=>{ S.callSec=Math.min(600,S.callSec+15); save(); openMenu(); });
 $('mEndYear').addEventListener('click',()=>{ closeMenu(); endTone(); if (!isSettle()) portOpen(S.order[S.idx], null); endYear(); });
-$('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', players:S.players, callSec:S.callSec, settleSec:S.settleSec, dial:S.dial, pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false }; $('iPin').value=''; save(); render(); });
+$('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', players:S.players, callSec:S.callSec, settleSec:S.settleSec, dial:S.dial, pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false, game:'', seats:{}, seen:[] }; $('iPin').value=''; startLink(); save(); render(); });
+
+/* ---------- joining: the phones ---------- */
+const joinUrl = () => new URL('../join/', location.origin + location.pathname).href + '#g=' + S.game;
+function newGame(){ S.game = window.IE ? IE.Link.newKey() : ''; S.seats = {}; S.seen = []; startLink(); }
+let LINK = null, linkState = 'off', fresh = 0, askRel = 0, askAt = 0;
+async function startLink(){
+  if (LINK && LINK.key === S.game) return;
+  if (LINK) { LINK.close(); LINK = null; }
+  linkState = 'off'; renderSeats();
+  if (!S.game || !window.IE || !window.crypto || !crypto.subtle) return;
+  const key = S.game;
+  try { const l = await IE.Link.open(key, onLink, { since: '15m', onStatus: st => { linkState = st; renderSeats(); } });
+    if (S.game !== key) { l.close(); return; } l.key = key; LINK = l; } catch(e){ linkState = 'off'; renderSeats(); }
+}
+function onLink(m){
+  if (m.t !== 'claim' || !LINK) return;
+  if (S.seen.includes(m._id)) return;           // replayed from the relay after a reload: already answered
+  S.seen.push(m._id); if (S.seen.length > 200) S.seen.splice(0, S.seen.length - 200);
+  const n = +m.seat, cur = S.seats[n], mineAt = Object.keys(S.seats).find(k => S.seats[k].dev === m.dev && +k !== n);
+  let ok = false, why = '';
+  if (!(n >= 1 && n <= S.players)) why = 'range';
+  else if (cur && cur.dev !== m.dev) why = 'taken';
+  else if (mineAt) why = 'hold';
+  else { ok = true; if (!cur) { S.seats[n] = { dev: m.dev, at: Date.now() }; fresh = n; clank(0, .7); } }
+  save(); renderSeats();
+  LINK.send({ t: 'seat', seat: n, dev: m.dev, nonce: m.nonce, ok, why, held: mineAt ? +mineAt : 0, players: S.players, year: S.year });
+}
+function seatsHtml(release){
+  return Array.from({length:S.players}, (_,i) => { const n = i+1, on = !!S.seats[n];
+    return `<button class="seat${on?' on':''}${n===fresh?' new':''}${release&&askRel===n?' ask':''}" data-seat="${n}" aria-label="Seat ${n}${on?' joined':' empty'}">${n}</button>`; }).join('');
+}
+function renderSeats(){
+  if (!S.game) { $('lJoin').style.display = 'none'; return; }
+  $('lJoin').style.display = '';
+  const url = joinUrl();
+  if ($('lQr').dataset.url !== url) { $('lQr').innerHTML = $('jQr').innerHTML = IE.QR.svg(url, { margin: 2, dark: '#2a1606', light: '#f3e3bd' }); $('lQr').dataset.url = url; }
+  const count = Object.keys(S.seats).length;
+  $('lSeats').innerHTML = seatsHtml(false); $('jSeats').innerHTML = seatsHtml(true);
+  const st = linkState === 'live' ? count + ' of ' + S.players + ' in the Port' : linkState === 'off' ? 'Offline · phones cannot join' : 'Reaching the relay…';
+  $('lLink').textContent = st; $('lLink').classList.toggle('live', linkState === 'live');
+  fresh = 0;
+}
+let joinAdmin = false;
+function openJoin(admin){ joinAdmin = !!admin; askRel = 0; $('jHint').style.visibility = joinAdmin ? 'visible' : 'hidden'; renderSeats(); $('oJoin').classList.add('on'); }
+$('lQr').addEventListener('click', () => openJoin(false));
+$('jClose').addEventListener('click', () => $('oJoin').classList.remove('on'));
+$('jSeats').addEventListener('click', e => {
+  const n = +(e.target.dataset && e.target.dataset.seat); if (!joinAdmin || !n || !S.seats[n]) return;
+  if (askRel === n && Date.now() - askAt < 4000) {
+    const d = S.seats[n].dev; delete S.seats[n]; askRel = 0; save(); renderSeats();
+    LINK && LINK.send({ t: 'release', seat: n, dev: d });
+  } else { askRel = n; askAt = Date.now(); renderSeats(); setTimeout(() => { if (askRel === n) { askRel = 0; renderSeats(); } }, 4000); }
+});
 
 /* ---------- render ---------- */
 function render(deal){
@@ -722,6 +819,7 @@ function render(deal){
     layoutRun();
   }
 }
+if (S.phase !== 'setup' && !S.game) { newGame(); save(); } else startLink();
 render();
 }
 </script>

@@ -6,10 +6,21 @@ A steampunk social-deduction and negotiation game for up to 10 Industrialists an
 
 | Piece | Device | Status |
 |---|---|---|
-| **Year Clock** (`app/index.html`) | iPad in the Negotiation Chamber | Rev 2.2 (see [CHANGELOG](CHANGELOG.md)) |
-| Joining prototype (`join/`) | Players' phones | Prototype 0.2 |
+| **Year Clock** (`app/index.html`) | iPad in the Negotiation Chamber | Rev 2.3 (see [CHANGELOG](CHANGELOG.md)) |
+| **Joining** (`join/`) | Players' phones | Rev 0.3 · live |
 | Chairman's control centre | Chairman's phone | Planned |
 | Industrialist handhelds | Players' phones | Planned |
+
+### Joining (phones)
+
+1. The Chairman seals the Year Clock. Its locked screen shows tonight's QR code (tap it to fill the screen).
+2. Each Industrialist scans that QR with their phone's **camera app**: the gates open with a fanfare.
+3. They then scan the QR on the back of their **Order Pass** with the camera app. The Iron Gate screen asks the clock for that seat; once accepted, the phone flies over the Port to their Warehouse. The seat lights up on the iPad.
+4. One phone holds one Pass, and a Pass belongs to one phone. The Chairman can release a seat in Chairman's controls → *Join screen · seats*.
+
+Test codes for the Passes: `join/passes.html` (print, cut out, stick on the back of each Pass). Opening `join/` with no code runs the demo.
+
+Messages travel through the public relay ntfy.sh (as in Prosperitas Arcana), sealed with AES-GCM using a key that exists only in tonight's QR code. Add `?relay=local` to test the clock and the phone pages in two tabs of one browser with no network.
 
 ### Year Clock
 
