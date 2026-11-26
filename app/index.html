@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="2.9">
+<meta name="ie-revision" content="3.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -147,6 +147,34 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 #oJoin .jbox{max-height:100%;overflow:auto;padding:12px}
 #oJoin .jbox{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
 #oJoin .seats .seat{width:40px;height:40px}
+/* the Formal Register */
+.reg[hidden]{display:none!important}
+.reg{position:fixed;inset:0;z-index:20;background:radial-gradient(ellipse at 50% 35%,#3a2210,#0b0603 75%);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.regin{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.2vh;padding:4vh 4vw;text-align:center;animation:regin 1s cubic-bezier(.2,1,.3,1)}
+@keyframes regin{from{opacity:0;transform:scale(.96)}}
+.reg .rk{font:700 clamp(14px,1.6vw,20px) "Cinzel",serif;letter-spacing:.4em;text-transform:uppercase;color:var(--brass)}
+.reg .rt{font:900 clamp(40px,6vw,84px)/1.05 "Cinzel Decorative",serif;color:var(--brass-l);text-shadow:0 0 30px rgba(255,200,110,.35),0 4px 0 #3b210b}
+.reg .rs{font:italic clamp(20px,2.4vw,30px) "Crimson Text",serif;color:#e6cf9c;max-width:36em}
+.reg .who{display:flex;gap:4vw;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.reg .w1{display:flex;flex-direction:column;align-items:center;gap:1.6vh;max-width:min(92vw,980px)}
+.reg .wh{display:flex;align-items:center;gap:2vw}
+.reg .wh img{height:clamp(120px,22vh,230px);border-radius:10px;box-shadow:0 10px 30px #000;border:3px solid #8d5e1f}
+.reg .wn{font:900 clamp(34px,5vw,68px)/1 "Cinzel Decorative",serif;color:var(--brass-l)}
+.reg .wi{font:700 clamp(16px,1.8vw,24px) "Cinzel",serif;color:#e6cf9c;letter-spacing:.06em}
+.reg .cards{display:flex;flex-wrap:wrap;gap:.6vw;justify-content:center}
+.reg .cards img{height:clamp(70px,13vh,140px);border-radius:6px;box-shadow:0 4px 12px #000;opacity:0;transform:translateY(20px) rotate(-4deg);animation:card .5s cubic-bezier(.2,1.3,.4,1) forwards}
+@keyframes card{to{opacity:1;transform:none}}
+.reg .score{font:900 clamp(60px,10vw,140px)/1 "Cinzel Decorative",serif;color:var(--brass-l);text-shadow:0 0 40px rgba(255,200,110,.6),0 5px 0 #3b210b}
+.reg .score small{display:block;font:700 clamp(14px,1.4vw,18px) "Cinzel",serif;letter-spacing:.3em;color:var(--brass);text-shadow:none}
+.reg .fail{color:#ff9a84}
+.reg.torch{background:radial-gradient(ellipse at 50% 30%,#7a4a14,#2a1606 55%,#0b0603)}
+.flame{width:clamp(70px,9vw,120px);height:clamp(110px,15vh,180px);position:relative}
+.flame::before{content:"";position:absolute;left:50%;bottom:0;width:30%;height:45%;transform:translateX(-50%);border-radius:6px 6px 14px 14px;background:linear-gradient(90deg,#6b4517,#f6dc96 45%,#6b4517);border:2px solid #3b210b}
+.flame::after{content:"";position:absolute;left:50%;bottom:42%;width:60%;height:62%;transform:translateX(-50%);border-radius:50% 50% 45% 45%/60% 60% 40% 40%;
+  background:radial-gradient(circle at 50% 70%,#fff6c4,#ffcf5a 35%,#ff7a1a 65%,rgba(255,80,0,0) 72%);filter:blur(1px);animation:flick .18s ease-in-out infinite alternate;box-shadow:0 0 60px 20px rgba(255,170,60,.45)}
+@keyframes flick{to{transform:translateX(-50%) scale(1.06,.94) rotate(2deg)}}
+.reg .sparks i{position:absolute;width:6px;height:6px;border-radius:50%;background:#ffd27a;box-shadow:0 0 10px #ffb84a;animation:spark 2.4s linear infinite;opacity:0}
+@keyframes spark{0%{opacity:0;transform:translateY(0)}10%{opacity:1}100%{opacity:0;transform:translateY(-70vh) translateX(var(--dx))}}
 /* pin pad */
 .overlay{position:fixed;inset:0;background:rgba(10,5,2,.82);display:none;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
 .overlay.on{display:flex}
@@ -355,6 +383,9 @@ body.dial-gauge .steam{display:block}
   </div>
 </div>
 
+<!-- THE FORMAL REGISTER: shown in the Chamber at the end of the Decade, stepped by the Chairman's device -->
+<div class="reg" id="oReg" hidden><div class="regin" id="regIn"></div></div>
+
 <!-- CHAIRMAN'S DEVICE -->
 <div class="overlay" id="oChair">
   <div class="jbox">
@@ -393,7 +424,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '2.9';
+const REV = '3.0';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -795,6 +826,40 @@ async function startLink(){
     if (S.game !== key) { l.close(); return; } l.key = key; LINK = l; } catch(e){ linkState = 'off'; renderSeats(); }
   startChairLink();
 }
+/* ---------- the Formal Register, stepped by the Chairman's device ---------- */
+function tone(type, f, at, dur, vol){ const ac = audio(); if (!ac) return; const t = ac.currentTime + at, o = ac.createOscillator(), g = ac.createGain(), lp = ac.createBiquadFilter();
+  o.type = type; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.value = f*3;
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .05); g.gain.setValueAtTime(vol, t + dur*.7); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(lp); lp.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + .05); }
+function fanfare(){ [0,.03].forEach(dt => { tone('sawtooth',261.6,dt,.32,.12); tone('sawtooth',329.6,.34+dt,.32,.12); tone('sawtooth',392,.68+dt,.32,.12);
+  tone('sawtooth',523.3,1.02+dt,2.2,.13); tone('sawtooth',392,1.02+dt,2.2,.1); tone('sawtooth',329.6,1.02+dt,2.2,.1); tone('sawtooth',130.8,1.02+dt,2.2,.11); });
+  for (let i = 0; i < 6; i++) tone('sine', 62 - i*2, 1 + i*.05, .7, .3*(1 - i*.12)); }
+const regCard = c => typeof c === 'string' && c[0] === 'L' ? '../chair/img/land-' + c.slice(1) + '.jpg' : '../join/cards/' + ['trade-agriculture','trade-medicine','influence-agriculture','influence-medicine','ore-weaponry','ore-currency','gold-weaponry','gold-currency','food-agriculture','food-literacy','citizens-agriculture','citizens-literacy','timber-literacy','timber-weaponry','textile-literacy','textile-weaponry','oil-currency','oil-medicine','exotics-currency','exotics-medicine','boom-time'][c] + '.jpg';
+function regWho(w, delay){
+  return `<div class="w1"><div class="wh"><img src="../chair/img/ind/${w.ind}.jpg" alt=""><div><div class="wn">Warehouse ${w.s}</div><div class="wi">${w.name}</div></div></div>
+    <div class="cards">${w.line.map((c, i) => `<img src="${regCard(c)}" alt="" style="animation-delay:${delay + i*.18}s">`).join('')}</div></div>`;
+}
+function countUp(el, to, after){ const t0 = performance.now(), d = 1400 + to*25; const f = now => { const k = Math.min(1, (now - t0)/d); el.textContent = Math.round(to*(1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); else after && after(); }; requestAnimationFrame(f); }
+function regShow(i, st){
+  const o = $('oReg'), box = $('regIn');
+  if (i === -2) { o.hidden = true; return; }
+  o.hidden = false; o.classList.remove('torch'); keepAwake();
+  let h = '';
+  if (i < 0 || !st) h = `<div class="rk">The Decade is ended</div><div class="rt">The Formal Register</div><div class="rs">Read from the lowest to the highest. The last name spoken carries the Brass Torch.</div>`;
+  else if (st.k === 'hold') { h = `<div class="rk">The Port falls silent</div><div class="rt">And now<br>the Brass Torch</div><div class="rs">We will now reveal the winner of the Decade.</div>`; bell(110, 0, 3.5, .5); bell(82.4, .9, 4, .45); }
+  else {
+    const n = st.w.reduce((a, w) => a + w.line.length, 0), delay = .6, score = st.w[0].score;
+    const kick = st.k === 'torch' ? 'The Brass Torch' : st.k === 'second' ? 'And in second place' : (st.pact ? 'An Iron Pact' : 'The Register');
+    h = (st.k === 'torch' ? '<div class="flame"></div>' : '') + `<div class="rk">${kick}</div><div class="who">${st.w.map((w, j) => regWho(w, delay + j*.3)).join('')}</div>
+      <div class="score" id="regScore">0<small>${st.pact ? 'shared by the Iron Pact' : st.w[0].failed ? 'the foundation failed' : 'points'}</small></div>`;
+    setTimeout(() => { const sEl = $('regScore'); if (!sEl) return; const small = sEl.querySelector('small').outerHTML;
+      const num = document.createElement('span'); sEl.textContent = ''; sEl.appendChild(num); sEl.insertAdjacentHTML('beforeend', small);
+      countUp(num, score, () => { if (st.k === 'torch') { fanfare(); setTimeout(gateSound, 2600); } else clank(0, .8); }); }, (delay + n*.18 + .4)*1000);
+    if (st.k === 'torch') { o.classList.add('torch'); h += '<div class="sparks">' + Array.from({length: 24}, (_, k) => `<i style="left:${5 + k*3.9}%;bottom:0;--dx:${(k%5 - 2)*30}px;animation-delay:${(k*.37)%2.4}s"></i>`).join('') + '</div>'; }
+  }
+  box.innerHTML = h; box.style.animation = 'none'; void box.offsetWidth; box.style.animation = '';
+}
+
 /* ---------- the Chairman's device: its own key, locked to the first device that pairs with the PIN ---------- */
 async function startChairLink(){
   if (CLINK && CLINK.key === S.ckey) return;
@@ -819,6 +884,7 @@ async function onChair(m){
   if (!S.cdev || m.dev !== S.cdev) return;                                 // only the Chairman's device
   if (m.t === 'hello') { stateSoon(true); return; }
   if (m.t === 'backup') { S.cblob = m.blob; save(); return; }
+  if (m.t === 'regstep') { regShow(m.i, m.st); return; }
   if (m.t === 'cmd') {
     const run = S.phase === 'call' || S.phase === 'paused' || S.phase === 'settle';
     if (m.op === 'open' && S.phase === 'locked') openYear();

@@ -8,7 +8,7 @@ A steampunk social-deduction and negotiation game for up to 10 Industrialists an
 |---|---|---|
 | **Year Clock** (`app/index.html`) | iPad in the Negotiation Chamber | Rev 2.4 (see [CHANGELOG](CHANGELOG.md)) |
 | **Joining** (`join/`) | Players' phones | Rev 0.4 · live |
-| **Chairman's device** (`chair/`) | Chairman's phone or iPad | Rev 0.1 (scoring engine next) |
+| **Chairman's device** (`chair/`) | Chairman's phone or iPad | Rev 0.3 (the Call, Clock, Pacts, the Great Reveal, Rulings) |
 | Industrialist handhelds | Players' phones | Planned |
 
 ### Joining (phones)

@@ -8,6 +8,7 @@ Every update to the apps gets a revision number. The Year Clock shows its revisi
 
 | Rev | Date | Changes |
 |---|---|---|
+| 3.0 | 26 Nov 2026 | The Formal Register in the Chamber, stepped by the Chairman's device: each Warehouse with its Industry, every card recorded at the Reveal dealt onto the screen, and its score counting up; lowest to highest; then "The Port falls silent · And now the Brass Torch"; the winner with flame, sparks, fanfare and steam whistle; second place announced last |
 | 2.9 | 26 Nov 2026 | The Chairman's device: Chairman's controls → "Chairman's device" shows a code only the Chairman sees. The first device that scans it and enters the Chairman's PIN is locked to the Decade ("Release the Chairman's device" frees it). The clock obeys its remote commands, sends it the year's state, and keeps its sealed backup |
 | 2.8 | 26 Nov 2026 | From Year Two (after the Cardinal Rule is proclaimed) the Order of Access shows Even numbers in steel and Odd numbers in brass |
 | 2.7 | 26 Nov 2026 | The clock tells the phones the state of the year whenever it changes (a Call starts, a pause, +30 s, a year opens or ends), and answers any phone that says hello |
@@ -46,5 +47,6 @@ The Rev 1.0–1.1 brass-ring version is kept on the `v1-brass-ring` branch.
 
 | Rev | Date | Changes |
 |---|---|---|
+| 0.3 | 26 Nov 2026 | The Great Reveal: close the Iron Pacts ledger; reveal each Warehouse in any order (Industry, Production Line card by card with "Land or Resource?" for the Wonder, the Warehouse's card count and calamities); Complete shows only "The foundation stands" or "You failed and must depart the Port in haste"; the Chairman scores alone (Boom Time, foundations, calamities, zero floor, Trade Block Pacts, the Brass Torch and its tie-breaks with a show of hands); then steps the Formal Register on the iPad. Scoring engine in `shared/score.js` |
 | 0.2 | 26 Nov 2026 | No Ledger: the device keeps only the card handed over this year, shows it for the In-Hand check at that Warehouse's next Call, and then lets it go. No history is kept |
 | 0.1 | 26 Nov 2026 | First version. Pairing by the iPad's Chairman code and the Chairman's PIN, locked to the Decade. **The Call**: who is In Port (follows the clock, or pick a Warehouse), the In-Hand check against the card handed at their last Call with the penalty spelled out, the Cardinal Rule as the Warehouses they may ship to, this year's duties, and recording the card handed at the Iron Gate. **Clock**: pause, +30 s, next Call, restart, Call length, open the year (Herald absent), end the year. **Ledger**: every card handed out, by Warehouse and year. **Pacts**: Iron Pacts recorded as they are made, one handshake each. **Rulings**: the quick rulings. Records backed up, sealed, on the clock and restored to a replacement device |
