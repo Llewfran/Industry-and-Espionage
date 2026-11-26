@@ -6,19 +6,22 @@ A steampunk social-deduction and negotiation game for up to 10 Industrialists an
 
 | Piece | Device | Status |
 |---|---|---|
-| **Year Clock** (`app/index.html`) | iPad in the Negotiation Chamber | Rev 2.3 (see [CHANGELOG](CHANGELOG.md)) |
-| **Joining** (`join/`) | Players' phones | Rev 0.3 · live |
+| **Year Clock** (`app/index.html`) | iPad in the Negotiation Chamber | Rev 2.4 (see [CHANGELOG](CHANGELOG.md)) |
+| **Joining** (`join/`) | Players' phones | Rev 0.4 · live |
 | Chairman's control centre | Chairman's phone | Planned |
 | Industrialist handhelds | Players' phones | Planned |
 
 ### Joining (phones)
 
-1. The Chairman seals the Year Clock. Its locked screen shows tonight's QR code (tap it to fill the screen).
-2. Each Industrialist scans that QR with their phone's **camera app**: the gates open with a fanfare.
-3. They then scan the QR on the back of their **Order Pass** with the camera app. The Iron Gate screen asks the clock for that seat; once accepted, the phone flies over the Port to their Warehouse. The seat lights up on the iPad.
-4. One phone holds one Pass, and a Pass belongs to one phone. The Chairman can release a seat in Chairman's controls → *Join screen · seats*.
+Set up and seal the Year Clock before the game begins. Then, **before the Welcome**:
 
-Test codes for the Passes: `join/passes.html` (print, cut out, stick on the back of each Pass). Opening `join/` with no code runs the demo.
+1. The locked "Year One awaits" screen shows tonight's QR code (tap it to fill the screen).
+2. Each Initiate scans it with their phone's **camera app**: the gates open with a fanfare.
+3. They scan the QR on their **Order Pass** with the camera app. The phone goes straight through the Iron Gate and flies over the Port; the roof of their Warehouse reveals their number. That number is their first secret, kept until it is called.
+4. The iPad shows only how many Initiates have reported, never who holds which number. Year One's order is drawn at random when the Chairman opens it.
+5. A Pass can be scanned again until the Chairman opens the year; then the Passes are sealed (the Chairman can unseal them in Chairman's controls → *Join screen*).
+
+Pass codes: `join/passes.html` (print, cut out, stick on each Pass, trim off the matching number). The codes carry a hidden token, not the number. `join/#demo` runs the demo.
 
 Messages travel through the public relay ntfy.sh (as in Prosperitas Arcana), sealed with AES-GCM using a key that exists only in tonight's QR code. Add `?relay=local` to test the clock and the phone pages in two tabs of one browser with no network.
 
@@ -26,7 +29,7 @@ Messages travel through the public relay ntfy.sh (as in Prosperitas Arcana), sea
 
 A single web page that runs the rhythm of the Decade on the Chamber's iPad:
 
-- **Order of Access**: Year One runs in number order; from Year Two a new random order is drawn each year.
+- **Order of Access**: a new random order is drawn each year, Year One included.
 - **Call timer**: adjustable length (default 3:00). At 30 seconds a bell sounds and the next Warehouse number flashes on screen.
 - **End of year**: the clock stops and waits. Only the Chairman's 4-digit PIN opens the next year. A phone remote will replace the PIN later.
 - **Herald's cues**: each locked screen shows which proclamation the Herald reads before that year opens (Welcome, Honour of the Pin, Warning, Year Five, Silent Procession, Year Ten, Great Reveal).

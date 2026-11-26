@@ -110,6 +110,13 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
 .token.no{animation:shake2 .5s}
 @keyframes shake2{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
 .how.err{color:#f0a67a}
+.secret{font-size:16px;color:#f3e3bd;max-width:23em;padding:10px 14px;border:1px solid #8d5e1f;border-radius:10px;background:rgba(20,10,4,.6)}
+.secret b{color:var(--brass-l);font-family:"Cinzel",serif;letter-spacing:.04em}
+.secret small{display:block;margin-top:6px;color:#b99a66;font-style:italic}
+.sound{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 56px);transform:translateX(-50%);z-index:20;font:700 15px "Cinzel",serif;padding:10px 18px;border-radius:30px;
+  color:#2a1606;background:linear-gradient(#f6dc96,#c99a45 45%,#8d5e1f);border:2px solid #3b210b;box-shadow:0 4px 14px #000}
+.notice{position:fixed;inset:0;z-index:30;background:rgba(10,5,2,.9);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
+.notice>div{display:flex;flex-direction:column;align-items:center;gap:14px}
 @media (prefers-reduced-motion:reduce){.gear,.glass .line{animation:none}}
 </style>
 </head>
@@ -149,9 +156,9 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
     <div class="passart" id="passart"><div class="pc"><i></i><i></i><i></i><b></b></div><span>Order Pass</span></div>
     <div class="line"></div>
   </div>
-  <p class="how live-only">Open your phone’s <b>camera</b> and point it at the QR code on the back of your Order Pass. Your Pass will bring you straight back to the Port.</p>
+  <p class="how live-only">Open your phone’s <b>camera</b> and point it at the QR code on your Order Pass. Your Pass will carry you straight to your Warehouse.</p>
   <p class="how demo-only">Demo: no clock is listening. Choose the number on your Pass to see the fly-over.</p>
-  <div class="row live-only"><button class="btn ghost" id="bCam" hidden>Scan it here</button><button class="btn ghost" id="bType">Type the number</button></div>
+  <div class="row live-only"><button class="btn ghost" id="bCam" hidden>Scan it here</button></div>
   <button class="btn live-only" id="bHeld" hidden></button>
   <div class="picker" id="picker"></div>
   <div class="stepper demo-only"><button id="pm" aria-label="Fewer">−</button><span id="pn">Industrialists tonight: 6</span><button id="pp" aria-label="More">+</button></div>
@@ -160,10 +167,11 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
 <!-- 2b. AT THE IRON GATE: claim the seat -->
 <section class="stage" id="sGate">
   <div class="kick" id="gKick">The Iron Gate</div>
-  <div class="token" id="gToken"><svg class="cog" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#gearShape"/><circle r="31" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><circle r="27" fill="none" stroke="#f7e3ad" stroke-width=".8" opacity=".7"/></svg><span id="gNum">4</span></div>
-  <div class="t" style="font-size:26px" id="gTitle">Order Pass 4</div>
+  <div class="token" id="gToken"><svg class="cog" viewBox="-50 -50 100 100" aria-hidden="true"><use href="#gearShape"/><circle r="31" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><circle r="27" fill="none" stroke="#f7e3ad" stroke-width=".8" opacity=".7"/>
+    <path d="M0-15a8 8 0 0 1 5 14.2L9 17H-9l4-17.8A8 8 0 0 1 0-15z" fill="#2a1606"/></svg></div>
+  <div class="t" style="font-size:26px" id="gTitle">Your Order Pass</div>
   <p class="how" id="gMsg">Present it at the Iron Gate to claim your Warehouse.</p>
-  <div class="row"><button class="btn" id="bPresent">Present it at the Iron Gate</button><button class="btn ghost" id="bAlt" hidden></button></div>
+  <div class="row"><button class="btn" id="bPresent" hidden>Try again</button><button class="btn ghost" id="bAlt" hidden></button></div>
 </section>
 
 <!-- 3. THE FLY-OVER -->
@@ -172,13 +180,18 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
   <div class="card">
     <div class="kick">Your Warehouse</div>
     <div class="num" id="fNum">Warehouse 4</div>
-    <div class="line1">is yours, Industrialist.</div>
-    <div class="line2" id="fLine2">Guard your Order Pass. When your number is first called, surrender it at the Iron Gate.</div>
+    <div class="line1">is yours, Initiate.</div>
+    <div class="line2 demo-only" id="fLine2">Guard your Order Pass. When your number is first called, surrender it at the Iron Gate.</div>
+    <div class="secret live-only" id="fSecret"></div>
     <div class="row"><button class="btn ghost" id="bReplay">Fly again</button><button class="btn demo-only" id="bRestart">Start over</button></div>
     <div class="fallback small" id="fallback">This phone can’t show the 3D Port, but your Warehouse is ready.</div>
   </div>
 </section>
-<div class="demo-note" id="revNote">Rev 0.3</div>
+<div class="demo-note" id="revNote">Rev 0.4</div>
+<button class="sound" id="bSound" hidden>🔊 Tap for sound</button>
+<div class="notice" id="notice" hidden><div><div class="t" style="font-size:22px">Your Pass was taken</div>
+  <p class="how">Another phone presented the Order Pass you scanned. Scan your own Order Pass with your camera again.</p>
+  <button class="btn" id="bNotice">Understood</button></div></div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <radialGradient id="gb" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fbe7aa"/><stop offset=".5" stop-color="#c99a45"/><stop offset="1" stop-color="#5a3a14"/></radialGradient>
@@ -229,7 +242,7 @@ function taDa(){
 }
 
 /* ---------- stages ---------- */
-const REV = '0.3';
+const REV = '0.4';
 const show = id => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === id));
 let players = 6, mine = 4;
 const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
@@ -238,20 +251,31 @@ const hash = new URLSearchParams(location.hash.slice(1));
 if (hash.get('g')) store.set('ie-join', { g: hash.get('g'), at: Date.now() });
 const joined = store.get('ie-join');
 const GAME = joined && Date.now() - joined.at < HOURS16 ? joined.g : null;
-const PASS = +hash.get('p') || 0;
-const DEMO = !hash.get('g') && !PASS;
+// the Pass: its secret code (#t=…); never a readable number
+const PASS = IE.passOf(hash.get('t') || '');
+const BADPASS = !!hash.get('t') && !PASS;
 let dev = store.get('ie-dev'); if (!dev) { dev = IE.Link.newId(); store.set('ie-dev', dev); }
 const held = () => { const h = store.get('ie-seat'); return h && h.g === GAME ? h : null; };
+const DEMO = hash.has('demo') || (!hash.get('g') && !hash.get('t') && !held());
 document.body.classList.toggle('demo', DEMO);
 $('revNote').textContent = 'Rev ' + REV + (DEMO ? ' · demo' : '') + (IE.Link.local() ? ' · local relay' : '');
+// keep the code out of the address bar once read
+if (hash.get('t') || hash.get('g')) history.replaceState(null, '', location.pathname + location.search);
+
+/* sound needs one touch on phones; the page may have been opened by the camera */
+const soundOn = () => { const a = ac(); return !!a && a.state === 'running'; };
+const wake = () => { ac(); setTimeout(() => { if (soundOn()) $('bSound').hidden = true; }, 60); };
+document.addEventListener('pointerdown', wake, { passive: true });
+$('bSound').addEventListener('click', () => { wake(); if (FLY.on && !FLY.arr) flySound(); });
 
 /* the encrypted line to the Port clock */
 let LINK = null, waiting = null;
 const linkReady = GAME ? IE.Link.open(GAME, onLink, { since: '2m' }).then(l => LINK = l).catch(() => null) : Promise.resolve(null);
 function onLink(m){
   if (m.t === 'seat' && waiting && m.nonce === waiting.nonce) { const w = waiting; waiting = null; w.done(m); }
-  if (m.t === 'release' && m.dev === dev) { const h = held(); if (h && h.seat === m.seat) store.set('ie-seat', null); }
+  if (m.t === 'release' && m.dev === dev) { const h = held(); if (h && h.seat === m.seat) { store.set('ie-seat', null); $('notice').hidden = false; } }
 }
+$('bNotice').addEventListener('click', () => { $('notice').hidden = true; show('sScan'); renderPicker(); });
 async function claim(n){
   const l = await linkReady; if (!l) return { ok: false, why: 'nolink' };
   const nonce = IE.Link.newId();
@@ -267,21 +291,17 @@ async function claim(n){
 $('bEnter').addEventListener('click', () => { ac(); fanfare(); $('sIntro').classList.add('opened'); });
 $('bToPass').addEventListener('click', () => { show('sScan'); renderPicker(); });
 
-/* the Pass: phone camera (live), or the demo picker */
+/* the Pass: the phone's camera (live), or the demo picker */
 function renderPicker(){
-  $('pn').textContent = 'Industrialists tonight: ' + players;
-  const max = DEMO ? players : 10;
-  $('picker').innerHTML = Array.from({length:10}, (_,i) => `<button data-n="${i+1}" ${i+1>max?'disabled':''}>${i+1}</button>`).join('');
-  $('picker').hidden = !DEMO && !typing;
-  const h = held(); $('bHeld').hidden = !h; if (h) $('bHeld').textContent = 'You hold Order Pass ' + h.seat + ' · fly to it';
+  $('pn').textContent = 'Initiates tonight: ' + players;
+  $('picker').innerHTML = Array.from({length:10}, (_,i) => `<button data-n="${i+1}" ${i+1>players?'disabled':''}>${i+1}</button>`).join('');
+  $('picker').hidden = !DEMO;
+  const h = held(); $('bHeld').hidden = !h || DEMO; $('bHeld').textContent = 'Fly to my Warehouse';
 }
-let typing = false;
 $('pm').addEventListener('click', () => { players = Math.max(4, players-1); renderPicker(); });
 $('pp').addEventListener('click', () => { players = Math.min(10, players+1); renderPicker(); });
-$('bType').addEventListener('click', () => { typing = !typing; renderPicker(); });
 $('bHeld').addEventListener('click', () => { const h = held(); players = h.players; mine = h.seat; ac(); clunk(); startFly(); });
-$('picker').addEventListener('click', e => { const n = +e.target.dataset.n; if (!n) return;
-  if (DEMO) { mine = n; ac(); clunk(); startFly(); } else { stopCam(); toGate(n); } });
+$('picker').addEventListener('click', e => { const n = +e.target.dataset.n; if (!n) return; mine = n; ac(); clunk(); startFly(); });
 
 /* scanning inside the page, where the browser can (Chrome on Android); iPhones use the camera app */
 let stream = null;
@@ -293,66 +313,65 @@ $('bCam').addEventListener('click', async () => {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
     const v = $('cam'); v.srcObject = stream; await v.play(); $('glass').classList.add('cam'); $('bCam').textContent = 'Stop the camera';
     const look = async () => { if (!stream) return;
-      try { for (const c of await det.detect(v)) { const m = /[#&]p=(\d+)/.exec(c.rawValue); if (m) { stopCam(); ac(); clunk(); toGate(+m[1]); return; } } } catch(e){}
+      try { for (const c of await det.detect(v)) { const m = /[#&]t=([A-Za-z0-9]+)/.exec(c.rawValue), n = m ? IE.passOf(m[1]) : 0;
+        if (n) { stopCam(); ac(); clunk(); present(n); return; } } } catch(e){}
       setTimeout(look, 250); };
     look();
   } catch (e) { stopCam(); $('bCam').hidden = true; }
 });
 function stopCam(){ if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; $('glass').classList.remove('cam'); $('bCam').textContent = 'Scan it here'; }
 
-/* at the Iron Gate */
+/* at the Iron Gate: the Pass goes straight to the clock, then straight into the fly-over.
+   Nothing on this screen shows the number: the roof reveals it. */
 let gateN = 0, gateAlt = null;
 function gateView(state, msg, alt){
-  const g = $('sGate'); g.classList.toggle('checking', state === 'checking');
+  $('sGate').classList.toggle('checking', state === 'checking');
   $('gToken').classList.toggle('ok', state === 'ok'); $('gToken').classList.remove('no');
   if (state === 'no') { void $('gToken').offsetWidth; $('gToken').classList.add('no'); }
   $('gMsg').innerHTML = msg; $('gMsg').classList.toggle('err', state === 'no');
-  $('bPresent').hidden = state === 'checking' || state === 'ok' || state === 'need';
-  $('bPresent').textContent = state === 'no' ? 'Try again' : 'Present it at the Iron Gate';
+  $('bPresent').hidden = state !== 'no';
   gateAlt = alt || null; $('bAlt').hidden = !alt; if (alt) $('bAlt').textContent = alt.label;
 }
-function toGate(n){
-  gateN = n; show('sGate');
-  $('gNum').textContent = n; $('gTitle').textContent = 'Order Pass ' + n; $('gKick').textContent = 'The Iron Gate';
+const flyTo = (n, p) => { players = p; mine = n; startFly(); };
+async function present(n){
+  gateN = n; show('sGate'); $('gKick').textContent = 'The Iron Gate'; $('gTitle').textContent = 'Your Order Pass';
   if (!GAME) {
     $('gKick').textContent = 'First, the Port clock';
     gateView('need', 'Scan the QR code on the <b>Port clock</b> (the iPad) with your camera first. Then scan your Order Pass again.');
     return;
   }
-  const h = held();
-  if (h && h.seat === n) { gateView('ready', 'This phone already holds Order Pass ' + n + '.', { label: 'Fly to my Warehouse', go(){ players = h.players; mine = n; startFly(); } }); $('bPresent').hidden = true; return; }
-  gateView('ready', 'Present it at the Iron Gate to claim your Warehouse.');
-}
-$('bAlt').addEventListener('click', () => { ac(); gateAlt && gateAlt.go(); });
-$('bPresent').addEventListener('click', async () => {
-  ac(); clunk();
   gateView('checking', '<i>The Iron Gate checks your Pass…</i>');
-  const r = await claim(gateN);
+  const r = await claim(n);
   if (r.ok) {
-    store.set('ie-seat', { g: GAME, seat: gateN, players: r.players, at: Date.now() });
-    gateView('ok', 'Welcome, Industrialist.');
-    players = r.players; mine = gateN;
-    setTimeout(startFly, 1300);
+    store.set('ie-seat', { g: GAME, seat: n, players: r.players, at: Date.now() });
+    gateView('ok', 'The Gate opens. Welcome, Initiate.');
+    setTimeout(() => flyTo(n, r.players), 900);
     return;
   }
-  const h = held();
+  const h = held(), mineAlt = h ? { label: 'Fly to my Warehouse', go(){ flyTo(h.seat, h.players); } } : null;
+  if (r.why === 'hold' && r.held) store.set('ie-seat', { g: GAME, seat: r.held, players: r.players, at: Date.now() });
   const why = {
-    taken: 'Order Pass ' + gateN + ' is already held by another phone. If this Pass is yours, ask the Chairman to release it.',
-    range: 'Tonight’s Decade has ' + r.players + ' Industrialists. Order Pass ' + gateN + ' is not in play.',
-    hold: 'This phone already holds Order Pass ' + r.held + '. One phone, one Pass.',
+    sealed: 'This Order Pass is already sealed to another phone. Show it to the Chairman.',
+    range: 'This Order Pass is not in play tonight. Hand it back to the Chairman.',
+    hold: 'This phone is already sealed to its own Order Pass. The Passes were sealed when the Chairman opened the year.',
     timeout: 'The Port clock did not answer. Make sure the iPad is showing the Port clock, then try again.',
     nolink: 'This phone could not reach the Port. Check its connection, then try again.'
   }[r.why] || 'The Iron Gate stays shut.';
-  gateView('no', why, r.why === 'hold' ? { label: 'Fly to Warehouse ' + r.held, go(){ players = r.players; mine = r.held; startFly(); } } : null);
-  if (r.why === 'hold') store.set('ie-seat', { g: GAME, seat: r.held, players: r.players, at: Date.now() });
-});
+  gateView('no', why, r.why === 'hold' ? { label: 'Fly to my Warehouse', go(){ const k = held(); if (k) flyTo(k.seat, k.players); } } : mineAlt);
+  if (r.why === 'sealed' || r.why === 'range' || r.why === 'hold') $('bPresent').hidden = true;
+}
+$('bPresent').addEventListener('click', () => { wake(); present(gateN); });
+$('bAlt').addEventListener('click', () => { wake(); gateAlt && gateAlt.go(); });
 
 $('bReplay').addEventListener('click', () => startFly());
 $('bRestart').addEventListener('click', () => { $('sFly').classList.remove('arrived','flying'); $('sIntro').classList.remove('opened'); show('sIntro'); FLY.on = false; });
 
 /* where to begin */
-if (PASS) toGate(PASS);
-if (!DEMO) $('fLine2').textContent = 'Keep this page and your Pass safe tonight. When your number is first called, surrender the Pass at the Iron Gate.';
+if (PASS) present(PASS);
+else if (BADPASS) { show('sGate'); gateView('no', 'That code is not an Order Pass of the Port.'); $('bPresent').hidden = true; }
+else if (!DEMO && !hash.get('g')) { show('sScan'); renderPicker(); }
+$('fSecret').innerHTML = '<b>Your first secret.</b> Tell no one your number, not by word or look, until it is called and you report to the Iron Gate.'
+  + '<small>Scanned the wrong Pass? Scan the right one with your camera before the Chairman opens Year One.</small>';
 
 /* =====================================================================
    A small WebGL engine: textured, lit, fogged meshes and sprites
@@ -559,20 +578,20 @@ function startFly(){
   scene = buildScene();
   const x0 = xOf(0), x1 = xOf(players-1), xp = xOf(mine-1);
   const asp = innerWidth/innerHeight, fov = 50*Math.PI/180;
-  const hFinal = Math.max(1.05, .64/(Math.tan(fov/2)*Math.min(asp, 1)));
+  const hFinal = 1.22*Math.max(1.05, .64/(Math.tan(fov/2)*Math.min(asp, 1))), k = .2*hFinal;   // k lifts the roof into the top half, clear of the card
   const bx = scene.objs[0].pos, bk = scene.objs[1].pos;
   // over the game box, across the district to the books, down to the river, along it to your warehouse, then up over its roof
   FLY.pos = [[bx[0] - .3, 3.4, bx[2] + 2.6], [bx[0] + 1.6, 2.7, bx[2] + 3.2], [lerp(x0, x1, .45), 2.3, -.6], [bk[0] - .1, 2.5, bk[2] + 1.5], [bk[0] + .6, 2.4, bk[2] + 1.2],
-             [x1 + .9, .78, 2.95], [lerp(x1, xp, .5) + .6, .64, 2.8], [xp + 1.0, .62, 2.6], [xp - .35, 1.45, 1.35], [xp, hFinal*.8, .25], [xp, hFinal, .02]];
+             [x1 + .9, .78, 2.95], [lerp(x1, xp, .5) + .6, .64, 2.8], [xp + 1.0, .62, 2.6], [xp - .35, 1.45, 1.35], [xp, hFinal*.8, .25 + k], [xp, hFinal, .02 + k]];
   FLY.tgt = [[bx[0], 0, bx[2]], [bx[0] + 1.2, .1, bx[2] + .4], [lerp(x0, x1, .65), .3, -3.2], [bk[0] + .55, 0, bk[2] - .1], [bk[0] + .65, 0, bk[2]],
-             [x1 - 1.2, .15, .8], [xp + .4, .15, .5], [xp - .4, .15, .35], [xp, .22, 0], [xp, .2, 0], [xp, .2, 0]];
+             [x1 - 1.2, .15, .8], [xp + .4, .15, .5], [xp - .4, .15, .35], [xp, .22, 0], [xp, .2, k*.6], [xp, .2, k]];
   FLY.dur = Math.min(22, 16 + Math.abs(x1 - xp)*.35);
   // even speed: map distance travelled along the path back to the curve parameter
   const N = 240, L = [0]; let prev = catmull(FLY.pos, 0);
   for (let i = 1; i <= N; i++) { const q = catmull(FLY.pos, i/N); L.push(L[i-1] + Math.hypot(q[0]-prev[0], q[1]-prev[1], q[2]-prev[2])); prev = q; }
   FLY.arc = L; FLY.t0 = performance.now(); FLY.on = true; FLY.arr = false;
   sprites = [];
-  flySound();
+  if (soundOn()) flySound(); else $('bSound').hidden = false;
 }
 function camAt(now){
   const t = FLY.fix !== undefined ? FLY.fix : Math.max(0, Math.min(1, (now - FLY.t0)/(FLY.dur*1000))), e = ease(t);
@@ -580,7 +599,7 @@ function camAt(now){
   const u = ((j - 1) + (want - L[j-1])/Math.max(1e-6, L[j] - L[j-1]))/(L.length - 1);
   let eye = catmull(FLY.pos, u), tgt = catmull(FLY.tgt, u);
   const k = Math.max(0, (u - .72)/.28), up = norm(lerpv([0,1,0], [0,.02,-1], ease(Math.min(1, k))));
-  if (t >= 1) { if (!FLY.arr) { FLY.arr = true; $('sFly').classList.add('arrived'); taDa(); }
+  if (t >= 1) { if (!FLY.arr) { FLY.arr = true; $('sFly').classList.add('arrived'); $('bSound').hidden = true; taDa(); }
     const b = (now - FLY.t0)/1000; eye = add(eye, [Math.sin(b*.7)*.02, Math.sin(b*1.1)*.03, 0]); }
   return { eye, tgt, up };
 }

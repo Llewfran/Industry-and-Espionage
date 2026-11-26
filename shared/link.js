@@ -129,5 +129,10 @@ async function open(gameKey, onMsg, opts){
   return { send, close(){ closed = true; es && es.close(); bc && bc.close(); }, get status(){ return status; }, topic };
 }
 
-root.IE = { QR: { matrix: qrMatrix, svg: qrSvg }, Link: { open, newKey, newId, local: localMode } };
+/* The Order Pass codes. The number is never written in the code itself, so no one reading
+   a QR (or the address it opens) can tell which Pass it is. Pass N carries PASSES[N-1]. */
+const PASSES = ['YJJu1i17','Qy2j1Zf7','2pRVM83X','Q3WLzdvI','A8V78iTA','hVO5ffW4','726TXYc5','ZlRXJblh','8G8PxlUh','cB2IrHkl'];
+const passOf = t => PASSES.indexOf(t) + 1;   // 0 if not a Pass
+
+root.IE = { QR: { matrix: qrMatrix, svg: qrSvg }, Link: { open, newKey, newId, local: localMode }, PASSES, passOf };
 })(window);

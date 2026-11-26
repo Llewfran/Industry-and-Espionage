@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="2.3">
+<meta name="ie-revision" content="2.4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -132,18 +132,19 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 .jtext .t{text-align:left;font-size:20px}
 .jtext p{font-style:italic;color:#d9c08c;font-size:18px;line-height:1.3}
 .seats{display:flex;flex-wrap:wrap;gap:8px}
-.seat{width:46px;height:46px;min-height:0;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font:900 20px "Cinzel Decorative",serif;
+.seat{width:34px;height:34px;min-height:0;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font:900 20px "Cinzel Decorative",serif;
   border:2px dashed var(--brass-d);color:#8d6a35;background:transparent;box-shadow:none}
 .seat.on{border:2px solid #3b210b;color:#2a1606;background:radial-gradient(circle at 35% 30%,#fbe7aa,#c99a45 55%,#6b4517);box-shadow:0 3px 8px rgba(0,0,0,.5),inset 0 0 0 2px #f7e3ad}
 .seat.new{animation:arrive .9s cubic-bezier(.2,1.4,.4,1)}
 @keyframes arrive{from{transform:scale(2.2);box-shadow:0 0 30px #ffd27a}}
-.seat.ask{background:var(--seal);color:#fff;border-color:#3b210b}
+.seats.studs .seat{width:30px;height:30px}
+#oJoin .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .lnk{font:600 13px "Cinzel",serif;letter-spacing:.14em;color:#8d6a35;text-transform:uppercase}
 .lnk.live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#7fc27a;margin-right:8px;box-shadow:0 0 8px #7fc27a}
 #oJoin .big{width:min(52vh,500px);cursor:default}
 #oJoin .jbox{max-height:100%;overflow:auto;padding:12px}
 #oJoin .jbox{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
-#oJoin .seats .seat{width:58px;height:58px;font-size:24px}
+#oJoin .seats .seat{width:40px;height:40px}
 /* pin pad */
 .overlay{position:fixed;inset:0;background:rgba(10,5,2,.82);display:none;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
 .overlay.on{display:flex}
@@ -206,13 +207,13 @@ body.dial-gauge .steam{display:block}
   <div class="card">
     <h1>The Year Clock</h1>
     <p class="sub" style="color:#5a3a1a;margin:6px auto 8px">Set by the Chairman before the Welcome.</p>
-    <div class="field"><label>Industrialists<small>Warehouses in play, 4 to 10</small></label>
+    <div class="field"><label>Initiates<small>Warehouses in play, 4 to 10</small></label>
       <div class="step"><button class="brass" data-adj="players:-1" aria-label="Fewer">−</button><output id="oPlayers">6</output><button class="brass" data-adj="players:1" aria-label="More">+</button></div></div>
     <div class="field"><label>Length of a Call<small>Warning tone 30 seconds before the end</small></label>
       <div class="step"><button class="brass" data-adj="call:-15" aria-label="Shorter">−</button><output id="oCall">3:00</output><button class="brass" data-adj="call:15" aria-label="Longer">+</button></div></div>
     <div class="field"><label>Settling time<small>Before the first Call of each year</small></label>
       <div class="step"><button class="brass" data-adj="settle:-15" aria-label="Shorter">−</button><output id="oSettle">1:00</output><button class="brass" data-adj="settle:15" aria-label="Longer">+</button></div></div>
-    <div class="field"><label>Begin at Year<small>Year One runs in number order</small></label>
+    <div class="field"><label>Begin at Year<small>Every year’s order is drawn at random</small></label>
       <div class="step"><button class="brass" data-adj="year:-1" aria-label="Earlier">−</button><output id="oYear">1</output><button class="brass" data-adj="year:1" aria-label="Later">+</button></div></div>
     <div class="field"><label>Dial<small>Steam gauge, or the original brass ring</small></label>
       <div class="seg"><button data-dial="gauge">Steam gauge</button><button data-dial="ring">Brass ring</button></div></div>
@@ -235,8 +236,8 @@ body.dial-gauge .steam{display:block}
   <p class="sub" id="lSub">The Chairman will open the year.</p>
   <div class="joinrow" id="lJoin">
     <div class="qr" id="lQr" role="button" aria-label="Show the join code full screen"></div>
-    <div class="jtext"><div class="t">Industrialists, enter the Port</div>
-      <p>Scan this with your phone’s camera, then scan the back of your Order Pass.</p>
+    <div class="jtext"><div class="t" id="lJoinT">Initiates, report to the Port</div>
+      <p>Scan this with your phone’s camera, then scan your Order Pass. Your number is your first secret.</p>
       <div class="seats" id="lSeats"></div><div class="lnk" id="lLink"></div></div>
   </div>
   <div class="plaque brass" id="lCue"><div class="t">The Herald's cue</div><p id="lCueText"></p></div>
@@ -339,10 +340,10 @@ body.dial-gauge .steam{display:block}
     <div class="kick">Tonight’s Decade</div>
     <div class="t" style="font-size:28px">Enter the Port of Ironreach</div>
     <div class="qr big" id="jQr"></div>
-    <p class="sub">Scan with your phone’s camera, then scan the back of your Order Pass.</p>
+    <p class="sub">Scan with your phone’s camera, then scan your Order Pass. Tell no one your number.</p>
     <div class="seats" id="jSeats"></div>
-    <div class="lnk" id="jHint">Chairman: tap a seat twice to release it from its phone.</div>
-    <button class="brass" id="jClose">Close</button>
+    <div class="lnk" id="jCount"></div>
+    <div class="row"><button class="ghost" id="jUnseal">Let the Passes be scanned again</button><button class="brass" id="jClose">Close</button></div>
   </div>
 </div>
 
@@ -372,11 +373,11 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '2.3';
+const REV = '2.4';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
-  1: 'Before the Welcome, then Proclamation I, The Welcome. Year One runs in number order.',
+  1: 'Before the Welcome, every Initiate scans the Port clock and their Order Pass, and keeps their number secret. Then Proclamation I, The Welcome.',
   2: 'Proclamation II, The Honour of the Pin, before this year’s order is set.',
   3: 'Proclamation III, The Warning, before the first Call.',
   5: 'Proclamation IV, Year Five. Production Lines begin this year.',
@@ -583,14 +584,14 @@ function renderLock(){
   const y = S.year;
   $('lKick').textContent = y===1 ? 'The Decade is ready' : 'Year ' + WORDS[y-1] + ' is complete · the Chairman sweeps the Port';
   $('lTitle').textContent = 'Year ' + WORDS[y] + ' awaits';
-  $('lSub').textContent = y===1 ? 'Calls run in number order this year.' : 'A new Order of Access will be drawn when the Chairman opens the year.';
+  $('lSub').textContent = y===1 ? 'Who is first? Who is last? The Order of Access is drawn when the Chairman opens the year.' : 'A new Order of Access will be drawn when the Chairman opens the year.';
   const c = CUES[y]; $('lCue').style.display = c ? 'block':'none'; $('lCueText').textContent = c||'';
   $('bUnlock').textContent = 'Chairman: open Year ' + WORDS[y];
   renderSeats();
 }
 $('bUnlock').addEventListener('click',()=>askPin('Open Year '+WORDS[S.year], openYear));
 function openYear(){
-  S.order = S.year===1 ? Array.from({length:S.players},(_,i)=>i+1) : shuffled(S.players);
+  S.order = shuffled(S.players); S.seatLock = true; renderSeats();
   S.idx = 0; S.warned=false;
   if (S.settleSec > 0) { S.phase='settle'; S.endAt = Date.now() + S.settleSec*1000; }
   else { S.phase='call'; S.endAt = Date.now() + S.callSec*1000; }
@@ -723,7 +724,7 @@ function openMenu(){
   $('mPause').textContent = S.phase==='paused' ? 'Resume' : 'Pause';
   $('mSkip').textContent = isSettle() ? 'Begin Call 1 now' : 'Next Call';
   $('mRestart').textContent = isSettle() ? 'Restart settling' : 'Restart this Call';
-  $('mInfo').textContent = 'Rev ' + REV + ' · Calls last ' + fmt(S.callSec) + ' · settling ' + fmt(S.settleSec) + ' · ' + S.players + ' Industrialists · Year ' + WORDS[Math.min(S.year,10)];
+  $('mInfo').textContent = 'Rev ' + REV + ' · Calls last ' + fmt(S.callSec) + ' · settling ' + fmt(S.settleSec) + ' · ' + S.players + ' ' + (S.year>1?'Industrialists':'Initiates') + ' · Year ' + WORDS[Math.min(S.year,10)];
   $('oMenu').classList.add('on');
 }
 const closeMenu = () => $('oMenu').classList.remove('on');
@@ -752,10 +753,14 @@ $('mLonger').addEventListener('click',()=>{ S.callSec=Math.min(600,S.callSec+15)
 $('mEndYear').addEventListener('click',()=>{ closeMenu(); endTone(); if (!isSettle()) portOpen(S.order[S.idx], null); endYear(); });
 $('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', players:S.players, callSec:S.callSec, settleSec:S.settleSec, dial:S.dial, pausedFrom:'call', year:1, pin:'', order:[], idx:0, endAt:0, left:0, warned:false, game:'', seats:{}, seen:[] }; $('iPin').value=''; startLink(); save(); render(); });
 
-/* ---------- joining: the phones ---------- */
+/* ---------- joining: the phones ----------
+   Each phone claims a seat with its Order Pass. No screen here ever shows which number a phone holds:
+   the numbers stay secret until each is called. Until the Chairman opens a year, a Pass may be scanned
+   again (a phone may change Pass, and the latest phone to present a Pass takes it). Opening a year seals them. */
 const joinUrl = () => new URL('../join/', location.origin + location.pathname).href + '#g=' + S.game;
-function newGame(){ S.game = window.IE ? IE.Link.newKey() : ''; S.seats = {}; S.seen = []; startLink(); }
-let LINK = null, linkState = 'off', fresh = 0, askRel = 0, askAt = 0;
+const titleOf = () => S.year > 1 ? 'Industrialists' : 'Initiates';
+function newGame(){ S.game = window.IE ? IE.Link.newKey() : ''; S.seats = {}; S.seen = []; S.seatLock = false; startLink(); }
+let LINK = null, linkState = 'off', fresh = false, joinAdmin = false;
 async function startLink(){
   if (LINK && LINK.key === S.game) return;
   if (LINK) { LINK.close(); LINK = null; }
@@ -769,41 +774,43 @@ function onLink(m){
   if (m.t !== 'claim' || !LINK) return;
   if (S.seen.includes(m._id)) return;           // replayed from the relay after a reload: already answered
   S.seen.push(m._id); if (S.seen.length > 200) S.seen.splice(0, S.seen.length - 200);
-  const n = +m.seat, cur = S.seats[n], mineAt = Object.keys(S.seats).find(k => S.seats[k].dev === m.dev && +k !== n);
+  const n = +m.seat, cur = S.seats[n], other = Object.keys(S.seats).find(k => S.seats[k].dev === m.dev && +k !== n);
+  const before = Object.keys(S.seats).length;
   let ok = false, why = '';
   if (!(n >= 1 && n <= S.players)) why = 'range';
-  else if (cur && cur.dev !== m.dev) why = 'taken';
-  else if (mineAt) why = 'hold';
-  else { ok = true; if (!cur) { S.seats[n] = { dev: m.dev, at: Date.now() }; fresh = n; clank(0, .7); } }
+  else if (cur && cur.dev === m.dev) ok = true;                       // the same phone again: fly again
+  else if (S.seatLock && cur) why = 'sealed';
+  else if (S.seatLock && other) why = 'hold';
+  else {
+    ok = true;
+    if (other) delete S.seats[other];                                 // this phone changes its Pass
+    if (cur) LINK.send({ t: 'release', seat: n, dev: cur.dev, why: 'taken' });   // another phone presented this Pass
+    S.seats[n] = { dev: m.dev, at: Date.now() };
+  }
+  if (Object.keys(S.seats).length > before) { fresh = true; clank(0, .7); }
   save(); renderSeats();
-  LINK.send({ t: 'seat', seat: n, dev: m.dev, nonce: m.nonce, ok, why, held: mineAt ? +mineAt : 0, players: S.players, year: S.year });
+  LINK.send({ t: 'seat', seat: n, dev: m.dev, nonce: m.nonce, ok, why, held: other && why === 'hold' ? +other : 0, players: S.players, year: S.year, sealed: !!S.seatLock });
 }
-function seatsHtml(release){
-  return Array.from({length:S.players}, (_,i) => { const n = i+1, on = !!S.seats[n];
-    return `<button class="seat${on?' on':''}${n===fresh?' new':''}${release&&askRel===n?' ask':''}" data-seat="${n}" aria-label="Seat ${n}${on?' joined':' empty'}">${n}</button>`; }).join('');
-}
+function studs(){ const c = Object.keys(S.seats).length;
+  return Array.from({length:S.players}, (_,i) => `<span class="seat${i<c?' on':''}${fresh&&i===c-1?' new':''}"></span>`).join(''); }
 function renderSeats(){
-  if (!S.game) { $('lJoin').style.display = 'none'; return; }
+  if (!S.game || !$('lJoin')) { if ($('lJoin')) $('lJoin').style.display = 'none'; return; }
   $('lJoin').style.display = '';
   const url = joinUrl();
   if ($('lQr').dataset.url !== url) { $('lQr').innerHTML = $('jQr').innerHTML = IE.QR.svg(url, { margin: 2, dark: '#2a1606', light: '#f3e3bd' }); $('lQr').dataset.url = url; }
-  const count = Object.keys(S.seats).length;
-  $('lSeats').innerHTML = seatsHtml(false); $('jSeats').innerHTML = seatsHtml(true);
-  const st = linkState === 'live' ? count + ' of ' + S.players + ' in the Port' : linkState === 'off' ? 'Offline · phones cannot join' : 'Reaching the relay…';
+  const c = Object.keys(S.seats).length, t = titleOf();
+  $('lJoinT').textContent = t + ', report to the Port';
+  $('lSeats').innerHTML = $('jSeats').innerHTML = studs();
+  const st = linkState === 'live' ? c + ' of ' + S.players + ' ' + t + ' have reported' : linkState === 'off' ? 'Offline · phones cannot report' : 'Reaching the relay…';
   $('lLink').textContent = st; $('lLink').classList.toggle('live', linkState === 'live');
-  fresh = 0;
+  $('jCount').textContent = st + (S.seatLock ? ' · Passes sealed' : '');
+  $('jUnseal').style.display = joinAdmin && S.seatLock ? '' : 'none';
+  fresh = false;
 }
-let joinAdmin = false;
-function openJoin(admin){ joinAdmin = !!admin; askRel = 0; $('jHint').style.visibility = joinAdmin ? 'visible' : 'hidden'; renderSeats(); $('oJoin').classList.add('on'); }
+function openJoin(admin){ joinAdmin = !!admin; renderSeats(); $('oJoin').classList.add('on'); }
 $('lQr').addEventListener('click', () => openJoin(false));
 $('jClose').addEventListener('click', () => $('oJoin').classList.remove('on'));
-$('jSeats').addEventListener('click', e => {
-  const n = +(e.target.dataset && e.target.dataset.seat); if (!joinAdmin || !n || !S.seats[n]) return;
-  if (askRel === n && Date.now() - askAt < 4000) {
-    const d = S.seats[n].dev; delete S.seats[n]; askRel = 0; save(); renderSeats();
-    LINK && LINK.send({ t: 'release', seat: n, dev: d });
-  } else { askRel = n; askAt = Date.now(); renderSeats(); setTimeout(() => { if (askRel === n) { askRel = 0; renderSeats(); } }, 4000); }
-});
+$('jUnseal').addEventListener('click', () => { S.seatLock = false; save(); renderSeats(); });
 
 /* ---------- render ---------- */
 function render(deal){
