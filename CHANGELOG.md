@@ -25,4 +25,5 @@ The Rev 1.0–1.1 brass-ring version is kept on the `v1-brass-ring` branch.
 
 | Rev | Date | Changes |
 |---|---|---|
+| 0.2 | 26 Nov 2026 | The fly-over now crosses a lamp-lit games table: the game box and both books (Chairman's Story on the Herald's Codex) in 3D, a miniature industrial district with brick factories, smoking chimneys and gasholders, and a river with an iron bridge in front of the warehouses. Even camera pace. Sounds: high bells removed; fanfare, steam and deep tones kept; a brass "ta-da" when the warehouse is revealed |
 | 0.1 | 26 Nov 2026 | `join/`: standalone prototype of a player's arrival. Brass gates and fanfare ("Welcome to Brasshaven"), "Present your Order Pass" (number picker until the camera is added), then a 3D fly-over of the Port of Ironreach at dusk built from the folded warehouse art, ending above the player's own roof. No live link yet |

@@ -140,7 +140,7 @@ canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
     <div class="fallback small" id="fallback">This phone can’t show the 3D Port, but your Warehouse is ready.</div>
   </div>
 </section>
-<div class="demo-note">Prototype · Rev 0.1</div>
+<div class="demo-note">Prototype · Rev 0.2</div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <radialGradient id="gb" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fbe7aa"/><stop offset=".5" stop-color="#c99a45"/><stop offset="1" stop-color="#5a3a14"/></radialGradient>
@@ -157,33 +157,37 @@ const $ = id => document.getElementById(id);
     d += (i ? 'L' : 'M') + p(36,a0) + 'L' + p(46,a1) + 'L' + p(46,a2) + 'L' + p(36,a3); }
   $('gp').setAttribute('d', d + 'Z'); })();
 
-/* ---------- sound ---------- */
+/* ---------- sound: brass, steam and deep tones only ---------- */
 let AC = null;
 const ac = () => { try { if (!AC) AC = new (window.AudioContext||window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch(e){} return AC; };
-function tone(type, f, at, dur, vol, glideTo){
-  const a = ac(); if (!a) return; const t = a.currentTime + at;
+function tone(type, f, at, dur, vol, bright){
+  const a = ac(); if (!a) return; const t = a.currentTime + at, br = bright || 3;
   const o = a.createOscillator(), g = a.createGain(), lp = a.createBiquadFilter();
-  o.type = type; o.frequency.setValueAtTime(f, t); if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t + dur);
-  lp.type = 'lowpass'; lp.frequency.setValueAtTime(f*2, t); lp.frequency.linearRampToValueAtTime(f*6, t + .08);
-  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .04); g.gain.setValueAtTime(vol, t + dur*.7); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(f*1.5, t); lp.frequency.linearRampToValueAtTime(f*br, t + .1);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .05); g.gain.setValueAtTime(vol, t + dur*.7); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
   o.connect(lp); lp.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + .05);
 }
 function noise(at, dur, vol, freq, q){
   const a = ac(); if (!a) return; const t = a.currentTime + at, len = Math.floor(a.sampleRate*dur);
   const b = a.createBuffer(1, len, a.sampleRate), d = b.getChannelData(0); for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
   const s = a.createBufferSource(); s.buffer = b; const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || .8;
-  const g = a.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .15); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  const g = a.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .2); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
   s.connect(f); f.connect(g); g.connect(a.destination); s.start(t);
 }
-function bell(f, at, dur, vol){ [[1,1],[2.76,.4],[5.4,.2]].forEach(([m,g]) => tone('sine', f*m, at, dur, vol*g)); }
+const drum = (at, vol) => { for (let i=0;i<6;i++) tone('sine', 62 - i*2, at + i*.05, .6, vol*(1 - i*.12), 2); };
 function fanfare(){
-  [0,.04].forEach(dt => { tone('sawtooth',261.6,dt,.32,.16); tone('sawtooth',329.6,.34+dt,.32,.16); tone('sawtooth',392,.68+dt,.32,.16);
-    tone('sawtooth',523.3,1.02+dt,1.6,.18); tone('sawtooth',392,1.02+dt,1.6,.12); tone('sawtooth',329.6,1.02+dt,1.6,.12); });
-  for (let i=0;i<8;i++) tone('sine', 62, 1.0 + i*.06, .5, .25 - i*.02);
-  noise(.9, 2.6, .35, 2600, .6); bell(784, 2.6, 3, .2);
+  [0,.03].forEach(dt => { tone('sawtooth',261.6,dt,.32,.14); tone('sawtooth',329.6,.34+dt,.32,.14); tone('sawtooth',392,.68+dt,.32,.14);
+    tone('sawtooth',523.3,1.02+dt,1.8,.15); tone('sawtooth',392,1.02+dt,1.8,.11); tone('sawtooth',329.6,1.02+dt,1.8,.11); tone('sawtooth',130.8,1.02+dt,1.8,.12,2); });
+  drum(1.0, .3); noise(.9, 2.6, .3, 2200, .6);
 }
-const flySound = () => { noise(0, 9, .06, 500, .4); noise(1.5, 3, .08, 3000, .7); noise(5, 3, .07, 2800, .7); };
-const arriveSound = () => { bell(523.3, 0, 3.5, .28); bell(659.3, .25, 3.5, .22); bell(784, .5, 4, .22); tone('sawtooth', 130.8, 0, 2.6, .07); };
+const clunk = () => { tone('sine', 85, 0, .5, .35, 2); tone('triangle', 55, 0, .6, .25, 2); noise(0, .5, .07, 500, .7); };
+const flySound = () => { noise(0, 10, .05, 380, .4); noise(1.2, 3.2, .05, 2200, .7); noise(5.5, 3.2, .045, 2000, .7); tone('sine', 65, 0, 9, .05, 2); };
+function taDa(){
+  tone('sawtooth', 196, 0, .2, .13, 2.5); tone('sawtooth', 98, 0, .2, .1, 2);
+  [130.8, 261.6, 329.6, 392].forEach(f => tone('sawtooth', f, .24, 2.8, f < 200 ? .12 : .09, 2.5));
+  drum(.24, .32); noise(.24, 2.4, .12, 1800, .6);
+}
 
 /* ---------- stages ---------- */
 const show = id => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === id));
@@ -196,18 +200,18 @@ function renderPicker(){
 }
 $('pm').addEventListener('click', () => { players = Math.max(4, players-1); renderPicker(); });
 $('pp').addEventListener('click', () => { players = Math.min(10, players+1); renderPicker(); });
-$('picker').addEventListener('click', e => { const n = +e.target.dataset.n; if (!n) return; mine = n; ac(); bell(988, 0, 1.2, .18); noise(0, .7, .12, 3500, 1); startFly(); });
+$('picker').addEventListener('click', e => { const n = +e.target.dataset.n; if (!n) return; mine = n; ac(); clunk(); startFly(); });
 $('bReplay').addEventListener('click', () => startFly());
 $('bRestart').addEventListener('click', () => { $('sFly').classList.remove('arrived','flying'); $('sIntro').classList.remove('opened'); show('sIntro'); FLY.on = false; });
 
 /* =====================================================================
-   A small WebGL engine: textured boxes, lighting, fog, sprites
+   A small WebGL engine: textured, lit, fogged meshes and sprites
    ===================================================================== */
 const cv = $('gl');
 const gl = cv.getContext('webgl', { antialias: true, alpha: false }) || cv.getContext('experimental-webgl');
 const FLY = { on: false };
+window.__flyAt = v => { FLY.fix = v; };   // test hook: freeze the flight at a point along its path
 const H = 0.30, GAP = 1.55;
-
 const m4 = {
   persp(fov, asp, n, f){ const t = 1/Math.tan(fov/2), r = 1/(n-f); return [t/asp,0,0,0, 0,t,0,0, 0,0,(n+f)*r,-1, 0,0,2*n*f*r,0]; },
   look(e, c, u){ let z = norm(sub(e,c)), x = norm(cross(u,z)), y = cross(z,x);
@@ -217,220 +221,301 @@ const m4 = {
 const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]], add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], mulv=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2], cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const norm=a=>{ const l=Math.hypot(a[0],a[1],a[2])||1; return [a[0]/l,a[1]/l,a[2]/l]; }, lerp=(a,b,t)=>a+(b-a)*t, lerpv=(a,b,t)=>[lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)];
+let rnd = 1; const rand = () => (rnd = (rnd*16807) % 2147483647) / 2147483647;
 
-let ready = false, P, S, buf = {}, tex = {}, sprites = [], skyline = [];
-if (gl) init(); else $('fallback').style.display = 'block';
+let ready = false, P, S, buf = {}, tex = {}, sprites = [], scene = null;
 
 function shader(vs, fs){
-  const mk = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(o); return o; };
+  const mk = (t, src) => { const o = gl.createShader(t); gl.shaderSource(o, src); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(o); return o; };
   const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
   const u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS); for (let i=0;i<n;i++){ const k = gl.getActiveUniform(p,i).name; u[k] = gl.getUniformLocation(p,k); }
   const a = {}, na = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES); for (let i=0;i<na;i++){ const k = gl.getActiveAttrib(p,i).name; a[k] = gl.getAttribLocation(p,k); }
   return { p, u, a };
 }
+function mkBuf(arr){ const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.STATIC_DRAW); return { b, n: arr.length/8 }; }
+const quad = (p0, p1, p2, p3, n, u = 1, v = 1) => [ ...p0,...n,0,0, ...p1,...n,u,0, ...p2,...n,u,v, ...p0,...n,0,0, ...p2,...n,u,v, ...p3,...n,0,v ];
+function canvasTex(w, h, paint){
+  const c = document.createElement('canvas'); c.width = w; c.height = h; paint(c.getContext('2d'), w, h);
+  const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  return t;
+}
 function init(){
-  /* mesh shader: diffuse sun + warm sky ambient + rim, exp2 fog, optional water shimmer */
   P = shader(`
     attribute vec3 pos; attribute vec3 nor; attribute vec2 uv;
-    uniform mat4 vp; uniform vec3 off; uniform vec2 uvs;
+    uniform mat4 vp; uniform vec3 off, scl; uniform vec2 rot, uvs;
     varying vec3 vN; varying vec2 vUv; varying vec3 vW;
-    void main(){ vec3 w = pos + off; vW = w; vN = nor; vUv = uv*uvs; gl_Position = vp*vec4(w,1.0); }`,
+    void main(){
+      vec3 p = pos*scl; p = vec3(rot.x*p.x + rot.y*p.z, p.y, -rot.y*p.x + rot.x*p.z);
+      vN = vec3(rot.x*nor.x + rot.y*nor.z, nor.y, -rot.y*nor.x + rot.x*nor.z);
+      vec3 w = p + off; vW = w; vUv = uv*uvs; gl_Position = vp*vec4(w,1.0); }`,
    `precision mediump float;
-    uniform sampler2D tx; uniform vec3 tint, sun, sunCol, amb, fogCol, cam; uniform float fogD, glow, water, time;
+    uniform sampler2D tx; uniform vec3 tint, sun, sunCol, amb, fogCol, cam, lamp, lampCol; uniform float fogD, glow, water, time, gloss;
     varying vec3 vN; varying vec2 vUv; varying vec3 vW;
     void main(){
       vec3 base = texture2D(tx, vUv).rgb * tint;
-      vec3 n = normalize(vN);
-      float d = max(dot(n, normalize(sun)), 0.0);
-      float sky = 0.55 + 0.45*n.y;
-      vec3 col = base*(amb*sky + sunCol*d) + base*glow;
+      vec3 n = normalize(vN), v = normalize(cam - vW);
+      vec3 L = lamp - vW; float dl = length(L); L /= dl;
+      float att = 1.0/(1.0 + dl*dl*0.035);
+      vec3 col = base*(amb*(0.6 + 0.4*n.y) + sunCol*max(dot(n, sun), 0.0) + lampCol*max(dot(n, L), 0.0)*att) + base*glow;
+      col += lampCol*att*gloss*pow(max(dot(reflect(-L, n), v), 0.0), 24.0);
       if (water > 0.5) {
-        float w = sin(vW.x*3.0 + time*0.9)*sin(vW.z*4.0 - time*1.3) + sin((vW.x+vW.z)*7.0 + time*2.0)*0.4;
-        vec3 v = normalize(cam - vW); float spec = pow(max(dot(reflect(-normalize(sun), vec3(w*0.06,1.0,w*0.05)), v), 0.0), 40.0);
-        col = mix(vec3(0.02,0.05,0.06), vec3(0.05,0.10,0.11), 0.5+0.5*w) + sunCol*spec*0.9;
+        float w = sin(vW.x*5.0 + time*1.3)*sin(vW.z*7.0 - time*1.7) + 0.5*sin((vW.x - vW.z)*11.0 + time*2.3);
+        vec3 nn = normalize(vec3(w*0.08, 1.0, w*0.06));
+        float spec = pow(max(dot(reflect(-L, nn), v), 0.0), 30.0);
+        col = mix(vec3(0.03,0.09,0.12), vec3(0.08,0.20,0.24), 0.5 + 0.5*w) + lampCol*att*spec*1.6;
       }
       float f = exp(-pow(fogD*distance(cam, vW), 2.0));
       gl_FragColor = vec4(mix(fogCol, col, f), 1.0);
     }`);
-  /* sprite shader: billboards (steam, lantern glow) and flat decals (shadows, highlight ring) */
   S = shader(`
-    attribute vec2 cor; uniform mat4 vp; uniform vec3 ctr, ax, ay; uniform float size;
+    attribute vec2 cor; uniform mat4 vp; uniform vec3 ctr, ax, ay; uniform vec2 sz;
     varying vec2 vC; varying vec3 vW;
-    void main(){ vC = cor; vec3 w = ctr + (ax*cor.x + ay*cor.y)*size; vW = w; gl_Position = vp*vec4(w,1.0); }`,
+    void main(){ vC = cor; vec3 w = ctr + ax*cor.x*sz.x + ay*cor.y*sz.y; vW = w; gl_Position = vp*vec4(w,1.0); }`,
    `precision mediump float;
     uniform vec4 col; uniform float kind, fogD; uniform vec3 fogCol, cam;
     varying vec2 vC; varying vec3 vW;
     void main(){
       float r = length(vC), a;
-      if (kind < 0.5) a = smoothstep(1.0, 0.0, r);                       // soft blob
-      else if (kind < 1.5) a = pow(max(1.0 - r, 0.0), 2.2);              // glow
-      else a = smoothstep(0.08, 0.0, abs(r - 0.82)) + 0.25*smoothstep(1.0, 0.6, r)*smoothstep(0.5, 0.8, r); // ring
+      if (kind < 0.5) a = smoothstep(1.0, 0.0, r);
+      else if (kind < 1.5) a = pow(max(1.0 - r, 0.0), 2.2);
+      else if (kind < 2.5) a = smoothstep(0.08, 0.0, abs(r - 0.82)) + 0.25*smoothstep(1.0, 0.6, r)*smoothstep(0.5, 0.8, r);
+      else { vec2 q = abs(vC); a = smoothstep(1.0, 0.7, max(q.x, q.y)); }
       float f = exp(-pow(fogD*distance(cam, vW), 2.0));
       gl_FragColor = vec4(col.rgb, col.a*a*f);
     }`);
-  const mk = (arr) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.STATIC_DRAW); return { b, n: arr.length/8 }; };
-  const quad = (p0, p1, p2, p3, n) => [ ...p0,...n,0,0, ...p1,...n,1,0, ...p2,...n,1,1, ...p0,...n,0,0, ...p2,...n,1,1, ...p3,...n,0,1 ];
   const h = .5;
-  // faces of a warehouse (uv: 0,0 bottom-left of image)
-  buf.roof  = mk(quad([-h,H,h],[h,H,h],[h,H,-h],[-h,H,-h],[0,1,0]));
-  buf.front = mk(quad([-h,0,h],[h,0,h],[h,H,h],[-h,H,h],[0,0,1]));
-  buf.back  = mk(quad([h,0,-h],[-h,0,-h],[-h,H,-h],[h,H,-h],[0,0,-1]));
-  buf.right = mk(quad([h,0,h],[h,0,-h],[h,H,-h],[h,H,h],[1,0,0]));
-  buf.left  = mk(quad([-h,0,-h],[-h,0,h],[-h,H,h],[-h,H,-h],[-1,0,0]));
-  buf.ground= mk(quad([-40,0,2.6],[40,0,2.6],[40,0,-30],[-40,0,-30],[0,1,0]));
-  buf.water = mk(quad([-40,-.08,60],[40,-.08,60],[40,-.08,2.6],[-40,-.08,2.6],[0,1,0]));
-  buf.quay  = mk(quad([-40,-.08,2.6],[40,-.08,2.6],[40,0,2.6],[-40,0,2.6],[0,0,1]));
-  buf.cube  = mk([].concat(
-    quad([-h,0,h],[h,0,h],[h,1,h],[-h,1,h],[0,0,1]), quad([h,0,-h],[-h,0,-h],[-h,1,-h],[h,1,-h],[0,0,-1]),
-    quad([h,0,h],[h,0,-h],[h,1,-h],[h,1,h],[1,0,0]), quad([-h,0,-h],[-h,0,h],[-h,1,h],[-h,1,-h],[-1,0,0]),
-    quad([-h,1,h],[h,1,h],[h,1,-h],[-h,1,-h],[0,1,0])));
+  buf.roof  = mkBuf(quad([-h,H,h],[h,H,h],[h,H,-h],[-h,H,-h],[0,1,0]));
+  buf.front = mkBuf(quad([-h,0,h],[h,0,h],[h,H,h],[-h,H,h],[0,0,1]));
+  buf.back  = mkBuf(quad([h,0,-h],[-h,0,-h],[-h,H,-h],[h,H,-h],[0,0,-1]));
+  buf.right = mkBuf(quad([h,0,h],[h,0,-h],[h,H,-h],[h,H,h],[1,0,0]));
+  buf.left  = mkBuf(quad([-h,0,-h],[-h,0,h],[-h,H,h],[-h,H,-h],[-1,0,0]));
+  // unit cube faces (x,z in -.5...5, y in 0..1)
+  buf.cTop   = mkBuf(quad([-h,1,h],[h,1,h],[h,1,-h],[-h,1,-h],[0,1,0]));
+  buf.cSides = mkBuf([].concat(quad([-h,0,h],[h,0,h],[h,1,h],[-h,1,h],[0,0,1]), quad([h,0,-h],[-h,0,-h],[-h,1,-h],[h,1,-h],[0,0,-1])));
+  buf.cEnds  = mkBuf([].concat(quad([h,0,h],[h,0,-h],[h,1,-h],[h,1,h],[1,0,0]), quad([-h,0,-h],[-h,0,h],[-h,1,h],[-h,1,-h],[-1,0,0])));
+  // unit cylinder (r .5, h 1)
+  { const a = [], N = 20; for (let i=0;i<N;i++){ const t0 = i/N*Math.PI*2, t1 = (i+1)/N*Math.PI*2;
+      const p = t => [.5*Math.cos(t), .5*Math.sin(t)], [x0,z0] = p(t0), [x1,z1] = p(t1);
+      a.push(...quad([x0,0,z0],[x1,0,z1],[x1,1,z1],[x0,1,z0],[Math.cos(t0+.157),0,Math.sin(t0+.157)], 1/N*8, 1));
+      a.push(0,1,0, 0,1,0, .5,.5,  x1,1,z1, 0,1,0, .5+x1,.5+z1,  x0,1,z0, 0,1,0, .5+x0,.5+z0); }
+    buf.cyl = mkBuf(a); }
   buf.spr = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf.spr);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, 1,1, -1,-1, 1,1, -1,1]), gl.STATIC_DRAW);
   // textures
   const blank = c => { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(c)); return t; };
   tex.white = blank([255,255,255,255]);
-  const load = (name, src, rep) => { const t = blank([90,60,30,255]); tex[name] = t; const im = new Image();
+  const load = (name, src) => { const t = blank([90,60,30,255]); tex[name] = t; const im = new Image();
     im.onload = () => { gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, im); gl.generateMipmap(gl.TEXTURE_2D);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-      const w = rep ? gl.REPEAT : gl.CLAMP_TO_EDGE; gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, w); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, w);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       const ext = gl.getExtension('EXT_texture_filter_anisotropic'); if (ext) gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, 8); };
     im.src = src; };
   ['front','back','left','right'].forEach(k => load('w_'+k, 'img/wall_'+k+'.jpg'));
   for (let i = 1; i <= 10; i++) load('roof'+i, 'img/roof'+i+'.jpg');
-  // dock planks, drawn on a canvas
-  const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
-  x.fillStyle = '#2b1a0d'; x.fillRect(0,0,256,256);
-  for (let i = 0; i < 8; i++) { x.fillStyle = `hsl(28,${30+Math.random()*15}%,${10+Math.random()*7}%)`; x.fillRect(0, i*32+1, 256, 30);
-    for (let k = 0; k < 40; k++) { x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(Math.random()*256, i*32+2+Math.random()*28, 30+Math.random()*60, 1); }
-    x.fillStyle = '#120a04'; x.fillRect(((i*97)%256), i*32, 3, 32); }
-  for (let i = 0; i < 60; i++) { x.fillStyle = 'rgba(160,120,60,.25)'; x.beginPath(); x.arc(Math.random()*256, Math.random()*256, 1.2, 0, 7); x.fill(); }
-  const tg = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tg); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); gl.generateMipmap(gl.TEXTURE_2D);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT); tex.ground = tg;
-  // distant skyline of chimneys and sheds
-  skyline = Array.from({length: 46}, (_, i) => ({ x: -26 + i*1.15 + Math.random()*.6, z: -7 - Math.random()*12, w: .5 + Math.random()*1.4, h: .6 + Math.random()*(Math.random() < .3 ? 4 : 1.6) }));
+  load('boxFront', 'img/box_front.jpg'); load('boxSide', 'img/box_side.jpg');
+  load('bookChair', 'img/book_chairman.jpg'); load('bookCodex', 'img/book_codex.jpg');
+  // polished table: long walnut planks with grain
+  tex.table = canvasTex(512, 512, (x, w, h) => {
+    for (let i = 0; i < 4; i++) { const y0 = i*128;
+      const g = x.createLinearGradient(0, y0, 0, y0+128); const l = 22 + (i%2)*4;
+      g.addColorStop(0, `hsl(22,48%,${l-3}%)`); g.addColorStop(.5, `hsl(24,52%,${l+3}%)`); g.addColorStop(1, `hsl(22,48%,${l-4}%)`);
+      x.fillStyle = g; x.fillRect(0, y0, w, 128);
+      x.strokeStyle = 'rgba(40,18,6,.35)'; x.lineWidth = 1.2;
+      for (let k = 0; k < 14; k++) { x.beginPath(); const yy = y0 + 6 + k*8.5, ph = Math.random()*6, am = 2 + Math.random()*4;
+        for (let s = 0; s <= w; s += 8) x.lineTo(s, yy + Math.sin(s/60 + ph)*am + Math.sin(s/17 + ph*2)*.8); x.stroke(); }
+      x.fillStyle = 'rgba(15,6,2,.9)'; x.fillRect(0, y0, w, 2);
+    }
+  });
+  tex.brick = canvasTex(256, 256, (x, w, h) => {
+    x.fillStyle = '#3a1c12'; x.fillRect(0,0,w,h);
+    for (let r = 0; r < 16; r++) for (let c = 0; c < 9; c++) { const o = (r%2)*16;
+      x.fillStyle = `hsl(${10+Math.random()*10},${40+Math.random()*15}%,${22+Math.random()*12}%)`; x.fillRect(c*32 - o + 1, r*16 + 1, 30, 14); }
+  });
+  tex.pages = canvasTex(64, 64, (x, w, h) => { x.fillStyle = '#e9dcbc'; x.fillRect(0,0,w,h);
+    for (let i = 0; i < 32; i++) { x.fillStyle = `rgba(120,90,50,${.15+Math.random()*.2})`; x.fillRect(0, i*2, w, 1); } });
+  tex.metal = canvasTex(64, 64, (x, w, h) => { const g = x.createLinearGradient(0,0,w,0);
+    g.addColorStop(0,'#5d5a4c'); g.addColorStop(.5,'#8f8a73'); g.addColorStop(1,'#4a473b'); x.fillStyle = g; x.fillRect(0,0,w,h);
+    x.fillStyle = 'rgba(30,25,15,.5)'; for (let i = 0; i < 8; i++) x.fillRect(0, i*8, w, 1.5); });
   ready = true;
   addEventListener('resize', resize); resize();
   requestAnimationFrame(frame);
 }
 function resize(){ const r = Math.min(devicePixelRatio || 1, 2); cv.width = innerWidth*r; cv.height = innerHeight*r; gl.viewport(0,0,cv.width,cv.height); }
 
-/* ---------- the fly-over ---------- */
+/* ---------- the tabletop world ---------- */
 const xOf = i => (i - (players-1)/2) * GAP;
-const chimneys = [[.28,-.40],[.36,-.06],[-.44,-.44]];
+const roofSteam = [[.28,-.40],[.36,-.06],[-.44,-.44]];
+const riverZ = x => 1.75 + .22*Math.sin(x*.45) + .1*Math.sin(x*1.1);
+function ribbon(x0, x1, half, y){
+  const a = [];
+  for (let x = x0; x < x1; x += .25) { const xa = x, xb = x + .25, za = riverZ(xa), zb = riverZ(xb);
+    a.push(...quad([xa,y,za+half],[xb,y,zb+half],[xb,y,zb-half],[xa,y,za-half],[0,1,0], .25, 1)); }
+  return mkBuf(a);
+}
+function buildScene(){
+  rnd = 7 + players*31;
+  const x0 = xOf(0), x1 = xOf(players-1), W = (x1 - x0) + 14;
+  const sc = { objs: [], smoke: [], shadows: [] };
+  sc.table = { w: W, d: 15, cz: -1.6 };
+  sc.tableTop = mkBuf(quad([-W/2,0,sc.table.cz+7.5],[W/2,0,sc.table.cz+7.5],[W/2,0,sc.table.cz-7.5],[-W/2,0,sc.table.cz-7.5],[0,1,0], W/2.2, 15/2.2));
+  sc.bank = ribbon(x0 - 7, x1 + 7, .44, .006);
+  sc.river = ribbon(x0 - 7, x1 + 7, .3, .014);
+  // the game box, lying flat behind the row on the left
+  const put = (o) => { sc.objs.push(o); return o; };
+  const bx = put({ kind: 'box', pos: [x0 - 2.2, 0, -3.4], scl: [2.3, .42, 3.45], ang: .22, top: 'boxFront', side: 'boxSide' });
+  sc.shadows.push({ pos: bx.pos, sz: [1.35, 1.95], ang: bx.ang, a: .55 });
+  // the two books, the Chairman's Story on top of the Herald's Codex
+  const bk1 = put({ kind: 'book', pos: [x1 + 2.1, 0, -2.6], scl: [1.45, .09, 2.1], ang: -.32, top: 'bookCodex' });
+  put({ kind: 'book', pos: [x1 + 2.35, .09, -2.45], scl: [1.45, .09, 2.1], ang: -.08, top: 'bookChair' });
+  sc.shadows.push({ pos: bk1.pos, sz: [.95, 1.25], ang: -.2, a: .5 });
+  // a miniature industrial district behind the warehouses
+  const xa = x0 - .2, xb = x1 + .2;
+  for (let i = 0; i < 9; i++) {
+    const x = lerp(xa, xb, (i + .5)/9) + (rand() - .5)*.5, z = -2.0 - rand()*1.6;
+    const w = .6 + rand()*.6, d = .45 + rand()*.35, hh = .22 + rand()*.22, ang = (rand() - .5)*.3;
+    put({ kind: 'bld', pos: [x, 0, z], scl: [w, hh, d], ang, tex: 'brick', tint: [1,.92,.85] });
+    put({ kind: 'bld', pos: [x, hh, z], scl: [w*.98, .05, d*.98], ang, tex: 'metal', tint: [.6,.55,.5] });
+    sc.shadows.push({ pos: [x, 0, z], sz: [w*.62, d*.7], ang, a: .45 });
+    if (rand() < .75) { const cx = x + (rand() - .5)*w*.6, cz = z - d*.25, ch = .55 + rand()*.5;
+      put({ kind: 'cyl', pos: [cx, 0, cz], scl: [.11, ch, .11], ang: 0, tex: 'brick', tint: [.9,.75,.65] });
+      put({ kind: 'cyl', pos: [cx, ch, cz], scl: [.14, .04, .14], ang: 0, tex: 'metal', tint: [.4,.36,.3] });
+      sc.smoke.push([cx, ch + .08, cz]); }
+  }
+  for (let i = 0; i < 3; i++) { const x = lerp(xa, xb, (i + .5)/3) + .6, z = -3.9 - rand()*.5, r = .5 + rand()*.2;
+    put({ kind: 'cyl', pos: [x, 0, z], scl: [r, .4, r], ang: 0, tex: 'metal', tint: [.7,.72,.62] });
+    put({ kind: 'cyl', pos: [x, .4, z], scl: [r*1.02, .03, r*1.02], ang: 0, tex: 'metal', tint: [.45,.42,.35] });
+    sc.shadows.push({ pos: [x, 0, z], sz: [r*.6, r*.6], ang: 0, a: .45, round: true }); }
+  // a little iron bridge over the river
+  const brX = lerp(x0, x1, .35) + .78;
+  put({ kind: 'bld', pos: [brX, .03, riverZ(brX)], scl: [.32, .05, 1.1], ang: 0, tex: 'metal', tint: [.55,.45,.35] });
+  sc.lamp = [(x0 + x1)/2, 5.2, -.8];
+  return sc;
+}
+
+/* ---------- the fly-over path ---------- */
 function catmull(p, t){ const n = p.length - 1, s = Math.min(n - 1e-6, t*n), i = Math.floor(s), u = s - i;
   const a = p[Math.max(i-1,0)], b = p[i], c = p[i+1], d = p[Math.min(i+2,n)];
   return [0,1,2].map(k => .5*((2*b[k]) + (-a[k]+c[k])*u + (2*a[k]-5*b[k]+4*c[k]-d[k])*u*u + (-a[k]+3*b[k]-3*c[k]+d[k])*u*u*u)); }
-const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+const ease = t => .5 - .5*Math.cos(Math.PI*t);
 function startFly(){
   show('sFly'); $('sFly').classList.remove('arrived'); $('sFly').classList.add('flying');
   $('fNum').textContent = 'Warehouse ' + mine;
   if (!ready) { $('sFly').classList.add('arrived'); return; }
+  scene = buildScene();
   const x0 = xOf(0), x1 = xOf(players-1), xp = xOf(mine-1);
   const asp = innerWidth/innerHeight, fov = 50*Math.PI/180;
   const hFinal = Math.max(1.05, .64/(Math.tan(fov/2)*Math.min(asp, 1)));
-  FLY.pos = [[x0-5,2.8,7.5],[x0-1.6,1.2,3.4],[lerp(x0,xp,.5)-.6,.78,2.25],[xp-.9,.72,1.95],[xp+.4,1.5,1.3],[xp,hFinal*.8,.25],[xp,hFinal,.02]];
-  FLY.tgt = [[x0+1,.2,0],[x0+1.5,.2,0],[xp+1.8,.18,0],[xp+.6,.2,0],[xp,.22,0],[xp,.2,0],[xp,.2,0]];
-  FLY.dur = Math.min(15, 9 + Math.abs(xp - x0)*.45); FLY.t0 = performance.now(); FLY.on = true; FLY.arr = false;
+  const bx = scene.objs[0].pos, bk = scene.objs[1].pos;
+  // over the game box, across the district to the books, down to the river, along it to your warehouse, then up over its roof
+  FLY.pos = [[bx[0] - .3, 3.4, bx[2] + 2.6], [bx[0] + 1.6, 2.7, bx[2] + 3.2], [lerp(x0, x1, .45), 2.3, -.6], [bk[0] - .1, 2.5, bk[2] + 1.5], [bk[0] + .6, 2.4, bk[2] + 1.2],
+             [x1 + .9, .78, 2.95], [lerp(x1, xp, .5) + .6, .64, 2.8], [xp + 1.0, .62, 2.6], [xp - .35, 1.45, 1.35], [xp, hFinal*.8, .25], [xp, hFinal, .02]];
+  FLY.tgt = [[bx[0], 0, bx[2]], [bx[0] + 1.2, .1, bx[2] + .4], [lerp(x0, x1, .65), .3, -3.2], [bk[0] + .55, 0, bk[2] - .1], [bk[0] + .65, 0, bk[2]],
+             [x1 - 1.2, .15, .8], [xp + .4, .15, .5], [xp - .4, .15, .35], [xp, .22, 0], [xp, .2, 0], [xp, .2, 0]];
+  FLY.dur = Math.min(22, 16 + Math.abs(x1 - xp)*.35);
+  // even speed: map distance travelled along the path back to the curve parameter
+  const N = 240, L = [0]; let prev = catmull(FLY.pos, 0);
+  for (let i = 1; i <= N; i++) { const q = catmull(FLY.pos, i/N); L.push(L[i-1] + Math.hypot(q[0]-prev[0], q[1]-prev[1], q[2]-prev[2])); prev = q; }
+  FLY.arc = L; FLY.t0 = performance.now(); FLY.on = true; FLY.arr = false;
   sprites = [];
   flySound();
 }
 function camAt(now){
-  const t = Math.min(1, (now - FLY.t0)/(FLY.dur*1000)), e = ease(t);
-  let eye = catmull(FLY.pos, e), tgt = catmull(FLY.tgt, e);
-  const k = Math.max(0, (e - .62)/.38), up = norm(lerpv([0,1,0], [0,.02,-1], ease(k)));
-  if (t >= 1) { if (!FLY.arr) { FLY.arr = true; $('sFly').classList.add('arrived'); arriveSound(); }
+  const t = FLY.fix !== undefined ? FLY.fix : Math.max(0, Math.min(1, (now - FLY.t0)/(FLY.dur*1000))), e = ease(t);
+  const L = FLY.arc, want = e*L[L.length-1]; let j = 1; while (j < L.length - 1 && L[j] < want) j++;
+  const u = ((j - 1) + (want - L[j-1])/Math.max(1e-6, L[j] - L[j-1]))/(L.length - 1);
+  let eye = catmull(FLY.pos, u), tgt = catmull(FLY.tgt, u);
+  const k = Math.max(0, (u - .72)/.28), up = norm(lerpv([0,1,0], [0,.02,-1], ease(Math.min(1, k))));
+  if (t >= 1) { if (!FLY.arr) { FLY.arr = true; $('sFly').classList.add('arrived'); taDa(); }
     const b = (now - FLY.t0)/1000; eye = add(eye, [Math.sin(b*.7)*.02, Math.sin(b*1.1)*.03, 0]); }
   return { eye, tgt, up };
 }
 
 /* ---------- draw ---------- */
-const FOG = [.13,.085,.05], SUN = norm([-.55,.75,.6]), SUNC = [1.25,.92,.56], AMB = [.46,.37,.29];
+const FOG = [.07,.045,.028], SUN = norm([-.5,.8,.5]), SUNC = [.55,.44,.32], AMB = [.36,.29,.23], LAMPC = [1.45,1.0,.58];
 function frame(now){
   requestAnimationFrame(frame);
   if (!FLY.on) { gl.clearColor(.07,.04,.02,1); gl.clear(gl.COLOR_BUFFER_BIT); return; }
-  const { eye, tgt, up } = camAt(now), time = now/1000;
-  const vp = m4.mul(m4.persp(50*Math.PI/180, cv.width/cv.height, .05, 80), m4.look(eye, tgt, up));
+  const { eye, tgt, up } = camAt(now), time = now/1000, sc = scene;
+  const vp = m4.mul(m4.persp(50*Math.PI/180, cv.width/cv.height, .04, 90), m4.look(eye, tgt, up));
   gl.clearColor(FOG[0], FOG[1], FOG[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.depthMask(true);
   gl.useProgram(P.p);
   gl.uniformMatrix4fv(P.u.vp, false, vp); gl.uniform3fv(P.u.sun, SUN); gl.uniform3fv(P.u.sunCol, SUNC); gl.uniform3fv(P.u.amb, AMB);
-  gl.uniform3fv(P.u.fogCol, FOG); gl.uniform3fv(P.u.cam, eye); gl.uniform1f(P.u.fogD, .085); gl.uniform1f(P.u.time, time);
+  gl.uniform3fv(P.u.fogCol, FOG); gl.uniform3fv(P.u.cam, eye); gl.uniform1f(P.u.fogD, .045); gl.uniform1f(P.u.time, time);
+  gl.uniform3fv(P.u.lamp, sc.lamp); gl.uniform3fv(P.u.lampCol, LAMPC);
   const draw = (b, t, off, o = {}) => {
     gl.bindBuffer(gl.ARRAY_BUFFER, b.b);
     gl.enableVertexAttribArray(P.a.pos); gl.vertexAttribPointer(P.a.pos, 3, gl.FLOAT, false, 32, 0);
     gl.enableVertexAttribArray(P.a.nor); gl.vertexAttribPointer(P.a.nor, 3, gl.FLOAT, false, 32, 12);
     gl.enableVertexAttribArray(P.a.uv);  gl.vertexAttribPointer(P.a.uv, 2, gl.FLOAT, false, 32, 24);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, t); gl.uniform1i(P.u.tx, 0);
-    gl.uniform3fv(P.u.off, off); gl.uniform2fv(P.u.uvs, o.uvs || [1,1]); gl.uniform3fv(P.u.tint, o.tint || [1,1,1]);
-    gl.uniform1f(P.u.glow, o.glow || 0); gl.uniform1f(P.u.water, o.water ? 1 : 0);
+    gl.uniform3fv(P.u.off, off); gl.uniform3fv(P.u.scl, o.scl || [1,1,1]); const a = o.ang || 0; gl.uniform2fv(P.u.rot, [Math.cos(a), Math.sin(a)]);
+    gl.uniform2fv(P.u.uvs, o.uvs || [1,1]); gl.uniform3fv(P.u.tint, o.tint || [1,1,1]);
+    gl.uniform1f(P.u.glow, o.glow || 0); gl.uniform1f(P.u.water, o.water ? 1 : 0); gl.uniform1f(P.u.gloss, o.gloss || 0);
     gl.drawArrays(gl.TRIANGLES, 0, b.n);
   };
-  draw(buf.ground, tex.ground, [0,0,0], { uvs: [26,12], tint: [.95,.85,.75] });
-  draw(buf.quay, tex.ground, [0,0,0], { uvs: [26,.06], tint: [.6,.5,.4] });
-  draw(buf.water, tex.white, [0,0,0], { water: true });
-  for (const s of skyline) drawBox(s, vp, eye);
-  gl.useProgram(P.p);
+  // the table, the river and its banks
+  draw(sc.tableTop, tex.table, [0,0,0], { gloss: .35 });
+  draw(sc.bank, tex.white, [0,0,0], { tint: [.16,.2,.1] });
+  draw(sc.river, tex.white, [0,0,0], { water: true });
+  // the box, the books, the district
+  for (const o of sc.objs) {
+    const opt = { scl: o.scl, ang: o.ang };
+    if (o.kind === 'box') { draw(buf.cTop, tex[o.top], o.pos, opt); draw(buf.cSides, tex[o.side], o.pos, { ...opt, tint: [.8,.7,.6] }); draw(buf.cEnds, tex[o.side], o.pos, opt); }
+    else if (o.kind === 'book') { draw(buf.cTop, tex[o.top], o.pos, { ...opt, gloss: .25 }); draw(buf.cSides, tex.pages, o.pos, opt); draw(buf.cEnds, tex.pages, o.pos, { ...opt, tint: [.55,.35,.2] }); }
+    else if (o.kind === 'bld') { const u = { ...opt, tint: o.tint, uvs: [o.scl[0]*2, o.scl[1]*2] };
+      draw(buf.cTop, tex[o.tex], o.pos, u); draw(buf.cSides, tex[o.tex], o.pos, u); draw(buf.cEnds, tex[o.tex], o.pos, u); }
+    else if (o.kind === 'cyl') draw(buf.cyl, tex[o.tex], o.pos, { ...opt, tint: o.tint, uvs: [1, o.scl[1]*2] });
+  }
+  // the warehouses
   const pulse = .5 + .5*Math.sin(time*3);
   for (let i = 0; i < players; i++) {
-    const off = [xOf(i), 0, 0], me = i === mine-1, g = me && FLY.arr ? .12 + .18*pulse : 0;
+    const off = [xOf(i), 0, 0], g = (i === mine-1 && FLY.arr) ? .12 + .18*pulse : 0;
     draw(buf.roof, tex['roof'+(i+1)], off, { glow: g });
     draw(buf.front, tex.w_front, off, { glow: g*.6 }); draw(buf.back, tex.w_back, off);
     draw(buf.left, tex.w_left, off); draw(buf.right, tex.w_right, off);
   }
-  // transparent pass
+  // transparent pass: shadows, lamp glow, ring, lanterns, steam
   gl.enable(gl.BLEND); gl.depthMask(false); gl.useProgram(S.p);
-  gl.uniformMatrix4fv(S.u.vp, false, vp); gl.uniform3fv(S.u.fogCol, FOG); gl.uniform3fv(S.u.cam, eye); gl.uniform1f(S.u.fogD, .085);
+  gl.uniformMatrix4fv(S.u.vp, false, vp); gl.uniform3fv(S.u.fogCol, FOG); gl.uniform3fv(S.u.cam, eye); gl.uniform1f(S.u.fogD, .045);
   gl.bindBuffer(gl.ARRAY_BUFFER, buf.spr); gl.enableVertexAttribArray(S.a.cor); gl.vertexAttribPointer(S.a.cor, 2, gl.FLOAT, false, 0, 0);
   const fwd = norm(sub(tgt, eye)), right = norm(cross(fwd, up)), upv = cross(right, fwd);
-  const spr = (ctr, size, col, kind, flat) => {
-    gl.uniform3fv(S.u.ctr, ctr); gl.uniform1f(S.u.size, size); gl.uniform4fv(S.u.col, col); gl.uniform1f(S.u.kind, kind);
-    gl.uniform3fv(S.u.ax, flat ? [1,0,0] : right); gl.uniform3fv(S.u.ay, flat ? [0,0,-1] : upv); gl.drawArrays(gl.TRIANGLES, 0, 6); };
+  const spr = (ctr, sz, col, kind, flatAng) => {
+    gl.uniform3fv(S.u.ctr, ctr); gl.uniform2fv(S.u.sz, typeof sz === 'number' ? [sz, sz] : sz); gl.uniform4fv(S.u.col, col); gl.uniform1f(S.u.kind, kind);
+    if (flatAng === undefined) { gl.uniform3fv(S.u.ax, right); gl.uniform3fv(S.u.ay, upv); }
+    else { const c = Math.cos(flatAng), s = Math.sin(flatAng); gl.uniform3fv(S.u.ax, [c,0,-s]); gl.uniform3fv(S.u.ay, [-s,0,-c]); }
+    gl.drawArrays(gl.TRIANGLES, 0, 6); };
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-  for (let i = 0; i < players; i++) spr([xOf(i), .004, .03], .82, [0,0,0,.6], 0, true);       // contact shadows
+  for (let i = 0; i < players; i++) spr([xOf(i), .003, .03], .82, [0,0,0,.6], 0, 0);
+  for (const s of sc.shadows) spr([s.pos[0], .002, s.pos[2]], s.sz, [0,0,0,s.a], s.round ? 0 : 3, s.ang);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-  if (FLY.arr) spr([xOf(mine-1), .006, 0], .98 + .05*pulse, [1,.75,.35,.55 + .35*pulse], 2, true); // highlight ring
-  for (let i = 0; i < players; i++) {                                                           // lanterns and their pools of light
+  spr([sc.lamp[0], .004, sc.lamp[2]], [ (xOf(players-1) - xOf(0))/2 + 6, 6 ], [1,.65,.3,.10], 0, 0);   // the lamp's pool of light
+  if (FLY.arr) spr([xOf(mine-1), .006, 0], .98 + .05*pulse, [1,.75,.35,.55 + .35*pulse], 2, 0);
+  for (let i = 0; i < players; i++) {
     const x = xOf(i), fl = .85 + .15*Math.sin(time*7 + i*2.3);
     spr([x-.317, .18, .52], .09, [1,.62,.25,.9*fl], 1); spr([x+.24, .18, .52], .09, [1,.62,.25,.9*fl], 1);
-    spr([x-.04, .004, .75], .42, [1,.55,.2,.16*fl], 1, true);
+    spr([x-.04, .004, .75], .42, [1,.55,.2,.14*fl], 1, 0);
   }
-  // steam: spawn and age particles
+  // steam from the warehouse roofs, smoke from the factory chimneys
   if (Math.random() < .55) for (let i = 0; i < players; i++) if (Math.random() < .5) {
-    const c = chimneys[(Math.random()*3)|0];
-    sprites.push({ p: [xOf(i)+c[0], H+.03, c[1]], v: [.02+Math.random()*.03, .16+Math.random()*.1, -.01], t: now, life: 3.2 + Math.random()*1.6, s: .05 + Math.random()*.03 });
+    const c = roofSteam[(Math.random()*3)|0];
+    sprites.push({ p: [xOf(i)+c[0], H+.03, c[1]], v: [.02+Math.random()*.03, .16+Math.random()*.1, -.01], t: now, life: 3 + Math.random()*1.6, s: .05 + Math.random()*.03, c: [.92,.88,.82], a: .32 });
   }
+  for (const c of sc.smoke) if (Math.random() < .12)
+    sprites.push({ p: c.slice(), v: [.05+Math.random()*.04, .22+Math.random()*.1, -.02], t: now, life: 5 + Math.random()*2, s: .09 + Math.random()*.05, c: [.55,.5,.46], a: .38 });
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   sprites = sprites.filter(p => (now - p.t)/1000 < p.life);
   for (const p of sprites) { const a = (now - p.t)/1000, k = a/p.life;
     const q = add(p.p, mulv(p.v, a)), near = Math.min(1, Math.max(0, (Math.hypot(q[0]-eye[0],q[1]-eye[1],q[2]-eye[2]) - .25)/.6));
-    spr(q, p.s + a*.12, [.92,.88,.82, .32*Math.sin(Math.PI*k)*near], 0); }
+    spr(q, p.s + a*.12, [p.c[0],p.c[1],p.c[2], p.a*Math.sin(Math.PI*k)*near], 0); }
   gl.depthMask(true); gl.disable(gl.BLEND);
 }
-function drawBox(s, vp, eye){
-  // a dark distant building: draw the unit cube scaled by stretching via the offset trick (scale baked per draw)
-  gl.useProgram(P.p);
-  const b = boxBuf(s);
-  gl.bindBuffer(gl.ARRAY_BUFFER, b.b);
-  gl.enableVertexAttribArray(P.a.pos); gl.vertexAttribPointer(P.a.pos, 3, gl.FLOAT, false, 32, 0);
-  gl.enableVertexAttribArray(P.a.nor); gl.vertexAttribPointer(P.a.nor, 3, gl.FLOAT, false, 32, 12);
-  gl.enableVertexAttribArray(P.a.uv);  gl.vertexAttribPointer(P.a.uv, 2, gl.FLOAT, false, 32, 24);
-  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex.white);
-  gl.uniform3fv(P.u.off, [s.x, 0, s.z]); gl.uniform2fv(P.u.uvs, [1,1]); gl.uniform3fv(P.u.tint, [.16,.11,.07]);
-  gl.uniform1f(P.u.glow, 0); gl.uniform1f(P.u.water, 0);
-  gl.drawArrays(gl.TRIANGLES, 0, b.n);
-}
-function boxBuf(s){
-  if (s.buf) return s.buf;
-  const w = s.w/2, h = s.h, q = (p0,p1,p2,p3,n) => [...p0,...n,0,0, ...p1,...n,1,0, ...p2,...n,1,1, ...p0,...n,0,0, ...p2,...n,1,1, ...p3,...n,0,1];
-  const a = [].concat(q([-w,0,w],[w,0,w],[w,h,w],[-w,h,w],[0,0,1]), q([w,0,w],[w,0,-w],[w,h,-w],[w,h,w],[1,0,0]),
-    q([-w,0,-w],[-w,0,w],[-w,h,w],[-w,h,-w],[-1,0,0]), q([-w,h,w],[w,h,w],[w,h,-w],[-w,h,-w],[0,1,0]));
-  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(a), gl.STATIC_DRAW);
-  return s.buf = { b, n: a.length/8 };
-}
+if (gl) init(); else $('fallback').style.display = 'block';
 }
 </script>
 </body>
