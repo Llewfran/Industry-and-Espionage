@@ -8,6 +8,7 @@ Every update to the apps gets a revision number. The Year Clock shows its revisi
 
 | Rev | Date | Changes |
 |---|---|---|
+| 2.0 | 26 Nov 2026 | New layout: Order of Access tokens staggered in a zigzag down the left (all 10 fit), clock right of centre and as large as the screen allows; at 30 s a large red panel over the left side reads "Stand ready at the Iron Gate" with the next number flashing; steam gauge needle steps every 5 s like an old station clock (10 s on Calls over 5 minutes), no shake, with a mark for every step; player number moved up inside the plate; "MINUTES" replaced by *Time is of the Essence* (Brasshaven Works kept). Applies to both dials |
 | 1.6 | 26 Nov 2026 | Revision numbers on every screen; CHANGELOG; update notice on the setup screen; cache-busting link from the site root |
 | 1.5 | 25 Nov 2026 | Steam gauge: 5-second steam whistle and steam when the Port opens; gauge plate reads "To the Gate" while settling |
 | 1.4 | 25 Nov 2026 | Steam-gauge dial (needle, danger band, lamp, whistle steam at 30 s); "Dial" choice in setup and "Switch dial" in the Chairman's controls; brass ring kept |

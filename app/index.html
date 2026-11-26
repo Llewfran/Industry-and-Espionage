@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="1.6">
+<meta name="ie-revision" content="2.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -54,7 +54,17 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 .status .t{font-size:clamp(20px,2.6vw,30px)}
 .status .s{font-family:"Cinzel",serif;color:var(--brass);font-size:clamp(15px,1.7vw,19px);letter-spacing:.14em;text-transform:uppercase}
 /* dial */
-.dialwrap{position:relative;width:min(56vmin,520px);aspect-ratio:1}
+.dialwrap{position:relative;width:var(--D,420px);height:var(--D,420px);flex:none}
+/* Rev 2 run layout: Order of Access on the left, clock right of centre */
+#sRun{flex-direction:row;align-items:stretch;justify-content:stretch;gap:2vw;padding:3vh 2.5vw 3vh 2vw}
+#sRun .side{flex:0 0 clamp(210px,25vw,330px);display:flex;flex-direction:column;align-items:center;gap:1.2vh;min-height:0;padding-top:1vh}
+#sRun .side .status{flex-direction:column;align-items:center;gap:2px;text-align:center}
+#sRun .railbox{flex:1;min-height:0;width:100%;position:relative}
+#sRun .stage{flex:1;min-width:0;display:flex;align-items:center;justify-content:center}
+@media (orientation:portrait){
+  #sRun{flex-direction:column-reverse;padding:3vh 3vw}
+  #sRun .side{flex:0 0 27vh;width:100%}
+}
 .dial{position:absolute;inset:0;border-radius:50%;
   background:radial-gradient(circle at 38% 30%,#fbe7aa 0%,#d6a654 30%,#9a6a24 62%,#4d300c 100%);
   box-shadow:0 0 0 6px #3b210b,0 0 0 10px #c9973f,0 0 0 13px #3b210b,0 18px 50px rgba(0,0,0,.7),inset 0 0 40px rgba(60,30,5,.6)}
@@ -67,15 +77,17 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 .ring .burn{stroke:var(--brass-l);stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(255,220,140,.8));transition:stroke .4s}
 .warn .ring .burn{stroke:var(--seal-l);filter:drop-shadow(0 0 8px rgba(255,90,60,.9))}
 .face{position:absolute;inset:16%;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;text-align:center}
-.face .lbl{font-family:"Cinzel",serif;font-size:clamp(12px,1.6vmin,16px);letter-spacing:.3em;text-transform:uppercase;color:var(--brass)}
-.face .num{font:900 clamp(90px,22vmin,210px)/.95 "Cinzel Decorative",serif;color:var(--brass-l);text-shadow:0 0 18px rgba(255,210,120,.35),0 3px 0 #3b210b}
-.face .time{font:700 clamp(30px,6vmin,58px)/1 "Cinzel",serif;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.face .lbl{font-family:"Cinzel",serif;font-size:calc(var(--D,420px)*.032);letter-spacing:.3em;text-transform:uppercase;color:var(--brass)}
+.face .num{font:900 calc(var(--D,420px)*.36)/.95 "Cinzel Decorative",serif;color:var(--brass-l);text-shadow:0 0 18px rgba(255,210,120,.35),0 3px 0 #3b210b}
+.face .time{font:700 calc(var(--D,420px)*.1)/1 "Cinzel",serif;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.04em}
 .warn .face .time{color:var(--seal-l)}
 /* next banner */
-.next{position:fixed;left:50%;top:max(3vh,14px);transform:translate(-50%,-160%);transition:transform .5s cubic-bezier(.2,1.4,.4,1);z-index:5;
-  display:flex;align-items:center;gap:18px;padding:12px 28px 12px 22px;border-radius:60px;
-  background:radial-gradient(circle at 30% 30%,#d5503f,#7e1410);border:3px solid #f2d48a;box-shadow:0 10px 30px rgba(0,0,0,.7)}
-.next.show{transform:translate(-50%,0)}
+.next{position:fixed;left:2vw;top:3vh;width:25vw;height:94vh;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;
+  padding:3vh 1.4vw;border-radius:22px;text-align:center;pointer-events:none;
+  background:radial-gradient(circle at 40% 28%,#d5503f,#7e1410 78%);border:4px solid #f2d48a;
+  box-shadow:0 16px 44px rgba(0,0,0,.75),inset 0 0 0 3px rgba(255,220,150,.3);
+  opacity:0;transform:translateX(-24px) scale(.96);transition:opacity .35s,transform .5s cubic-bezier(.2,1.4,.4,1)}
+.next.show{opacity:1;transform:none}
 #sRun .status{transition:opacity .3s}
 .open{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:8;pointer-events:none;opacity:0;transition:opacity .4s}
 .open.show{opacity:1}
@@ -90,16 +102,17 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 .open .who span{display:flex;flex-direction:column;align-items:center;gap:4px}
 @media (prefers-reduced-motion:reduce){.open .gate{transition:none}}
 #sRun.banner .status{opacity:0}
-.next .t{color:#ffe4d8;font-size:clamp(17px,2vw,22px);text-transform:uppercase;letter-spacing:.18em}
-.next .n{font:900 clamp(40px,5vw,60px)/1 "Cinzel Decorative",serif;color:#fff3c8;animation:flash .8s ease-in-out infinite alternate}
+.next .t{color:#ffe4d8;font-size:clamp(20px,2.3vw,30px);line-height:1.3;text-transform:uppercase;letter-spacing:.14em}
+.next .n{font:900 clamp(110px,15vw,250px)/1 "Cinzel Decorative",serif;text-shadow:0 0 30px rgba(255,220,150,.6);color:#fff3c8;animation:flash .8s ease-in-out infinite alternate}
 @keyframes flash{from{opacity:1;transform:scale(1)}to{opacity:.35;transform:scale(1.15)}}
 /* token rail */
-.rail{display:flex;gap:clamp(8px,1.4vw,16px);flex-wrap:wrap;justify-content:center;max-width:94vw}
+.rail{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.rail .tok{position:absolute;width:var(--T,72px);font-size:calc(var(--T,72px)*.44)}
+.rail .tok.cur{z-index:2}
 .tok{width:clamp(52px,7vw,78px);aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;
   font:900 clamp(22px,3vw,34px) "Cinzel Decorative",serif;color:#2a1606;
   background:radial-gradient(circle at 35% 30%,#fbe7aa,#c99a45 55%,#6b4517);border:2px solid #3b210b;box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 0 0 2px #f7e3ad;
   transition:opacity .4s,transform .4s,filter .4s}
-.tok small{position:absolute;bottom:-22px;font:600 13px "Cinzel",serif;color:var(--brass);letter-spacing:.1em}
 .tok.done{opacity:.28;filter:grayscale(.7)}
 .tok.cur{transform:scale(1.18);box-shadow:0 0 0 4px var(--brass-l),0 0 24px rgba(255,210,120,.8)}
 .tok.nxt{animation:pulse .8s ease-in-out infinite alternate}
@@ -132,13 +145,11 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 .gauge,.steam{display:none}
 body.dial-gauge .dial,body.dial-gauge .rivets,body.dial-gauge .ring,body.dial-gauge .face{display:none}
 body.dial-gauge .gauge{display:block;position:absolute;inset:-8% -6% -4%}
-body.dial-gauge .dialwrap{width:min(60vmin,560px);margin-top:4vh}
+body.dial-gauge .dialwrap{margin-top:5%}
 body.dial-gauge .steam{display:block}
 .gauge svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 16px 30px rgba(0,0,0,.7))}
-#gNeedle{transform-origin:100px 100px;transform-box:view-box;transition:transform .35s linear}
+#gNeedle{transform-origin:100px 100px;transform-box:view-box;transition:transform .22s cubic-bezier(.3,1.9,.5,1)}
 #gTremble{transform-origin:100px 100px;transform-box:view-box}
-.warn #gTremble{animation:tremble .11s linear infinite}
-@keyframes tremble{0%{transform:rotate(-.9deg)}50%{transform:rotate(.9deg)}100%{transform:rotate(-.9deg)}}
 #gLamp{transition:fill .3s}
 .warn #gLamp{fill:#ff5a3c;filter:url(#gGlow)}
 .warn #gTime{fill:#ff8a70}
@@ -152,7 +163,7 @@ body.dial-gauge .steam{display:block}
 .seg{display:flex;border:2px solid #6b4517;border-radius:12px;overflow:hidden}
 .seg button{border:0;border-radius:0;min-height:48px;padding:0 16px;font-size:15px;background:rgba(255,248,230,.5);color:#3b210b;box-shadow:none}
 .seg button.on{background:linear-gradient(180deg,#f6dc96,#c99a45 50%,#8d5e1f);color:#2a1606}
-@media (prefers-reduced-motion:reduce){.warn #gTremble,.warn .steam i{animation:none}}
+@media (prefers-reduced-motion:reduce){.warn .steam i{animation:none}}
 
 .rev{position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));z-index:4;
   font:600 12px "Cinzel",serif;letter-spacing:.14em;color:var(--brass);opacity:.6;pointer-events:none}
@@ -165,8 +176,6 @@ body.dial-gauge .steam{display:block}
 .update{display:none;margin-top:12px;text-align:center}
 .update.on{display:block}
 .update button{min-height:46px;font-size:15px}
-@media (orientation:portrait){.dialwrap{width:min(78vw,560px)}}
-@media (max-height:620px){.dialwrap{width:min(48vmin,400px)}.rail .tok{width:46px}}
 @media (prefers-reduced-motion:reduce){.next .n,.tok.nxt,.deal .tok{animation:none}}
 </style>
 </head>
@@ -211,9 +220,14 @@ body.dial-gauge .steam{display:block}
 
 <!-- RUNNING -->
 <section class="screen" id="sRun">
-  <div class="status"><div class="t" id="rYear">Year One</div><div class="s" id="rCall">Call 1 of 6</div></div>
-  <div class="paused-tag">Paused by the Chairman</div>
-  <div class="dialwrap">
+  <aside class="side" id="side">
+    <div class="status"><div class="t" id="rYear">Year One</div><div class="s" id="rCall">Call 1 of 6</div></div>
+    <div class="paused-tag">Paused by the Chairman</div>
+    <div class="kick">Order of Access</div>
+    <div class="railbox" id="railbox"><div class="rail" id="rail"></div></div>
+  </aside>
+  <div class="stage" id="stage">
+  <div class="dialwrap" id="dialwrap">
     <div class="dial"></div>
     <svg class="rivets" viewBox="0 0 100 100" aria-hidden="true" id="rivets"></svg>
     <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"/><circle class="burn" id="burn" cx="50" cy="50" r="44"/></svg>
@@ -250,12 +264,12 @@ body.dial-gauge .steam{display:block}
         <text x="100" y="52" text-anchor="middle" font-family="Cinzel,serif" font-weight="700" font-size="7.4" letter-spacing="1.8" fill="#3b210b">IRONREACH</text>
         <rect x="79" y="60" width="42" height="15" rx="2" fill="#160d07" stroke="#9a6a24" stroke-width="1.2"/>
         <text id="gTime" x="100" y="71.6" text-anchor="middle" font-family="Cinzel,serif" font-weight="700" font-size="11" fill="#f2d48a" letter-spacing=".5">3:00</text>
-        <rect x="71" y="119" width="58" height="40" rx="4" fill="url(#gBrass)" stroke="#2a1606" stroke-width="1" filter="url(#gSh)"/>
-        <rect x="74" y="122" width="52" height="34" rx="2.5" fill="none" stroke="#3b210b" stroke-width=".5"/>
-        <text id="gLbl" x="100" y="129" text-anchor="middle" font-family="Cinzel,serif" font-weight="700" font-size="4.8" letter-spacing="1.4" fill="#2a1606">IN PORT</text>
-        <text id="gNum" x="100" y="153" text-anchor="middle" font-family="'Cinzel Decorative',serif" font-weight="900" font-size="25" fill="#2a1606">1</text>
-        <text x="100" y="169" text-anchor="middle" font-family="Cinzel,serif" font-weight="700" font-size="4.8" letter-spacing="2" fill="#6b4517">MINUTES</text>
-        <text x="100" y="176" text-anchor="middle" font-family="Cinzel,serif" font-size="3.6" letter-spacing="1.4" fill="#6b4517">BRASSHAVEN WORKS</text>
+        <rect x="70" y="111" width="60" height="48" rx="4" fill="url(#gBrass)" stroke="#2a1606" stroke-width="1" filter="url(#gSh)"/>
+        <rect x="73" y="114" width="54" height="42" rx="2.5" fill="none" stroke="#3b210b" stroke-width=".5"/>
+        <text id="gLbl" x="100" y="121.5" text-anchor="middle" font-family="Cinzel,serif" font-weight="700" font-size="4.8" letter-spacing="1.4" fill="#2a1606">IN PORT</text>
+        <text id="gNum" x="100" y="147" text-anchor="middle" font-family="'Cinzel Decorative',serif" font-weight="900" font-size="26" fill="#2a1606">1</text>
+        <text x="100" y="168.5" text-anchor="middle" font-family="'Crimson Text',Georgia,serif" font-style="italic" font-weight="600" font-size="6.6" fill="#5a3a14">Time is of the Essence</text>
+        <text x="100" y="175.5" text-anchor="middle" font-family="Cinzel,serif" font-size="3.6" letter-spacing="1.4" fill="#6b4517">BRASSHAVEN WORKS</text>
         <!-- needle -->
         <g id="gTremble"><g id="gNeedle">
           <circle cx="100" cy="117" r="5.5" fill="url(#gSteel)" stroke="#0c1118" stroke-width=".6"/>
@@ -271,8 +285,7 @@ body.dial-gauge .steam{display:block}
     </div>
     <div class="steam" aria-hidden="true"><i></i><i></i><i></i></div>
   </div>
-  <div class="kick" style="margin-top:.6vh">Order of Access</div>
-  <div class="rail" id="rail"></div>
+  </div>
 </section>
 
 <!-- DECADE OVER -->
@@ -322,7 +335,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '1.6';
+const REV = '2.0';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -433,24 +446,35 @@ function drawScale(T){
   gT = T; const ang = sec => -135 + 270*sec/T; let h = '';
   h += `<path d="${arc(79,-135,135)}" stroke="#3b210b" stroke-width=".8" fill="none"/>`;
   h += `<path d="${arc(73,-135,ang(Math.min(30,T)))}" stroke="#b5372e" stroke-width="7" fill="none" opacity=".85"/>`;
-  for (let sec=0; sec<=T+0.01; sec+=15){
-    const maj = sec%60===0, mid = !maj && sec%30===0, a = ang(sec);
-    const [x0,y0]=P(79,a), [x1,y1]=P(maj?69:mid?73:75.5,a);
-    h += `<line x1="${x0.toFixed(2)}" y1="${y0.toFixed(2)}" x2="${x1.toFixed(2)}" y2="${y1.toFixed(2)}" stroke="#2a1606" stroke-width="${maj?1.8:mid?1.1:.7}"/>`;
+  const step = stepOf(T), midE = step===5 ? 15 : 30, marks = [];
+  for (let sec=0; sec<=T+0.01; sec+=step) marks.push(sec);
+  if (marks[marks.length-1] !== T) marks.push(T);
+  for (const sec of marks){
+    const maj = sec%60===0, mid = !maj && sec%midE===0, a = ang(sec);
+    const [x0,y0]=P(79,a), [x1,y1]=P(maj?69:mid?72.5:75.8,a);
+    h += `<line x1="${x0.toFixed(2)}" y1="${y0.toFixed(2)}" x2="${x1.toFixed(2)}" y2="${y1.toFixed(2)}" stroke="#2a1606" stroke-width="${maj?1.8:mid?1.1:.55}"/>`;
     if (maj) { const [lx,ly]=P(59,a); h += `<text x="${lx.toFixed(2)}" y="${(ly+3.4).toFixed(2)}" text-anchor="middle" font-family="Cinzel,serif" font-weight="700" font-size="10" fill="#2a1606">${sec/60}</text>`; }
   }
   $('gScale').innerHTML = h;
 }
 $('gScrews').innerHTML = [20,80,140,200,260,320].map(a=>{ const [x,y]=P(93.6,a);
   return `<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${a*1.7})"><circle r="2.6" fill="url(#gBrass)" stroke="#2a1606" stroke-width=".6"/><path d="M-1.8 0 h3.6" stroke="#2a1606" stroke-width=".8"/></g>`; }).join('');
+const stepOf = T => T > 300 ? 10 : 5;
+let gA = null;
 function gaugeSet(left, T){
   if (T !== gT) drawScale(T);
-  const f = Math.max(0, Math.min(1, left/T));
-  $('gNeedle').style.transform = `rotate(${(-135 + 270*f).toFixed(2)}deg)`;
+  const st = stepOf(T), q = Math.min(T, Math.ceil(Math.max(0,left)/st - 1e-6)*st);
+  const a = +(-135 + 270*q/T).toFixed(2);
+  if (a !== gA) {
+    const n = $('gNeedle');
+    n.style.transition = (gA === null || Math.abs(a-gA) > 20) ? 'transform .9s cubic-bezier(.45,0,.2,1)' : 'transform .22s cubic-bezier(.3,1.9,.5,1)';
+    n.style.transform = `rotate(${a}deg)`; gA = a;
+  }
   $('gTime').textContent = fmt(left);
 }
 function applyDial(){
   document.body.classList.toggle('dial-gauge', S.dial==='gauge');
+  if (typeof layoutRun === 'function') layoutRun();
   document.querySelectorAll('[data-dial]').forEach(b=>b.classList.toggle('on', b.dataset.dial===S.dial));
 }
 document.querySelectorAll('[data-dial]').forEach(b=>b.addEventListener('click',()=>{ S.dial=b.dataset.dial; save(); applyDial(); }));
@@ -508,11 +532,38 @@ function openYear(){
 }
 
 /* ---------- running ---------- */
+function layoutRun(){
+  const sr = $('sRun'); if (!sr.classList.contains('on')) return;
+  const st = $('stage').getBoundingClientRect();
+  const k = S.dial==='gauge' ? 1.16 : 1.08;
+  const D = Math.floor(Math.max(200, Math.min(st.width/1.04, st.height/k)));
+  sr.style.setProperty('--D', D + 'px');
+  placeRail(); placePanel();
+}
+function placeRail(){
+  const rb = $('railbox'), r = $('rail'), toks = [...r.children], n = toks.length; if (!n) return;
+  const W = rb.clientWidth, H = rb.clientHeight, vert = H >= W*0.8;
+  const span = 1 + (n-1)*0.56, cross = 1.92;
+  let T = vert ? Math.min(H/span, W/cross/1.08) : Math.min(W/span, H/cross/1.08);
+  T = Math.floor(Math.max(40, Math.min(T/1.06, 112)));
+  r.style.setProperty('--T', T + 'px');
+  r.style.width = (vert ? cross*T : span*T) + 'px'; r.style.height = (vert ? span*T : cross*T) + 'px';
+  toks.forEach((t,i)=>{ const a = i*0.56*T, b = (i%2)*0.92*T;
+    t.style.left = (vert ? b : a) + 'px'; t.style.top = (vert ? a : b) + 'px'; });
+}
+function placePanel(){
+  const sd = $('side').getBoundingClientRect(), p = $('next');
+  if (!sd.width) return;
+  Object.assign(p.style, { left: sd.left + 'px', top: sd.top + 'px', width: sd.width + 'px', height: sd.height + 'px' });
+}
+window.addEventListener('resize', layoutRun);
+window.addEventListener('orientationchange', ()=>setTimeout(layoutRun, 300));
 function renderRail(deal){
   const r = $('rail');
   r.classList.toggle('deal', !!deal);
   const st = isSettle();
-  r.innerHTML = S.order.map((n,i)=>`<div class="tok ${i<S.idx?'done':''} ${i===S.idx&&!st?'cur':''} ${(st?i===0:i===S.idx+1)?'nxt':''}" style="animation-delay:${deal?i*0.18:0}s">${n}<small>${i+1}</small></div>`).join('');
+  r.innerHTML = S.order.map((n,i)=>`<div class="tok ${i<S.idx?'done':''} ${i===S.idx&&!st?'cur':''} ${(st?i===0:i===S.idx+1)?'nxt':''}" style="animation-delay:${deal?i*0.18:0}s">${n}</div>`).join('');
+  placeRail();
 }
 function renderRun(deal){
   $('rYear').textContent = 'Year ' + WORDS[S.year];
@@ -546,6 +597,7 @@ function nextBanner(on){
   $('nextT').textContent = last ? 'Last Call of Year ' + WORDS[S.year] + ' · prepare to exit' : 'Stand ready at the Iron Gate';
   $('nextN').textContent = last ? '⚙' : S.order[S.idx+1];
   $('next').classList.toggle('show', !!on);
+  if (on) placePanel();
 }
 function advance(silent){
   if (!silent) endTone();
@@ -643,6 +695,7 @@ function render(deal){
     // catch up silently if the iPad slept through whole Calls
     while (S.phase==='call' && S.endAt + 0 <= Date.now() - S.callSec*1000 && S.idx < S.players-1) { S.idx++; S.endAt += S.callSec*1000; S.warned=false; }
     renderRun(deal);
+    layoutRun();
   }
 }
 render();
