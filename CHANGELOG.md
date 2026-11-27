@@ -8,6 +8,7 @@ Every update to the apps gets a revision number. The Year Clock shows its revisi
 
 | Rev | Date | Changes |
 |---|---|---|
+| 3.4 | 27 Nov 2026 | Layout: the red "Stand ready" panel now drops into its own column at the right edge, beside the clock, so the Order of Access and the year line stay visible on the left. The clock sits a little left of centre. Portrait is unchanged |
 | 3.3 | 27 Nov 2026 | The clock releases the Chairman's device when that device signs itself out |
 | 3.2 | 27 Nov 2026 | The relay account: a "Relay token" field on the setup screen (your ntfy token, kept on this iPad, with Show and Check). The line under it shows the allowance: signed in as, plan, messages left today, when it refills (or the free allowance for this Wi-Fi). The token travels inside the join code and the Chairman's code, so every device's messages count against the account. A red strip warns whenever the relay refuses a message (allowance used up, token refused, no connection) |
 | 3.1 | 26 Nov 2026 | Pairing the Chairman's device is now step 2 of setup: sealing the clock opens the pairing code at once, waits for the device (✓ Paired and locked), then Continue (or pair later). The locked screen also has a "Chairman's device" button behind the Chairman's PIN |

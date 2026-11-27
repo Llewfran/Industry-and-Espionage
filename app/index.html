@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="3.3">
+<meta name="ie-revision" content="3.4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -61,9 +61,12 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 #sRun .side .status{flex-direction:column;align-items:center;gap:2px;text-align:center}
 #sRun .railbox{flex:1;min-height:0;width:100%;position:relative}
 #sRun .stage{flex:1;min-width:0;display:flex;align-items:center;justify-content:center}
+/* Rev 3.4: the red panel has its own column at the right, so the Order of Access stays in view */
+#sRun .slot{flex:0 0 clamp(170px,19vw,260px)}
 @media (orientation:portrait){
   #sRun{flex-direction:column-reverse;padding:3vh 3vw}
   #sRun .side{flex:0 0 27vh;width:100%}
+  #sRun .slot{display:none}
 }
 .dial{position:absolute;inset:0;border-radius:50%;
   background:radial-gradient(circle at 38% 30%,#fbe7aa 0%,#d6a654 30%,#9a6a24 62%,#4d300c 100%);
@@ -86,7 +89,7 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
   padding:3vh 1.4vw;border-radius:22px;text-align:center;pointer-events:none;
   background:radial-gradient(circle at 40% 28%,#d5503f,#7e1410 78%);border:4px solid #f2d48a;
   box-shadow:0 16px 44px rgba(0,0,0,.75),inset 0 0 0 3px rgba(255,220,150,.3);
-  opacity:0;transform:translateX(-24px) scale(.96);transition:opacity .35s,transform .5s cubic-bezier(.2,1.4,.4,1)}
+  opacity:0;transform:translateX(24px) scale(.96);transition:opacity .35s,transform .5s cubic-bezier(.2,1.4,.4,1)}
 .next.show{opacity:1;transform:none}
 #sRun .status{transition:opacity .3s}
 .open{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:8;pointer-events:none;opacity:0;transition:opacity .4s}
@@ -101,9 +104,9 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 .open .who b{font:900 clamp(44px,6vw,72px)/1 "Cinzel Decorative",serif;color:var(--brass-l);display:block}
 .open .who span{display:flex;flex-direction:column;align-items:center;gap:4px}
 @media (prefers-reduced-motion:reduce){.open .gate{transition:none}}
-#sRun.banner .status{opacity:0}
-.next .t{color:#ffe4d8;font-size:clamp(20px,2.3vw,30px);line-height:1.3;text-transform:uppercase;letter-spacing:.14em}
-.next .n{font:900 clamp(110px,15vw,250px)/1 "Cinzel Decorative",serif;text-shadow:0 0 30px rgba(255,220,150,.6);color:#fff3c8;animation:flash .8s ease-in-out infinite alternate}
+@media (orientation:portrait){ #sRun.banner .status{opacity:0} }
+.next .t{color:#ffe4d8;font-size:clamp(17px,2vw,28px);line-height:1.3;text-transform:uppercase;letter-spacing:.14em}
+.next .n{font:900 clamp(90px,13vw,220px)/1 "Cinzel Decorative",serif;text-shadow:0 0 30px rgba(255,220,150,.6);color:#fff3c8;animation:flash .8s ease-in-out infinite alternate}
 @keyframes flash{from{opacity:1;transform:scale(1)}to{opacity:.35;transform:scale(1.15)}}
 /* token rail */
 .rail{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
@@ -363,6 +366,7 @@ body.dial-gauge .steam{display:block}
     <div class="steam" aria-hidden="true"><i></i><i></i><i></i></div>
   </div>
   </div>
+  <div class="slot" id="slot" aria-hidden="true"></div>
 </section>
 
 <!-- DECADE OVER -->
@@ -446,7 +450,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '3.3';
+const REV = '3.4';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -699,7 +703,7 @@ function placeRail(){
     t.style.left = (vert ? b : a) + 'px'; t.style.top = (vert ? a : b) + 'px'; });
 }
 function placePanel(){
-  const sd = $('side').getBoundingClientRect(), p = $('next');
+  const sl = $('slot').getBoundingClientRect(), sd = sl.width ? sl : $('side').getBoundingClientRect(), p = $('next');   // the right column; the side in portrait
   if (!sd.width) return;
   Object.assign(p.style, { left: sd.left + 'px', top: sd.top + 'px', width: sd.width + 'px', height: sd.height + 'px' });
 }
