@@ -96,6 +96,17 @@ const rand = n => crypto.getRandomValues(new Uint8Array(n));
 const newKey = () => b64u.to(rand(16));
 const newId = () => b64u.to(rand(9));
 const sha = async (label, raw) => crypto.subtle.digest('SHA-256', new Uint8Array([...enc.encode(label), ...raw]));
+/* the relay account: with a token every message counts against the account's allowance, not this Wi-Fi's free one */
+const authOf = token => token ? b64u.to(enc.encode('Bearer ' + token)) : '';
+const problems = new Set();                       // listeners told when the relay refuses a message
+const tellProblem = (kind, detail) => problems.forEach(f => { try { f(kind, detail); } catch (e){} });
+async function account(token){
+  try { const r = await fetch('https://ntfy.sh/v1/account' + (token ? '?auth=' + authOf(token) : ''));
+    if (r.status === 401 || r.status === 403) return { ok: false, why: 'auth' };
+    const j = await r.json(); return { ok: true, user: j.username, anon: j.role === 'anonymous' || j.username === '*', tier: j.tier && (j.tier.name || j.tier.code),
+      limit: j.limits && j.limits.messages, left: j.stats && j.stats.messages_remaining, resetAt: j.stats && j.stats.reset_at ? j.stats.reset_at*1000 : 0 };
+  } catch (e){ return { ok: false, why: 'net' }; }
+}
 const localMode = () => /[?&]relay=local\b/.test(location.search) || root.__IE_RELAY === 'local';
 
 async function open(gameKey, onMsg, opts){
@@ -114,7 +125,8 @@ async function open(gameKey, onMsg, opts){
   if (localMode()){
     bc = new BroadcastChannel(topic); bc.onmessage = e => deliver(e.data); setTimeout(() => setStatus('live'), 0);
   } else {
-    es = new EventSource(RELAY + topic + '/sse?since=' + (opts.since || '10m'));
+    const auth = authOf(opts.token);
+    es = new EventSource(RELAY + topic + '/sse?since=' + (opts.since || '10m') + (auth ? '&auth=' + auth : ''));
     es.onopen = () => setStatus('live');
     es.onerror = () => setStatus('reconnecting');
     es.onmessage = e => { let d; try { d = JSON.parse(e.data); } catch (x){ return; } if (d.event && d.event !== 'message') return; if (d.message) deliver(d.message); };
@@ -122,9 +134,15 @@ async function open(gameKey, onMsg, opts){
   async function send(obj){
     const body = await seal(Object.assign({}, obj, { _from: me, _id: newId(), _at: Date.now() }));
     if (bc){ bc.postMessage(body); return true; }
-    for (let i = 0; i < 3; i++){ try { const r = await fetch(RELAY + topic, { method: 'POST', body }); if (r.ok) return true; } catch (e){}
+    const auth = authOf(opts.token), url = RELAY + topic + (auth ? '?auth=' + auth : '');
+    for (let i = 0; i < 3; i++){
+      try { const r = await fetch(url, { method: 'POST', body });
+        if (r.ok){ tellProblem('', ''); return true; }
+        if (r.status === 429){ tellProblem('limit', opts.token ? 'account' : 'free'); return false; }   // the day's allowance is used up
+        if (r.status === 401 || r.status === 403){ tellProblem('auth', ''); return false; }            // the token was refused
+      } catch (e){}
       await new Promise(r => setTimeout(r, 800*(i + 1))); }
-    return false;
+    tellProblem('net', ''); return false;
   }
   return { send, close(){ closed = true; es && es.close(); bc && bc.close(); }, get status(){ return status; }, topic };
 }
@@ -134,5 +152,8 @@ async function open(gameKey, onMsg, opts){
 const PASSES = ['YJJu1i17','Qy2j1Zf7','2pRVM83X','Q3WLzdvI','A8V78iTA','hVO5ffW4','726TXYc5','ZlRXJblh','8G8PxlUh','cB2IrHkl'];
 const passOf = t => PASSES.indexOf(t) + 1;   // 0 if not a Pass
 
-root.IE = { QR: { matrix: qrMatrix, svg: qrSvg }, Link: { open, newKey, newId, local: localMode }, PASSES, passOf };
+root.IE = { QR: { matrix: qrMatrix, svg: qrSvg }, Link: { open, newKey, newId, local: localMode, account, onProblem: f => problems.add(f) }, PASSES, passOf };
+/* a plain-words account of what went wrong, for every screen */
+root.IE.Link.problemText = (kind, detail) => kind === 'limit' ? (detail === 'account' ? 'The relay refused a message: your account\'s daily allowance is used up.' : 'The relay refused a message: today\'s free allowance for this Wi-Fi is used up. Add your relay token on the clock\'s setup screen.')
+  : kind === 'auth' ? 'The relay did not accept the token. Check it on the clock\'s setup screen.' : kind === 'net' ? 'The relay could not be reached. Check the internet connection.' : '';
 })(window);

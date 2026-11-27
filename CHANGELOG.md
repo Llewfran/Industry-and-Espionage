@@ -8,6 +8,7 @@ Every update to the apps gets a revision number. The Year Clock shows its revisi
 
 | Rev | Date | Changes |
 |---|---|---|
+| 3.2 | 27 Nov 2026 | The relay account: a "Relay token" field on the setup screen (your ntfy token, kept on this iPad, with Show and Check). The line under it shows the allowance: signed in as, plan, messages left today, when it refills (or the free allowance for this Wi-Fi). The token travels inside the join code and the Chairman's code, so every device's messages count against the account. A red strip warns whenever the relay refuses a message (allowance used up, token refused, no connection) |
 | 3.1 | 26 Nov 2026 | Pairing the Chairman's device is now step 2 of setup: sealing the clock opens the pairing code at once, waits for the device (✓ Paired and locked), then Continue (or pair later). The locked screen also has a "Chairman's device" button behind the Chairman's PIN |
 | 3.0 | 26 Nov 2026 | The Formal Register in the Chamber, stepped by the Chairman's device: each Warehouse with its Industry, every card recorded at the Reveal dealt onto the screen, and its score counting up; lowest to highest; then "The Port falls silent · And now the Brass Torch"; the winner with flame, sparks, fanfare and steam whistle; second place announced last |
 | 2.9 | 26 Nov 2026 | The Chairman's device: Chairman's controls → "Chairman's device" shows a code only the Chairman sees. The first device that scans it and enters the Chairman's PIN is locked to the Decade ("Release the Chairman's device" frees it). The clock obeys its remote commands, sends it the year's state, and keeps its sealed backup |
@@ -34,6 +35,7 @@ The Rev 1.0–1.1 brass-ring version is kept on the `v1-brass-ring` branch.
 
 | Rev | Date | Changes |
 |---|---|---|
+| 0.10 | 27 Nov 2026 | Uses the relay token carried in the Port clock's code; "did not answer" now says when the relay is refusing messages |
 | 0.9 | 26 Nov 2026 | The player's private register, open from the start of Year One: In Stock and On Order (whole cards, two to a row; "+ Add a card" at the top opens all 20 card faces by Land plus Boom Time, newest first; ✕ to remove, with Undo) and the Trade Register (the 13 Industries, each with two pickers: ? or 1 to the number of players). Kept only on the phone; nothing automatic |
 | 0.8 | 26 Nov 2026 | The Port screen: "Enter Ironreach" when the player's Call begins, then their own countdown with a brass ring; "Thirty seconds · Finish and prepare to leave" and "Leave Ironreach" at the end; Calls before yours and Calls left in the Decade; leaving the Port after Year One brings the title "Industrialist of Brasshaven" with a fanfare; the Herald's Codex on the phone, pages unlocking through the Decade (Year One: 6–10; after the player's Year One Call: 21–23; Year Two: 11–15; Year Three: 16; Year Five: 17; after Year Five: 18; Year Ten: 19; after Year Ten: 20) |
 | 0.7 | 26 Nov 2026 | The watch never shows the number: a keyhole gear and "Your Warehouse" instead. The number appears only while the player holds "Hold to remind me". The 30-second alarm no longer shows the number either |
@@ -48,6 +50,7 @@ The Rev 1.0–1.1 brass-ring version is kept on the `v1-brass-ring` branch.
 
 | Rev | Date | Changes |
 |---|---|---|
+| 0.5 | 27 Nov 2026 | Uses the relay token carried in the Chairman's code; pairing and the status line say at once when the relay is refusing messages |
 | 0.4 | 26 Nov 2026 | Prompts for every Call: the first 15 seconds bring a full-screen In-Hand check (the card they should hold, ✓ or ✗; closes when answered or after 15 s); 15 seconds before the end of the Call a full-screen draw page (all cards; tap the one handed over). The draw page stays open across the changeover and records for the player who is leaving; it is skipped if already recorded on The Call page, in a penalty year or in Year Ten |
 | 0.3 | 26 Nov 2026 | The Great Reveal: close the Iron Pacts ledger; reveal each Warehouse in any order (Industry, Production Line card by card with "Land or Resource?" for the Wonder, the Warehouse's card count and calamities); Complete shows only "The foundation stands" or "You failed and must depart the Port in haste"; the Chairman scores alone (Boom Time, foundations, calamities, zero floor, Trade Block Pacts, the Brass Torch and its tie-breaks with a show of hands); then steps the Formal Register on the iPad. Scoring engine in `shared/score.js` |
 | 0.2 | 26 Nov 2026 | No Ledger: the device keeps only the card handed over this year, shows it for the In-Hand check at that Warehouse's next Call, and then lets it go. No history is kept |

@@ -355,15 +355,16 @@ function taDa(){
 }
 
 /* ---------- stages ---------- */
-const REV = '0.9';
+const REV = '0.10';
 const show = id => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === id));
 let players = 6, mine = 4;
 const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
 const HOURS16 = 16*3600e3;
 const hash = new URLSearchParams(location.hash.slice(1));
-if (hash.get('g')) store.set('ie-join', { g: hash.get('g'), at: Date.now() });
+if (hash.get('g')) store.set('ie-join', { g: hash.get('g'), at: Date.now(), k: hash.get('k') || '' });
 const joined = store.get('ie-join');
 const GAME = joined && Date.now() - joined.at < HOURS16 ? joined.g : null;
+const TOKEN = (joined && joined.k) || '';   // the relay account token, carried in the Port clock's code
 // the Pass: its secret code (#t=…); never a readable number
 const PASS = IE.passOf(hash.get('t') || '');
 const BADPASS = !!hash.get('t') && !PASS;
@@ -386,7 +387,9 @@ $('bSound').addEventListener('click', () => { wake(); if (FLY.on && !FLY.arr) fl
 
 /* the encrypted line to the Port clock */
 let LINK = null, waiting = null;
-const linkReady = GAME ? IE.Link.open(GAME, onLink, { since: '2m', onStatus: st => { if (st === 'live') setTimeout(() => { try { hello(); } catch(e){} }, 50); } }).then(l => LINK = l).catch(() => null) : Promise.resolve(null);
+let relayProblem = '';
+IE.Link.onProblem((k, d) => { relayProblem = k ? IE.Link.problemText(k, d) : ''; });
+const linkReady = GAME ? IE.Link.open(GAME, onLink, { since: '2m', token: TOKEN, onStatus: st => { if (st === 'live') setTimeout(() => { try { hello(); } catch(e){} }, 50); } }).then(l => LINK = l).catch(() => null) : Promise.resolve(null);
 function onLink(m){
   if (m.t === 'seat' && waiting && m.nonce === waiting.nonce) { const w = waiting; waiting = null; w.done(m); }
   if (m.t === 'warn') callMe(m);
@@ -472,7 +475,7 @@ async function present(n){
     sealed: 'This Order Pass is already sealed to another phone. Show it to the Chairman.',
     range: 'This Order Pass is not in play tonight. Hand it back to the Chairman.',
     hold: 'This phone is already sealed to its own Order Pass. The Passes were sealed when the Chairman opened the year.',
-    timeout: 'The Port clock did not answer. Make sure the iPad is showing the Port clock, then try again.',
+    timeout: relayProblem || 'The Port clock did not answer. Make sure the iPad is showing the Port clock, then try again.',
     nolink: 'This phone could not reach the Port. Check its connection, then try again.'
   }[r.why] || 'The Iron Gate stays shut.';
   gateView('no', why, r.why === 'hold' ? { label: 'Fly to my Warehouse', go(){ const k = held(); if (k) flyTo(k.seat, k.players); } } : mineAlt);

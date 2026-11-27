@@ -226,8 +226,10 @@ const GROUPS = [['Ocean', [0,1,2,3]], ['Mountain', [4,5,6,7]], ['Fields', [8,9,1
 const hash = new URLSearchParams(location.hash.slice(1));
 let C = store.get('ie-chair');
 if (hash.get('c') && (!C || C.ckey !== hash.get('c'))) { C = { ckey: hash.get('c'), dev: (C && C.dev) || IE.Link.newId(), paired: false }; store.set('ie-chair', C); }
+if (hash.get('c') && C) { C.k = hash.get('k') || ''; store.set('ie-chair', C); }   // the relay account token, carried in the Chairman's code
 if (hash.get('c')) history.replaceState(null, '', location.pathname + location.search);
-let LINK = null, ST = null, stAt = 0, waitPair = null;
+let LINK = null, ST = null, stAt = 0, waitPair = null, relayProblem = '';
+IE.Link.onProblem((k, d) => { relayProblem = k ? IE.Link.problemText(k, d) : ''; try { render(); } catch(e){} });
 const D = () => store.get('ie-chair-data-' + (C && C.ckey)) || { H: {}, K: {}, P: [], at: 0 };   // H the card handed (this year and last only), K this year's check, P pacts
 const saveD = d => { d.at = Date.now(); store.set('ie-chair-data-' + C.ckey, d); backupSoon(); };
 
@@ -247,7 +249,7 @@ function onLink(m){
 }
 async function connect(){
   if (LINK || !C) return;
-  LINK = await IE.Link.open(C.ckey, onLink, { since: '2m', onStatus: st => { render(); if (st === 'live' && C.paired) LINK.send({ t: 'hello', dev: C.dev }); } });
+  LINK = await IE.Link.open(C.ckey, onLink, { since: '2m', token: C.k || '', onStatus: st => { render(); if (st === 'live' && C.paired) LINK.send({ t: 'hello', dev: C.dev }); } });
 }
 let pinBuf = '';
 $('pKeys').innerHTML = [1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => k === '' ? '<span></span>' : `<button class="btn ${k === '⌫' ? 'ghost' : ''}" data-k="${k}">${k}</button>`).join('');
@@ -261,7 +263,8 @@ $('pKeys').addEventListener('click', async e => {
   const nonce = IE.Link.newId(), pr = await proof(pin);
   const r = await new Promise(res => { let n = 0; waitPair = { nonce, done: res };
     const send = () => { if (!waitPair || waitPair.nonce !== nonce) return; if (n++ >= 5) { waitPair = null; res({ ok: false, why: 'timeout' }); return; }
-      LINK.send({ t: 'pair', dev: C.dev, proof: pr, nonce }); setTimeout(send, 4000); }; send(); });
+      LINK.send({ t: 'pair', dev: C.dev, proof: pr, nonce }).then(ok => { if (!ok && relayProblem && waitPair && waitPair.nonce === nonce) { waitPair = null; res({ ok: false, why: 'relay' }); } });
+      setTimeout(send, 4000); }; send(); });
   if (r.ok) {
     BK = await bakKey(pin); C.paired = true; C.bk = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ie-cbak|' + C.ckey + '|' + pin))));
     store.set('ie-chair', C);
@@ -270,7 +273,8 @@ $('pKeys').addEventListener('click', async e => {
   }
   pinBuf = ''; dots(); $('pDots').classList.remove('shake'); void $('pDots').offsetWidth; $('pDots').classList.add('shake');
   $('pErr').textContent = { pin: 'That is not the Chairman\'s PIN.', locked: 'This Decade already has a Chairman\'s device. Release it in the iPad\'s Chairman\'s controls first.',
-    timeout: 'The clock did not answer. Is the iPad showing the Port clock?' }[r.why] || 'The clock refused.';
+    relay: relayProblem,
+    timeout: relayProblem || 'The clock did not answer. Is the iPad showing the Port clock?' }[r.why] || 'The clock refused.';
 });
 
 /* ---------- the app ---------- */
@@ -304,7 +308,7 @@ function render(){
   $('tDot').classList.toggle('live', !!live);
   const y = year();
   $('tYear').textContent = ST ? (ST.phase === 'done' ? 'The Decade is over' : 'Year ' + WORDS[y]) : 'The Chairman';
-  let st = !live ? 'Reaching the clock…' : !ST ? 'Waiting for the clock' : ST.paused ? 'Paused' : ST.phase === 'settle' ? 'Settling · first: ' + (ST.order || [])[0]
+  let st = relayProblem ? '⚠ ' + relayProblem : !live ? 'Reaching the clock…' : !ST ? 'Waiting for the clock' : ST.paused ? 'Paused' : ST.phase === 'settle' ? 'Settling · first: ' + (ST.order || [])[0]
     : ST.phase === 'call' ? 'In Port: ' + ST.inPort + (ST.idx < ST.players - 1 ? ' · next: ' + ST.order[ST.idx + 1] : ' · last Call') : ST.phase === 'locked' ? 'Waiting for the Herald to open the year' : '';
   $('tStat').textContent = st;
   const open = ST && (ST.phase === 'call' || ST.phase === 'settle');

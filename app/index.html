@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="3.1">
+<meta name="ie-revision" content="3.2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -179,6 +179,16 @@ input.pin{font:700 26px "Cinzel",serif;letter-spacing:.4em;width:6.2em;text-alig
 #oChair .qr.done{opacity:.25;filter:grayscale(1)}
 #oChair .jbox{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;max-height:100%;overflow:auto;padding:12px}
 #oChair .row{display:flex;gap:12px;justify-content:center}
+/* the relay token and its allowance */
+.field.tokf{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+.field.tokf label{width:auto;max-width:none}
+.tokrow{display:flex;gap:8px}
+.tokrow input{flex:1;min-width:0;font:600 18px ui-monospace,Menlo,monospace;letter-spacing:.04em;padding:10px 12px;border-radius:10px;border:2px solid #6b4517;background:#1c1007;color:#f2d48a}
+.tokrow button{min-height:48px;padding:0 14px;font-size:15px}
+.tokst{font-size:16px;font-weight:600;color:#5a3a14;min-height:1.3em}
+.tokst.ok{color:#2f6b2a}.tokst.bad{color:#9b2a1f}
+.relaywarn{position:fixed;left:0;right:0;top:0;z-index:30;background:#8e231b;color:#fff3ec;font:600 17px "Cinzel",serif;letter-spacing:.03em;text-align:center;padding:10px 16px;box-shadow:0 4px 16px rgba(0,0,0,.6)}
+.relaywarn[hidden]{display:none}
 /* pin pad */
 .overlay{position:fixed;inset:0;background:rgba(10,5,2,.82);display:none;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
 .overlay.on{display:flex}
@@ -255,6 +265,9 @@ body.dial-gauge .steam{display:block}
       <input class="pin" id="iPin" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="····"></div>
     <div class="field"><label>Herald's PIN<small>4 digits; the Herald opens each year after reading the Codex</small></label>
       <input class="pin" id="iHPin" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="····"></div>
+    <div class="field tokf"><label>Relay token<small>Your ntfy account token (tk_…). Kept on this iPad; leave empty to use the free allowance</small></label>
+      <div class="tokrow"><input id="iTok" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="tk_…"><button class="ghost" id="bTokShow" type="button">Show</button><button class="ghost" id="bTokCheck" type="button">Check</button></div>
+      <div class="tokst" id="tokSt"></div></div>
     <div class="err" id="setupErr"></div>
     <div class="row">
       <button class="ghost" id="bTest">Test the bells</button>
@@ -388,6 +401,8 @@ body.dial-gauge .steam{display:block}
   </div>
 </div>
 
+<div class="relaywarn" id="relayWarn" hidden></div>
+
 <!-- THE FORMAL REGISTER: shown in the Chamber at the end of the Decade, stepped by the Chairman's device -->
 <div class="reg" id="oReg" hidden><div class="regin" id="regIn"></div></div>
 
@@ -431,7 +446,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '3.1';
+const REV = '3.2';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -638,6 +653,7 @@ $('bOpen').addEventListener('click',()=>{
   const p = $('iPin').value.trim(), h = $('iHPin').value.trim();
   if (!/^\d{4}$/.test(p) || !/^\d{4}$/.test(h)) { $('setupErr').textContent = 'Choose a four-digit PIN for the Chairman and one for the Herald.'; return; }
   if (p === h) { $('setupErr').textContent = 'The Chairman and the Herald need different PINs.'; return; }
+  const tk = $('iTok').value.trim(); try { tk ? localStorage.setItem(TOKK, tk) : localStorage.removeItem(TOKK); } catch(e){}
   audio(); S.pin = p; S.hpin = h; S.phase='locked'; S.order=[]; S.idx=0; newGame(); save(); render(); keepAwake();
   setTimeout(() => showChair(true), 300);   // setup, step 2: pair the Chairman's device straight away
 });
@@ -816,11 +832,34 @@ $('mLonger').addEventListener('click',()=>{ S.callSec=Math.min(600,S.callSec+15)
 $('mEndYear').addEventListener('click',()=>{ closeMenu(); endTone(); if (!isSettle()) portOpen(S.order[S.idx], null); endYear(); });
 $('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', players:S.players, callSec:S.callSec, settleSec:S.settleSec, dial:S.dial, pausedFrom:'call', year:1, pin:'', hpin:'', order:[], idx:0, endAt:0, left:0, warned:false, game:'', seats:{}, seen:[] }; $('iPin').value=''; $('iHPin').value=''; startLink(); save(); render(); });
 
+/* ---------- the relay token: the ntfy account every device's messages count against ---------- */
+const TOKK = 'ie-relay-token';
+const relayToken = () => { try { return localStorage.getItem(TOKK) || ''; } catch(e){ return ''; } };
+function fmtReset(ms){ if (!ms) return ''; const d = new Date(ms); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + (d.toDateString() !== new Date().toDateString() ? ' tomorrow' : ''); }
+async function checkRelay(){
+  const tk = $('iTok').value.trim(), st = $('tokSt');
+  if (tk && !/^tk_[A-Za-z0-9]{10,}$/.test(tk)) { st.textContent = 'That does not look like an ntfy token: it starts with tk_ and has no spaces.'; st.className = 'tokst bad'; return; }
+  st.textContent = 'Asking the relay…'; st.className = 'tokst';
+  const a = await IE.Link.account(tk);
+  if (!a.ok) { st.textContent = a.why === 'auth' ? 'The relay did not accept this token.' : 'The relay could not be reached.'; st.className = 'tokst bad'; return; }
+  try { tk ? localStorage.setItem(TOKK, tk) : localStorage.removeItem(TOKK); } catch(e){}
+  const left = (a.left != null && a.limit) ? a.left.toLocaleString() + ' of ' + a.limit.toLocaleString() + ' messages left today' : '';
+  st.textContent = (a.anon ? 'Free relay, shared by this Wi-Fi' : 'Signed in as ' + a.user + (a.tier ? ' · ' + a.tier : '')) + (left ? ' · ' + left : '') + (a.resetAt ? ' · refills ' + fmtReset(a.resetAt) : '');
+  st.className = 'tokst ' + (a.left === 0 ? 'bad' : 'ok');
+}
+$('iTok').value = relayToken();
+$('bTokShow').addEventListener('click', () => { const i = $('iTok'); i.type = i.type === 'password' ? 'text' : 'password'; $('bTokShow').textContent = i.type === 'password' ? 'Show' : 'Hide'; });
+$('bTokCheck').addEventListener('click', checkRelay);
+$('iTok').addEventListener('change', checkRelay);
+setTimeout(checkRelay, 400);
+/* the warning strip: shown whenever the relay refuses a message, cleared by the next message that goes through */
+IE.Link.onProblem((kind, detail) => { const w = $('relayWarn'); if (!kind) { w.hidden = true; return; } w.textContent = '⚠ ' + IE.Link.problemText(kind, detail); w.hidden = false; });
+
 /* ---------- joining: the phones ----------
    Each phone claims a seat with its Order Pass. No screen here ever shows which number a phone holds:
    the numbers stay secret until each is called. Until the Chairman opens a year, a Pass may be scanned
    again (a phone may change Pass, and the latest phone to present a Pass takes it). Opening a year seals them. */
-const joinUrl = () => new URL('../join/', location.origin + location.pathname).href + '#g=' + S.game;
+const joinUrl = () => new URL('../join/', location.origin + location.pathname).href + '#g=' + S.game + (relayToken() ? '&k=' + relayToken() : '');
 const titleOf = () => S.year > 1 ? 'Industrialists' : 'Initiates';
 function newGame(){ S.game = window.IE ? IE.Link.newKey() : ''; S.ckey = window.IE ? IE.Link.newKey() : ''; S.cdev = ''; S.cblob = ''; S.seats = {}; S.seen = []; S.seatLock = false; startLink(); }
 let LINK = null, CLINK = null, linkState = 'off', fresh = false, joinAdmin = false;
@@ -830,7 +869,7 @@ async function startLink(){
   linkState = 'off'; renderSeats();
   if (!S.game || !window.IE || !window.crypto || !crypto.subtle) return;
   const key = S.game;
-  try { const l = await IE.Link.open(key, onLink, { since: '15m', onStatus: st => { linkState = st; renderSeats(); } });
+  try { const l = await IE.Link.open(key, onLink, { since: '15m', token: relayToken(), onStatus: st => { linkState = st; renderSeats(); } });
     if (S.game !== key) { l.close(); return; } l.key = key; LINK = l; } catch(e){ linkState = 'off'; renderSeats(); }
   startChairLink();
 }
@@ -874,7 +913,7 @@ async function startChairLink(){
   if (CLINK) { CLINK.close(); CLINK = null; }
   if (!S.ckey || !window.IE) return;
   const key = S.ckey;
-  try { const l = await IE.Link.open(key, onChair, { since: '2m' }); if (S.ckey !== key) { l.close(); return; } l.key = key; CLINK = l; } catch(e){}
+  try { const l = await IE.Link.open(key, onChair, { since: '2m', token: relayToken() }); if (S.ckey !== key) { l.close(); return; } l.key = key; CLINK = l; } catch(e){}
 }
 async function pinProof(pin){ const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ie-chair|' + S.ckey + '|' + pin)); return Array.from(new Uint8Array(d), x => x.toString(16).padStart(2,'0')).join(''); }
 const seenC = new Set();
@@ -905,7 +944,7 @@ async function onChair(m){
 let chSetup = false;   // true while the pairing step of the setup is showing
 function renderChair(){
   if (!S.ckey) return;
-  const url = new URL('../chair/', location.origin + location.pathname).href + '#c=' + S.ckey;
+  const url = new URL('../chair/', location.origin + location.pathname).href + '#c=' + S.ckey + (relayToken() ? '&k=' + relayToken() : '');
   if ($('chQr').dataset.url !== url) { $('chQr').innerHTML = IE.QR.svg(url, { margin: 2, dark: '#2a1606', light: '#f3e3bd' }); $('chQr').dataset.url = url; }
   $('chKick').textContent = chSetup ? 'Setup · step 2 of 2 · for the Chairman\'s eyes only' : 'For the Chairman\'s eyes only';
   $('chOk').hidden = !S.cdev; $('chQr').classList.toggle('done', !!S.cdev);
