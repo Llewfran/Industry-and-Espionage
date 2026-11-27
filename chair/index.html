@@ -31,7 +31,12 @@ html,body{min-height:100%;background:radial-gradient(ellipse at 50% 0%,#3a2210,v
 .dot.live{background:#7fc27a;box-shadow:0 0 8px #7fc27a}
 /* tabs */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:#1a0f07;border-top:1px solid #6b4517;padding:6px 6px calc(env(safe-area-inset-bottom) + 6px)}
-.tabs button{flex:1;min-height:52px;border:0;background:none;color:#b48a45;font:700 12px "Cinzel",serif;letter-spacing:.08em;cursor:pointer;border-radius:10px}
+.tabs button{flex:1;min-width:0;min-height:52px;border:0;background:none;color:#b48a45;font:700 11px "Cinzel",serif;letter-spacing:.04em;cursor:pointer;border-radius:10px;padding:0 2px}
+.chk{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-bottom:1px solid #3b250d;cursor:pointer}
+.chk:last-child{border:0}
+.chk input{width:26px;height:26px;flex:none;margin-top:1px;accent-color:#c99a45}
+.chk input:checked+span{opacity:.55}
+.chk b{color:var(--brass-l)}
 .tabs button.on{background:rgba(201,151,63,.16);color:var(--brass-l)}
 .tab{display:none}.tab.on{display:block}
 .box{border:1px solid #5a3a14;border-radius:14px;background:rgba(201,151,63,.06);padding:14px;margin-bottom:12px}
@@ -150,6 +155,9 @@ details p{padding:0 14px 12px}
     <div class="cd" id="tCd">–</div>
   </div>
 
+  <!-- SETUP -->
+  <section class="tab" id="tabSetup"><div id="suBody"></div></section>
+
   <!-- THE CALL -->
   <section class="tab on" id="tabPort">
     <div class="box">
@@ -199,7 +207,7 @@ details p{padding:0 14px 12px}
 </div>
 
 <nav class="tabs" id="tabs" hidden>
-  <button class="on" data-tab="tabPort">The Call</button><button data-tab="tabClock">Clock</button>
+  <button data-tab="tabSetup">Setup</button><button class="on" data-tab="tabPort">The Call</button><button data-tab="tabClock">Clock</button>
   <button data-tab="tabPacts">Pacts</button><button data-tab="tabReveal">Reveal</button><button data-tab="tabRules">Rulings</button>
 </nav>
 
@@ -252,7 +260,8 @@ function backupSoon(){ clearTimeout(bakT); bakT = setTimeout(async () => { if (!
 async function proof(pin){ const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ie-chair|' + C.ckey + '|' + pin)); return Array.from(new Uint8Array(d), x => x.toString(16).padStart(2,'0')).join(''); }
 function onLink(m){
   if (m.t === 'paired' && waitPair && m.nonce === waitPair.nonce) { const w = waitPair; waitPair = null; w.done(m); }
-  if (m.t === 'state') { if (ST && m._at && ST._at && m._at < ST._at) return; ST = m; stAt = (m._at && Math.abs(Date.now() - m._at) < 5000) ? m._at : Date.now(); render(); }
+  if (m.t === 'state') { if (ST && m._at && ST._at && m._at < ST._at) return; const first = !ST; ST = m;
+    if (first && m.phase === 'locked' && m.year === 1) document.querySelector('#tabs [data-tab="tabSetup"]').click(); stAt = (m._at && Math.abs(Date.now() - m._at) < 5000) ? m._at : Date.now(); render(); }
 }
 async function connect(){
   if (LINK || !C) return;
@@ -316,13 +325,13 @@ function render(){
   const y = year();
   $('tYear').textContent = ST ? (ST.phase === 'done' ? 'The Decade is over' : 'Year ' + WORDS[y]) : 'The Chairman';
   let st = relayProblem ? '⚠ ' + relayProblem : !live ? 'Reaching the clock…' : !ST ? 'Waiting for the clock' : ST.paused ? 'Paused' : ST.phase === 'settle' ? 'Settling · first: ' + (ST.order || [])[0]
-    : ST.phase === 'call' ? 'In Port: ' + ST.inPort + (ST.idx < ST.players - 1 ? ' · next: ' + ST.order[ST.idx + 1] : ' · last Call') : ST.phase === 'locked' ? 'Waiting for the Herald to open the year' : '';
+    : ST.phase === 'call' ? 'In Port: ' + ST.inPort + (ST.idx < ST.players - 1 ? ' · next: ' + ST.order[ST.idx + 1] : ' · last Call') : ST.phase === 'locked' ? (ST.year === 1 ? 'Year One waits for you to open it' : 'Waiting for the Herald to open the year') : '';
   $('tStat').textContent = st;
   const open = ST && (ST.phase === 'call' || ST.phase === 'settle');
   $('tCd').textContent = open ? fmt(leftNow()) : '–'; $('tCd').classList.toggle('late', open && ST.phase === 'call' && leftNow() <= 30);
   if (follow && ST && ST.phase === 'call' && ST.inPort) seat = ST.inPort;
   if (!seat && ST && (ST.order || []).length) seat = ST.order[0];
-  renderPort(); renderClock(); renderPacts(); if ($('tabReveal').classList.contains('on')) renderReveal();
+  renderPort(); renderClock(); renderPacts(); if ($('tabReveal').classList.contains('on')) renderReveal(); if ($('tabSetup').classList.contains('on')) renderSetup();
 }
 setInterval(() => { if (ST && !ST.paused && (ST.phase === 'call' || ST.phase === 'settle')) { $('tCd').textContent = fmt(leftNow()); $('tCd').classList.toggle('late', ST.phase === 'call' && leftNow() <= 30); } }, 250);
 
@@ -401,12 +410,13 @@ function renderClock(){
   const run = ST && (ST.phase === 'call' || ST.phase === 'settle');
   ['kPause','kPlus','kSkip','kRestart','kEnd'].forEach(id => $(id).disabled = !run);
   $('kOpen').disabled = !(ST && ST.phase === 'locked');
+  $('kOpen').textContent = ST && ST.year === 1 ? 'Open Year One' : 'Open the year (Herald absent)';
   $('kPause').textContent = ST && ST.paused ? 'Resume' : 'Pause';
   $('kSkip').textContent = ST && ST.phase === 'settle' ? 'Begin Call 1 now' : 'Next Call';
   const o = (ST && run) ? ST.order : [];
   $('cOrder').innerHTML = o.length ? o.map((n, i) => `<span class="${ST.phase === 'call' && i < ST.idx ? 'done' : ''} ${ST.phase === 'call' && i === ST.idx ? 'cur' : ''} ${(ST.phase === 'settle' ? i === 0 : i === ST.idx + 1) ? 'nxt' : ''}">${n}</span>`).join('') : '<span class="muted" style="width:auto;border:0">Drawn when the year opens</span>';
   $('cInfo').textContent = ST ? 'Calls last ' + fmt(ST.callSec) + ' · ' + ST.players + ' players · ' + (ST.joined || 0) + ' phones reported' : '';
-  $('kNote').textContent = 'The Herald opens each year with the Herald\'s PIN. Use “Open the year” only if the Herald is absent.';
+  $('kNote').textContent = 'You open Year One. From Year Two the Herald opens each year with the Herald\'s PIN; use “Open the year” only if the Herald is absent.';
 }
 
 /* ---------- the Iron Pacts ---------- */
@@ -478,6 +488,37 @@ function watchPrompts(){
   if (promptKind === 'check' && shownCheck !== key) closePrompt();   // the Call moved on
 }
 setInterval(watchPrompts, 250);
+
+/* ---------- the Decade's setup: the deck and the room, worked out for the number of players ---------- */
+const SETUP = p => [
+  ['In Ironreach, alone', [
+    ['wh', `Place <b>${p} Warehouses</b>, numbered 1 to ${p}, in a row. Keep each Landside clear in front and room for 10 or more cards behind.`],
+    ['pins', `Keep the <b>Port Access Pins 1 to ${p}</b> in the velvet case. They do not go in the Warehouses.`],
+    ['lands', `Shuffle each of the five Land decks and draw <b>${2*p} from each</b>: Ocean, Mountain, Fields, Forest, Desert (<b>${10*p} cards</b>). Shuffle them together. The rest go back unseen.`],
+    ['deal', `Deal <b>3 cards into each Warehouse</b> (${3*p} cards). <b>${7*p}</b> remain.`],
+    ['boom', `Add <b>${p} Boom Time</b>.`],
+    ['fm', `Draw <b>${p} Force Majeure</b> blind from the case of ten and add them. Do not look. ${p < 10 ? 'The other ' + (10 - p) + ' go back unopened.' : 'All ten are used.'}`],
+    ['shuffle', `Shuffle. The deck now holds <b>${9*p} cards</b>: one draw for each player at the end of Years One to Nine. Set it <b>Land-side up</b>.`],
+    ['ind', `Shuffle the <b>13 Industries</b> face down and place <b>one in each Warehouse</b>. The other ${13 - p} stay unseen.`],
+    ['seal', 'Seal every Warehouse. Lock the Iron Gate behind you.']]],
+  ['In the Chamber', [
+    ['passes', `Shuffle the <b>Order Passes 1 to ${p}</b> and give one to each guest privately, with a Reference Sheet. Not even you know which is which.`],
+    ['scan', 'Before the Welcome: every Initiate scans the Port clock, then their Order Pass.'],
+    ['welcome', 'The Herald reads the Welcome.']]]];
+const setupDone = () => (D().setup || {});
+function renderSetup(){
+  const p = players(), done = setupDone(), joined = ST ? ST.joined || 0 : 0;
+  const lists = SETUP(p).map(([h, items]) => `<div class="box"><h3>${h}</h3>${items.map(([k, t]) => `<label class="chk"><input type="checkbox" data-k="${k}" ${done[k] ? 'checked' : ''}><span>${t}</span></label>`).join('')}</div>`).join('');
+  const canOpen = ST && ST.phase === 'locked' && ST.year === 1;
+  $('suBody').innerHTML = `<div class="box"><h3>The Decade</h3><p><b class="t" style="font-size:20px">${p} players</b> · deck of ${9*p} · ${10*p} Resource cards drawn</p>
+    <p class="muted" style="font-size:14px">Set on the Port clock. To change it, start a new Decade there.</p></div>` + lists
+    + `<div class="box"><h3>Year One</h3><p>${joined} of ${p} Initiates have reported.</p>
+      ${canOpen ? '<p class="muted">When everyone is ready and the Welcome is read, open the year. Only you can open Year One.</p><button class="btn" style="width:100%;min-height:64px;font-size:20px;margin-top:10px" id="suOpen">Open Year One</button>'
+        : ST && ST.year >= 1 && ST.phase !== 'locked' || (ST && ST.year > 1) ? '<p class="muted">Year One is under way.</p>' : '<p class="muted">Waiting for the Port clock.</p>'}</div>`;
+  if ($('suOpen')) $('suOpen').onclick = () => { if (Date.now() - suAsk > 4000) { suAsk = Date.now(); $('suOpen').textContent = 'Tap again to open Year One'; return; } cmd('open'); $('suOpen').disabled = true; $('suOpen').textContent = 'Opening…'; };
+}
+let suAsk = 0;
+$('suBody').addEventListener('change', e => { const c = e.target; if (!c.dataset.k) return; const d = D(); d.setup = d.setup || {}; d.setup[c.dataset.k] = c.checked; saveD(d); });
 
 /* ---------- the Great Reveal ----------
    Pacts closed → each Warehouse revealed (Industry, line card by card, the Warehouse) → Complete shows only pass or fail →

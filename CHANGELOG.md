@@ -8,6 +8,7 @@ Every update to the apps gets a revision number. The Year Clock shows its revisi
 
 | Rev | Date | Changes |
 |---|---|---|
+| 3.5 | 27 Nov 2026 | Year One is the Chairman's: the locked screen reads "Chairman: open Year One" and takes only the Chairman's PIN (or the Chairman's device); from Year Two the Herald opens each year as before. The end of each year now sounds a higher steam toot-toot (two short blasts) instead of the long whistle; changeovers are unchanged |
 | 3.4 | 27 Nov 2026 | Layout: the red "Stand ready" panel now drops into its own column at the right edge, beside the clock, so the Order of Access and the year line stay visible on the left. The clock sits a little left of centre. Portrait is unchanged |
 | 3.3 | 27 Nov 2026 | The clock releases the Chairman's device when that device signs itself out |
 | 3.2 | 27 Nov 2026 | The relay account: a "Relay token" field on the setup screen (your ntfy token, kept on this iPad, with Show and Check). The line under it shows the allowance: signed in as, plan, messages left today, when it refills (or the free allowance for this Wi-Fi). The token travels inside the join code and the Chairman's code, so every device's messages count against the account. A red strip warns whenever the relay refuses a message (allowance used up, token refused, no connection) |
@@ -52,6 +53,7 @@ The Rev 1.0–1.1 brass-ring version is kept on the `v1-brass-ring` branch.
 
 | Rev | Date | Changes |
 |---|---|---|
+| 0.7 | 27 Nov 2026 | New Setup tab (shown first until Year One opens): the deck and room worked out for the number of players (Warehouses, Pins, cards per Land, the deal, Boom Time, Force Majeure, deck size, Industries, Order Passes) as a checklist that remembers its ticks; how many Initiates have reported; and "Open Year One", which only the Chairman can do |
 | 0.6 | 27 Nov 2026 | Rulings tab → This device → "Sign out and clear this device" (two taps): tells the clock to release it and wipes everything it holds. A Chairman's code scanned into a tab that already shows the page now reloads and reads it |
 | 0.5 | 27 Nov 2026 | Uses the relay token carried in the Chairman's code; pairing and the status line say at once when the relay is refusing messages |
 | 0.4 | 26 Nov 2026 | Prompts for every Call: the first 15 seconds bring a full-screen In-Hand check (the card they should hold, ✓ or ✗; closes when answered or after 15 s); 15 seconds before the end of the Call a full-screen draw page (all cards; tap the one handed over). The draw page stays open across the changeover and records for the player who is leaving; it is skipped if already recorded on The Call page, in a penalty year or in Year Ten |

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="3.4">
+<meta name="ie-revision" content="3.5">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -450,7 +450,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '3.4';
+const REV = '3.5';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -536,6 +536,24 @@ function gateSound(){
   } else gateTone();
 }
 const endTone  = gateSound;
+function steamToot(at, dur, vol){
+  const ac = audio(); if (!ac) return;
+  const t = ac.currentTime + at, master = ac.createGain();
+  master.gain.setValueAtTime(0.0001, t); master.gain.exponentialRampToValueAtTime(vol, t + .05);
+  master.gain.setValueAtTime(vol, t + dur - .12); master.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  master.connect(ac.destination);
+  [587.3, 740.0, 880.0].forEach(f => {                       // a bright steam chord, an octave above the Port whistle
+    const o = ac.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(f*.93, t); o.frequency.exponentialRampToValueAtTime(f, t + .08);
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f*1.6; bp.Q.value = 2.2;
+    const g = ac.createGain(); g.gain.value = .3; o.connect(bp); bp.connect(g); g.connect(master); o.start(t); o.stop(t + dur);
+  });
+  const len = Math.floor(ac.sampleRate*dur), buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random()*2 - 1;
+  const n = ac.createBufferSource(); n.buffer = buf; const hp = ac.createBiquadFilter(); hp.type = 'bandpass'; hp.frequency.value = 3200; hp.Q.value = .8;
+  const ng = ac.createGain(); ng.gain.value = .18; n.connect(hp); hp.connect(ng); ng.connect(master); n.start(t); n.stop(t + dur);
+}
+function yearEndTone(){ clank(0, .9); steamToot(.25, .5, 1.1); steamToot(.95, .75, 1.1); }
 const yearTone = () => { [0,.5,1,1.5].forEach((d,i)=>bell([392,523,659,784][i],d,2.4,.5)); };
 
 /* ---------- wake lock ---------- */
@@ -667,12 +685,12 @@ function renderLock(){
   const y = S.year;
   $('lKick').textContent = y===1 ? 'The Decade is ready' : 'Year ' + WORDS[y-1] + ' is complete · the Chairman sweeps the Port';
   $('lTitle').textContent = 'Year ' + WORDS[y] + ' awaits';
-  $('lSub').textContent = y===1 ? 'Who is first? Who is last? The Order of Access is drawn when the Herald opens the year.' : 'A new Order of Access will be drawn when the Herald opens the year.';
+  $('lSub').textContent = y===1 ? 'Who is first? Who is last? When every Initiate has reported, the Chairman opens Year One.' : 'A new Order of Access will be drawn when the Herald opens the year.';
   const c = CUES[y]; $('lCue').style.display = c ? 'block':'none'; $('lCueText').textContent = c||'';
-  $('bUnlock').textContent = 'Herald: open Year ' + WORDS[y];
+  $('bUnlock').textContent = y === 1 ? 'Chairman: open Year One' : 'Herald: open Year ' + WORDS[y];
   renderSeats();
 }
-$('bUnlock').addEventListener('click',()=>askPin('Herald: open Year '+WORDS[S.year], openYear, [S.hpin, S.pin]));
+$('bUnlock').addEventListener('click',()=> S.year === 1 ? askPin('Chairman: open Year One', openYear, [S.pin]) : askPin('Herald: open Year '+WORDS[S.year], openYear, [S.hpin, S.pin]));
 function openYear(){
   S.order = shuffled(S.players); S.seatLock = true; renderSeats();
   S.idx = 0; S.warned=false;
@@ -751,7 +769,7 @@ function nextBanner(on){
   if (on) placePanel();
 }
 function advance(silent){
-  if (!silent) endTone();
+  if (!silent) { if (S.idx + 1 >= S.players) yearEndTone(); else endTone(); }   // the last Call of the year ends with the toot-toot
   const out = S.order[S.idx], inn = S.order[S.idx+1];
   if (!silent) portOpen(out, inn);
   S.idx++; S.warned=false; nextBanner(false); $('sRun').classList.remove('warn');
@@ -833,7 +851,7 @@ $('mRestart').addEventListener('click',()=>{
   S.endAt=Date.now()+sec*1000; S.left=sec; S.warned=false; if (!isSettle()) nextBanner(false); save(); closeMenu(); tick(); });
 $('mShorter').addEventListener('click',()=>{ S.callSec=Math.max(60,S.callSec-15); save(); openMenu(); });
 $('mLonger').addEventListener('click',()=>{ S.callSec=Math.min(600,S.callSec+15); save(); openMenu(); });
-$('mEndYear').addEventListener('click',()=>{ closeMenu(); endTone(); if (!isSettle()) portOpen(S.order[S.idx], null); endYear(); });
+$('mEndYear').addEventListener('click',()=>{ closeMenu(); yearEndTone(); if (!isSettle()) portOpen(S.order[S.idx], null); endYear(); });
 $('mReset').addEventListener('click',()=>{ closeMenu(); S = { phase:'setup', players:S.players, callSec:S.callSec, settleSec:S.settleSec, dial:S.dial, pausedFrom:'call', year:1, pin:'', hpin:'', order:[], idx:0, endAt:0, left:0, warned:false, game:'', seats:{}, seen:[] }; $('iPin').value=''; $('iHPin').value=''; startLink(); save(); render(); });
 
 /* ---------- the relay token: the ntfy account every device's messages count against ---------- */
