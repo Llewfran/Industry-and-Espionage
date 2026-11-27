@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Year Clock">
 <title>Year Clock · Industry &amp; Espionage</title>
-<meta name="ie-revision" content="3.2">
+<meta name="ie-revision" content="3.3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
@@ -446,7 +446,7 @@ body.dial-gauge .steam{display:block}
 {
 const $ = id => document.getElementById(id);
 /* ---- REVISION: bump both lines and add an entry to CHANGELOG.md for every update ---- */
-const REV = '3.2';
+const REV = '3.3';
 const REV_DATE = '26 Nov 2026';
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const CUES = {
@@ -930,6 +930,7 @@ async function onChair(m){
   }
   if (!S.cdev || m.dev !== S.cdev) return;                                 // only the Chairman's device
   if (m.t === 'hello') { stateSoon(true); return; }
+  if (m.t === 'unpair') { S.cdev = ''; save(); renderChair(); return; }   // the Chairman's device signed itself out
   if (m.t === 'backup') { S.cblob = m.blob; save(); return; }
   if (m.t === 'regstep') { regShow(m.i, m.st); return; }
   if (m.t === 'cmd') {

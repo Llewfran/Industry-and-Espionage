@@ -190,7 +190,12 @@ details p{padding:0 14px 12px}
   <section class="tab" id="tabReveal"><div id="rv"></div></section>
 
   <!-- RULINGS -->
-  <section class="tab" id="tabRules"><div id="rList"></div></section>
+  <section class="tab" id="tabRules"><div id="rList"></div>
+    <div class="box" style="margin-top:16px"><h3>This device</h3>
+      <p class="muted">Signing out releases this device from the Decade and clears everything it holds: the cards handed out, the Iron Pacts and the Reveal. The clock keeps its sealed backup until a new Decade begins.</p>
+      <button class="btn red" style="margin-top:10px;width:100%" id="bSignOut">Sign out and clear this device</button>
+      <p class="muted" id="soNote" style="margin-top:8px"></p></div>
+  </section>
 </div>
 
 <nav class="tabs" id="tabs" hidden>
@@ -224,6 +229,8 @@ const GROUPS = [['Ocean', [0,1,2,3]], ['Mountain', [4,5,6,7]], ['Fields', [8,9,1
 
 /* ---------- pairing: the code from the iPad, then the PIN; the first device to pair is locked to the Decade ---------- */
 const hash = new URLSearchParams(location.hash.slice(1));
+// a scan may land in a tab that already has this page open: only the #code changes, so reload to read it
+addEventListener('hashchange', () => { if (/[#&]c=/.test(location.hash)) location.reload(); });
 let C = store.get('ie-chair');
 if (hash.get('c') && (!C || C.ckey !== hash.get('c'))) { C = { ckey: hash.get('c'), dev: (C && C.dev) || IE.Link.newId(), paired: false }; store.set('ie-chair', C); }
 if (hash.get('c') && C) { C.k = hash.get('k') || ''; store.set('ie-chair', C); }   // the relay account token, carried in the Chairman's code
@@ -608,6 +615,19 @@ const RULES = [
   ['The Silent Procession', 'Silence, hands at rest, keep walking. An offender is sent back alone; the Herald names them on the return.'],
   ['Iron Pacts', 'One binding handshake each, open declarations in any order until you close the ledger. Both partners receive the combined total after calamities; if either is at 0, both score 0.'],
   ['The Brass Torch', 'Iron Pact partners at the top share it. An individual beats an equal Pact. Individuals tied: fewest cards (Warehouse + Production Line), then a show of hands by the others; you do not vote.']];
+/* signing out: tell the clock to release this device, then forget everything on it */
+let soAsk = 0;
+$('bSignOut').addEventListener('click', async () => {
+  if (Date.now() - soAsk > 4000) { soAsk = Date.now(); $('bSignOut').textContent = 'Tap again to sign out and clear'; setTimeout(() => $('bSignOut').textContent = 'Sign out and clear this device', 4000); return; }
+  $('bSignOut').disabled = true; $('soNote').textContent = 'Releasing this device…';
+  let told = false; try { if (LINK) told = await LINK.send({ t: 'unpair', dev: C.dev }); } catch(e){}
+  try { Object.keys(localStorage).filter(k => k === 'ie-chair' || k.startsWith('ie-chair-data-')).forEach(k => localStorage.removeItem(k)); } catch(e){}
+  try { LINK && LINK.close(); } catch(e){}
+  LINK = null; C = null; ST = null;
+  $('app').hidden = true; $('tabs').hidden = true; $('prompt').hidden = true; $('pick').hidden = true; $('pNone').hidden = false;
+  $('pNone').querySelector('p').innerHTML = (told ? 'Signed out. The clock has released this device.' : 'Signed out and cleared. If the clock still shows a paired device, use <b>Release the Chairman\'s device</b> there.')
+    + '<br><br>To pair again, open the Chairman\'s controls on the iPad and scan the code.';
+});
 function renderRules(){ $('rList').innerHTML = RULES.map(([t, p]) => `<details><summary>${t}</summary><p>${p}</p></details>`).join(''); }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && LINK && C && C.paired) LINK.send({ t: 'hello', dev: C.dev }); });
 }
