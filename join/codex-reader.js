@@ -5,6 +5,7 @@
    Built by tools/build_codex_phone.py, which rewrites the PAGE map below. */
 (function () {
 'use strict';
+const BUILD = '9f11315c38';
 const PAGE = {"6": "cad922f02bf0baa1", "7": "2531cf0322eb6224", "8": "05751ca26cf5f16b", "9": "e3233406e1d142cf", "10": "5d841c751ad10d77", "11": "67c8d975a259257d", "12": "2a77760d954086fd", "13": "471fff65793ec35d", "14": "5dd496415a3bdb81", "15": "45c8fbd63b27cae2", "16": "45b8d7f3d8b23ef7", "17": "71ac494897ea7de9", "18": "2748cb3eb1e8d405", "19": "4b9e342b728aac77", "20": "aac7de82fa5bfa8a", "21": "64602b6edf9bf904", "22": "55fc7ab0d908598f", "23": "93bd225d012b3b6b", "24": "7ac64eb9fed4bd5a", "25": "c9d6392b23ce5186", "26": "f3442d381288876e"};
 
 /* the chapters, in the order the tabs show them; `until` is what a sealed tab says */
@@ -143,9 +144,9 @@ const $e = (tag, cls, html) => { const e = document.createElement(tag); if (cls)
 const cache = {};
 async function fragment(p) {
   if (cache[p]) return cache[p];
-  const r = await fetch((R.base || '') + 'codex/' + PAGE[p] + '.html', { cache: 'force-cache' });
+  const r = await fetch((R.base || '') + 'codex/' + PAGE[p] + '.html?v=' + BUILD, { cache: 'no-cache' });
   if (!r.ok) throw new Error('page ' + p);
-  const html = (await r.text()).replace(/src="codex\/img\//g, 'src="' + (R.base || '') + 'codex/img/');
+  const html = (await r.text()).replace(/src="(codex\/img\/[^"]+)"/g, (m, u) => 'src="' + (R.base || '') + u + '?v=' + BUILD + '"');
   return (cache[p] = html);
 }
 

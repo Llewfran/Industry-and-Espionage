@@ -294,7 +294,7 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
   <g id="gearShape"><path id="gp" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><circle r="12" fill="#2a1606"/><circle r="7" fill="url(#gb)"/></g>
 </defs></svg>
 
-<script src="codex-reader.js"></script>
+<script src="codex-reader.js?v=9f11315c38"></script>
 <script src="../shared/link.js"></script>
 <script>
 {
@@ -339,7 +339,7 @@ function taDa(){
 }
 
 /* ---------- stages ---------- */
-const REV = '0.14';
+const REV = '0.15';
 const show = id => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === id));
 let players = 6, mine = 4;
 const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };

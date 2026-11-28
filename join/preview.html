@@ -49,7 +49,7 @@ function draw(){
   const k = STAGES[+sel.value][1], q = `codex-test.html?started=${k.started}&completed=${k.completed}&y1=${k.y1}`;
   const sizes = dev.value === 'both' ? [['Android', 360, 780], ['iPhone', 390, 844]] : [[dev.options[dev.selectedIndex].text, ...dev.value.split('x').map(Number)]];
   document.getElementById('phones').innerHTML = sizes.map(([n, w, h], i) =>
-    `<div><div class="phone"><iframe src="${q}&id=${i}" width="${w}" height="${h}" title="${n}"></iframe></div><div class="cap">${n} · ${w} × ${h}</div></div>`).join('');
+    `<div><div class="phone"><iframe src="${q}&id=${i}&t=${Date.now()}" width="${w}" height="${h}" title="${n}"></iframe></div><div class="cap">${n} · ${w} × ${h}</div></div>`).join('');
   try { localStorage.setItem('ie-bench-stage', sel.value); localStorage.setItem('ie-bench-dev', dev.value); } catch (e) {}
 }
 sel.onchange = draw; dev.onchange = draw;

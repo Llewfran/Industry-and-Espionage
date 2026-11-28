@@ -148,5 +148,18 @@ for name in sorted(images):
 js = os.path.join(ROOT, 'join', 'codex-reader.js')
 s = open(js, encoding='utf-8').read()
 s = re.sub(r'const PAGE = \{[^}]*\};', 'const PAGE = ' + json.dumps({str(k): v for k, v in pagemap.items()}) + ';', s, count=1)
+# a build stamp from everything the reader shows, so phones never keep an old page or picture
+dig = hashlib.sha256()
+for f in sorted(os.listdir(OUT)):
+    if f.endswith('.html'): dig.update(open(os.path.join(OUT, f), 'rb').read())
+for f in sorted(os.listdir(OIMG)): dig.update(open(os.path.join(OIMG, f), 'rb').read())
+dig.update(re.sub(r"const BUILD = '[^']*';", '', s).encode())
+stamp = dig.hexdigest()[:10]
+s = re.sub(r"const BUILD = '[^']*';", f"const BUILD = '{stamp}';", s, count=1)
 open(js, 'w', encoding='utf-8').write(s)
+for page in ('index.html', 'codex-test.html'):
+    fp = os.path.join(ROOT, 'join', page); h = open(fp, encoding='utf-8').read()
+    h = re.sub(r'<script src="codex-reader\.js(\?v=[^"]*)?"></script>', f'<script src="codex-reader.js?v={stamp}"></script>', h)
+    open(fp, 'w', encoding='utf-8').write(h)
+print('build', stamp)
 print(len(pagemap), 'pages,', len(images), 'images')
