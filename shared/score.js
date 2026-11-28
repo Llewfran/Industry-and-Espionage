@@ -1,4 +1,4 @@
-/* Industry & Espionage — the Great Reveal scoring engine (Canon v1.7).
+/* Industry & Espionage — the Great Reveal scoring engine (Canon v1.9).
    Pure functions: give it what was recorded at the Reveal and it returns every score, the Iron Pacts,
    the Brass Torch and the order of the Formal Register. Used by the Chairman's device. */
 (function (root) {
@@ -28,6 +28,11 @@ const INDUSTRIES = {
   wonder:    { name: 'Industrial Wonder', img: 'i_wonder', wonder: true, flat: 25 },
   phil:      { name: 'Philanthropist', img: 'i_phil', phil: true }
 };
+/* the Philanthropist's target by table size (canon v1.9) */
+const PHIL = { 4: 19, 5: 21, 6: 24, 7: 24, 8: 25, 9: 26, 10: 28 };
+const PHIL_TARGET = p => PHIL[p] || (p < 4 ? 19 : 28);
+/* at 6 players or fewer International Trade and the Industrial Wonder stay in the box (canon v1.9) */
+const inPlay = p => Object.keys(INDUSTRIES).filter(k => !(p <= 6 && (k === 'trade' || k === 'wonder')));
 const BLOCKS = [['trade', 'wonder'], ['retail', 'fashion'], ['hotels', 'cruise'], ['property', 'news'], ['politics', 'weapons'], ['oil', 'banking']];
 const validPair = (a, b) => BLOCKS.some(([x, y]) => (a === x && b === y) || (a === y && b === x));
 const face = c => { const [r, d] = CARDS[c].split('-'); return { kind: 'face', r, d, land: LAND_OF[r], c }; };
@@ -58,8 +63,9 @@ function scoreOne(w, players){
   const cards = (w.line || []).length + (w.wh && w.wh.total || 0);
   const r = { ind: w.ind, name: ind.name, items, sym, cards, base: 0, cal: 0, failed: false, missing: [], note: '' };
   if (ind.phil) {
-    r.base = Math.max(0, Math.min(20, 3*players) - cards);
-    r.note = Math.min(20, 3*players) + ' − ' + cards + ' cards';
+    const target = PHIL_TARGET(players);
+    r.base = Math.max(0, target - cards);
+    r.note = target + ' − ' + cards + ' cards';
     r.final = r.base; return r;                                    // the Philanthropist counts cards only: no calamities
   }
   if (ind.wonder) {
@@ -126,5 +132,5 @@ function scoreAll(W, pacts, players, torchPick){
   return { S, P, groups, torch, hands, register };
 }
 
-root.IEScore = { CARDS, BOOM, LANDS, INDUSTRIES, BLOCKS, validPair, resolve, scoreOne, scoreAll };
+root.IEScore = { CARDS, BOOM, LANDS, INDUSTRIES, BLOCKS, PHIL, PHIL_TARGET, inPlay, validPair, resolve, scoreOne, scoreAll };
 })(typeof window !== 'undefined' ? window : globalThis);

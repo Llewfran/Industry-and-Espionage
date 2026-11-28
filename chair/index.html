@@ -363,12 +363,13 @@ function renderPort(){
   const to = Array.from({length: n}, (_, i) => i + 1).filter(s => s % 2 !== seat % 2);
   $('pShip').innerHTML = y >= 10 ? '<p class="muted">Year Ten: no Ship Through and no shipping.</p>' : chk === 'bad' ? '<p class="muted">Penalty year: no shipping at all.</p>'
     : `<p class="muted">${seat % 2 ? 'Odd' : 'Even'} ships only to ${seat % 2 ? 'Even' : 'Odd'}, never to its own Warehouse:</p><div class="ship">${to.map(s => `<span class="${s % 2 ? '' : 'even'}">${s}</span>`).join('')}</div>`
+      + '<p style="margin-top:8px">Ship Through: <b>no limit</b>. From the Warehouse: <b>up to 2 cards</b>.</p>'
       + (y === 1 ? '<p class="muted" style="margin-top:6px">Year One: never explain. Refuse with only, “The conveyors will not carry that.”</p>' : '');
   // this year's duties
-  const duty = y === 1 ? 'Ship Through, open the Warehouse, the draw. Take the Order Pass and fix the Pin in silence.'
-    : y < 5 ? 'Ship Through, open the Warehouse, the draw.'
-    : y === 5 ? 'Ship Through, open the Warehouse, then the <b>Production Line: place 5 cards</b> (or all they have), Land-side up, in order. Then the draw.'
-    : y < 10 ? 'Ship Through, open the Warehouse, then <b>place exactly 1 card</b> in the Production Line. Then the draw.' + (y === 9 ? ' <b>The last draw of the Decade.</b>' : '')
+  const duty = y === 1 ? 'Ship Through, open the Warehouse (<b>up to 2</b> shipped from it), the draw. Take the Order Pass and fix the Pin in silence.'
+    : y < 5 ? 'Ship Through, open the Warehouse (<b>up to 2</b> shipped from it), the draw.'
+    : y === 5 ? 'Ship Through, open the Warehouse (<b>up to 2</b> shipped from it), then the <b>Production Line: place 5 cards</b> (or all they have), Land-side up, in order. Then the draw.'
+    : y < 10 ? 'Ship Through, open the Warehouse (<b>up to 2</b> shipped from it), then <b>place exactly 1 card</b> in the Production Line. Then the draw.' + (y === 9 ? ' <b>The last draw of the Decade.</b>' : '')
     : '<b>No Ship Through, no shipping.</b> Open the Warehouse; the In-Hand card goes inside. Place <b>1 compulsory</b> card, then any optional cards. <b>No draw.</b>';
   $('pDuty').innerHTML = `<p>${duty}</p>` + (y >= 6 ? '<p class="muted" style="margin-top:6px">No legal card? Check the Warehouse yourself; if it holds no Resource or Boom Time, none is placed and there is no penalty.</p>' : '');
   // the draw
@@ -499,12 +500,14 @@ const SETUP = p => [
     ['boom', `Add <b>${p} Boom Time</b>.`],
     ['fm', `Draw <b>${p} Force Majeure</b> blind from the case of ten and add them. Do not look. ${p < 10 ? 'The other ' + (10 - p) + ' go back unopened.' : 'All ten are used.'}`],
     ['shuffle', `Shuffle. The deck now holds <b>${9*p} cards</b>: one draw for each player at the end of Years One to Nine. Set it <b>Land-side up</b>.`],
-    ['ind', `Shuffle the <b>13 Industries</b> face down and place <b>one in each Warehouse</b>. The other ${13 - p} stay unseen.`],
+    ['ind', p <= 6 ? `Return <b>International Trade</b> and the <b>Industrial Wonder</b> to the box: at ${p} players they are not used. Shuffle the other <b>11 Industries</b> face down and place <b>one in each Warehouse</b>. The other ${11 - p} stay unseen.`
+      : `Shuffle the <b>13 Industries</b> face down and place <b>one in each Warehouse</b>. The other ${13 - p} stay unseen.`],
     ['seal', 'Seal every Warehouse. Lock the Iron Gate behind you.']]],
   ['In the Chamber', [
     ['passes', `Shuffle the <b>Order Passes 1 to ${p}</b> and give one to each guest privately, with a Reference Sheet. Not even you know which is which.`],
+    ['fmsheet', 'Keep the <b>Force Majeure sheets</b> (or the board) <b>covered</b>. They are shown only at the Honour of the Pin, after Year One.'],
     ['scan', 'Before the Welcome: every Initiate scans the Port clock, then their Order Pass.'],
-    ['welcome', 'The Herald reads the Welcome.']]]];
+    ['welcome', p <= 6 ? 'The Herald reads the Welcome, and tells the room that <b>International Trade and the Industrial Wonder are not in play</b> this Decade.' : 'The Herald reads the Welcome.']]]];
 const setupDone = () => (D().setup || {});
 function renderSetup(){
   const p = players(), done = setupDone(), joined = ST ? ST.joined || 0 : 0;
@@ -563,7 +566,7 @@ function renderWh(r){
   const stepper = (k, label) => `<div class="step"><span>${label}</span><div class="n"><button class="btn ghost" data-k="${k}" data-d="-1" ${locked ? 'disabled' : ''}>−</button><b>${w.wh[k] || 0}</b><button class="btn ghost" data-k="${k}" data-d="1" ${locked ? 'disabled' : ''}>+</button></div></div>`;
   el.innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:10px"><div class="big">Warehouse ${rvSeat}</div><button class="btn ghost" id="rvBack">All Warehouses</button></div>
     <div class="box"><h3>The Industry</h3>${w.ind ? `<div class="row"><img src="img/ind/${ind.img}.jpg" style="width:70px;border-radius:6px"><div class="t">${ind.name}</div>${locked || w.line.length ? '' : '<button class="btn ghost" id="rvIndCh">Change</button>'}</div>`
-      : `<div class="indg">${Object.entries(IND).map(([k, v]) => `<button data-i="${k}"><img src="img/ind/${v.img}.jpg" alt=""><span>${v.name}</span></button>`).join('')}</div>`}</div>
+      : `<div class="indg">${SC.inPlay(players()).map(k => [k, IND[k]]).map(([k, v]) => `<button data-i="${k}"><img src="img/ind/${v.img}.jpg" alt=""><span>${v.name}</span></button>`).join('')}</div>`}</div>
     ${w.ind ? `<div class="box"><h3>The Production Line · ${w.line.length} cards</h3>
       <div class="line">${w.line.map(e => `<img src="${cardImg(e)}" alt="">`).join('') || '<span class="muted">Flip the first card.</span>'}</div>
       ${locked ? '' : (ind.wonder ? `<p style="margin:12px 0 8px" class="t">Next card: “Land or Resource?”</p><div class="lr"><button class="btn" id="rvLand">Land</button><button class="btn" id="rvRes">Resource</button></div>
@@ -645,6 +648,10 @@ function stepData(A, st){
 const RULES = [
   ['The In-Hand check', 'Missing or wrong makes no difference. The wrong card is confiscated and removed from the game. That year: no Ship Through, no shipping from the Warehouse; production only; no new In-Hand card.'],
   ['The Cardinal Rule', 'Odd ships only to Even, Even only to Odd, never to its own Warehouse. Applies from the first shipment. In Year One it is never explained: “The conveyors will not carry that.”'],
+  ['The shipping limit', 'Ship Through (Landside and the In-Hand card): no limit. From the Warehouse: up to 2 cards in a Call. A third is refused.'],
+  ['The Force Majeure sheet', 'Covered in Year One; players learn only the five names, and a card drawn then explains itself. Uncovered at the Honour of the Pin and shown for the rest of the Decade.'],
+  ['The Philanthropist', 'Target minus every card in its Warehouse and Production Line (calamities count as cards, no penalties). Target: 4p 19, 5p 21, 6p 24, 7p 24, 8p 25, 9p 26, 10p 28. The line is no safety net.'],
+  ['Six players or fewer', 'International Trade and the Industrial Wonder stay in the box: 11 Industries, five Trade Blocks.'],
   ['Theft', 'Played during Ship Through, from hand or their own Landside, onto one opposite-parity Landside. They take one card blind (by its Land back); it goes to their own Landside, usable next year. On an empty Landside nothing is stolen. The victim may play it on their own turn; if their turn has passed, it is swept into their Warehouse. Stuck in a Warehouse: −1.'],
   ['Espionage', 'Played from hand on their own turn, before Ship Through, by showing it to you. They see one other Warehouse\'s Landside or Production Line face side. Then it is discarded. Stuck in a Warehouse: no penalty.'],
   ['FIRE!', 'Arrives only as the end-of-Call draw: straight into the Warehouse; they leave with no In-Hand card. It never moves. No points penalty.'],

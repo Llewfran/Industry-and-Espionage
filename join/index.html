@@ -355,7 +355,7 @@ function taDa(){
 }
 
 /* ---------- stages ---------- */
-const REV = '0.10';
+const REV = '0.11';
 const show = id => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === id));
 let players = 6, mine = 4;
 const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
@@ -487,9 +487,7 @@ $('bAlt').addEventListener('click', () => { wake(); gateAlt && gateAlt.go(); });
 $('bReplay').addEventListener('click', () => startFly());
 
 /* ---------- the Port screen: reminders, the player's own clock, and the Codex ---------- */
-const CODEX = {6:'f752f467f2f9bd',7:'8475cb96d0d5b8',8:'afce5be9c88f68',9:'d7f1d3a6f1377c',10:'09d6171adb9d7c',11:'3e12eb2e4a41a5',12:'a17336ae2d0da3',
-  13:'fb426d6240726f',14:'2714d15f0438df',15:'0838182453baa4',16:'362a64fa72ffd8',17:'8ac96484ba5bc7',18:'e630f47c475454',19:'e9cf0ae4b31d2f',
-  20:'398812195f3550',21:'61b57ebfc60c1f',22:'a686fbfe81689f',23:'4de67a219f7b65'};
+const CODEX = {6:'9f13fafb5bd1ce',7:'d342f48c33bf8d',8:'9b9bb8e5f47041',9:'90cd61035eb07a',10:'85ffd0e0e4b1de',11:'768068f72cdfe3',12:'4211c0e63b5e58',13:'f4b9710d656cb7',14:'8a8787240dddbd',15:'ffd5162429e3f7',16:'0600cc229fd1c7',17:'5a73a8be5ec196',18:'f6a33aa20db311',19:'5f3c8090361212',20:'352882dc287929',21:'68d5335683b091',22:'deb4b103002990',23:'b2184c56244650',24:'2f63a73bbdde42',25:'ae0a40c7c3d20c'};
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 let armed = false, wakeLock = null, alarmTimer = null, ST = null, stAt = 0, firedKey = '';
 const linkState = () => LINK && LINK.status === 'live';
@@ -513,7 +511,7 @@ function pagesFor(k){
   const p = [];
   if (k.started >= 1) p.push(6,7,8,9,10);
   if (k.yearOneDone) p.push(21,22,23);
-  if (k.started >= 2) p.push(11,12,13,14,15);
+  if (k.started >= 2) p.push(11,12,13,14,15,24,25);   // the Honour of the Pin, and the Force Majeure reference (v1.9)
   if (k.started >= 3) p.push(16);
   if (k.started >= 5) p.push(17);
   if (k.completed >= 5) p.push(18);
@@ -707,7 +705,7 @@ $('bPkDone').addEventListener('click', () => { $('picker2').hidden = true; $('le
 function renderTrade(){
   const t = store.get(gkey('ie-trade')) || {}, n = (held() || {}).players || 10;
   const opts = v => ['?'].concat(Array.from({length: n}, (_, i) => String(i + 1))).map(o => `<option${o === (v || '?') ? ' selected' : ''}>${o}</option>`).join('');
-  $('lgTradeList').innerHTML = INDUSTRIES.map(([nm, img]) => { const v = t[nm] || ['?','?'];
+  $('lgTradeList').innerHTML = INDUSTRIES.filter(([nm]) => !(n <= 6 && (nm === 'International Trade' || nm === 'Industrial Wonder'))).map(([nm, img]) => { const v = t[nm] || ['?','?'];
     return `<div class="tr"><img src="cards/${img}.jpg" alt=""><span class="nm">${nm}</span>`
       + [0,1].map(k => `<select data-ind="${nm}" data-k="${k}" aria-label="${nm}, guess ${k+1}" class="${v[k] && v[k] !== '?' ? 'set' : ''}">${opts(v[k])}</select>`).join('') + `</div>`; }).join('');
 }
