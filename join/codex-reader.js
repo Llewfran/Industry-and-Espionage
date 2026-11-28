@@ -118,7 +118,26 @@ const CSS = `
 .cxseal b{display:block;font:700 22px "Cinzel",serif;color:#f2d48a;margin-bottom:6px}
 .cxnext{display:flex;gap:10px;justify-content:space-between;margin:6px 0 0}
 .cxnext .cxb{flex:1}
-.cxload{color:#cfb27a;text-align:center;padding:30px;font:italic 18px "Crimson Text",serif}`;
+.cxload{color:#cfb27a;text-align:center;padding:30px;font:italic 18px "Crimson Text",serif}
+.cxpage .dv{white-space:nowrap}
+.cxpage .dv img{height:1.25em;width:auto;vertical-align:-.28em;margin-right:.18em}
+.cxpage td.title{display:flex!important;align-items:center;gap:.6em}
+.cxpage .indimg{width:3.2em;border-radius:5px;box-shadow:0 2px 6px rgba(40,20,5,.5);flex:none}
+.cxpage .land{border:2px solid rgba(110,70,25,.5);border-radius:10px;background:rgba(255,248,228,.7);padding:.7em;margin:0 0 .9em}
+.cxpage .lhead{display:flex;gap:.8em;align-items:flex-start}
+.cxpage .lback{width:32%;max-width:130px;border-radius:7px;box-shadow:0 3px 8px rgba(40,20,5,.55);flex:none}
+.cxpage .lname{font:700 calc(var(--cxf)*1.1) "Cinzel",serif;color:#6e1f16}
+.cxpage .lplace{font-style:italic;color:#6b4a22;margin-bottom:.3em}
+.cxpage .lrow{margin:.15em 0}
+.cxpage .lrow b{display:block;font:700 calc(var(--cxf)*.58) "Cinzel",serif;letter-spacing:.16em;text-transform:uppercase;color:#8a5a1c}
+.cxpage .row.four{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:.8em 0 0}
+.cxpage .row.four .card{width:auto;min-width:0;max-width:none}
+.cxpage .devrow{display:flex;gap:.9em;align-items:center;border-bottom:1px solid rgba(110,70,25,.35);padding:.6em 0}
+.cxpage .devrow img{width:3.6em;height:3.6em;object-fit:contain;flex:none;filter:drop-shadow(0 2px 3px rgba(40,20,5,.45))}
+.cxpage .muted{color:#5a3a1a;font-size:.92em}
+.cxpage .devs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:.3em 0 1em;text-align:center}
+.cxpage .devs img{width:100%;height:3em;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(40,20,5,.45))}
+.cxpage .devs span{display:block;font:700 calc(var(--cxf)*.5) "Cinzel",serif;letter-spacing:.04em;color:#5a3410;margin-top:3px}`;
 
 const $e = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 const cache = {};

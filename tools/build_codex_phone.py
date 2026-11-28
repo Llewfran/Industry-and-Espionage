@@ -59,6 +59,70 @@ def clean(node):
     for t in node.find_all('table'): stack_table(t)
     return node
 
+
+# ---------- phone-only enrichment: Industry art on the Scoring Reference, Development emblems, a fuller Lands page ----------
+DEVS = ['medicine', 'agriculture', 'literacy', 'currency', 'weaponry']
+DEV_WORD = re.compile(r'\b(Medicine|Agriculture|Literacy|Currency|Weaponry)\b')
+IND_IMG = {'Banking': 'i_banking', 'Cruise Lines': 'i_cruise', 'Food Retail': 'i_retail', 'Hotels': 'i_hotels', 'Fashion': 'i_fashion',
+           'Politics': 'i_politics', 'Oil & Gas': 'i_oil', 'Property Dev.': 'i_property', 'Newspapers': 'i_news', 'Weapons Mfr.': 'i_weapons',
+           "Int'l Trade": 'i_trade', 'Ind. Wonder': 'i_wonder', 'Philanthropist': 'i_phil'}
+LANDS = [('ocean', 'Ocean', 'Sapphire Coast', ['trade', 'influence'], ['medicine', 'agriculture']),
+         ('mountain', 'Mountain', 'Argent Peaks', ['ore', 'gold'], ['weaponry', 'currency']),
+         ('fields', 'Fields', 'Verdant Expanse', ['food', 'citizens'], ['agriculture', 'literacy']),
+         ('forest', 'Forest', 'Umberwild', ['timber', 'textile'], ['literacy', 'weaponry']),
+         ('desert', 'Desert', 'Ember Wastes', ['oil', 'exotics'], ['currency', 'medicine'])]
+NEEDS = {'medicine': 'Cruise Lines, Hotels, Politics (two), Oil & Gas, International Trade and the Industrial Wonder',
+         'agriculture': 'Food Retail, Fashion (two), Property Development (two), International Trade and the Industrial Wonder',
+         'literacy': 'Banking, Food Retail, Hotels, Politics, International Trade and the Industrial Wonder. Newspapers scores by it alone',
+         'currency': 'Banking (two), Cruise Lines, Food Retail, International Trade (two) and the Industrial Wonder',
+         'weaponry': 'Oil & Gas (two), Weapons Manufacture (four) and the Industrial Wonder'}
+cap = lambda w: w[0].upper() + w[1:]
+dev = lambda d, big=False: f'<span class="dv{" big" if big else ""}"><img src="codex/img/dev_{d}.png" alt="">{cap(d)}</span>'
+
+def emblems(html):
+    """put each Development's emblem beside its name, inside table cells only"""
+    frag = BeautifulSoup(html, 'html.parser')
+    for td in frag.find_all('td'):
+        if 'title' in (td.get('class') or []): continue
+        for t in list(td.find_all(string=True)):
+            if DEV_WORD.search(t):
+                t.replace_with(BeautifulSoup(DEV_WORD.sub(lambda m: dev(m.group(1).lower()), t), 'html.parser'))
+    return str(frag)
+
+def scoring(html):
+    frag = BeautifulSoup(emblems(html), 'html.parser')
+    for td in frag.select('td.title'):
+        name = td.get_text(' ', strip=True).rstrip('7+').strip()
+        key = IND_IMG.get(name)
+        if key:
+            td.insert(0, BeautifulSoup(f'<img class="indimg" src="cards/{key}.jpg" alt="">', 'html.parser'))
+    return str(frag)
+
+def lands_page(html):
+    old = BeautifulSoup(html, 'html.parser'); note = old.select_one('.note-box')
+    out = ['<div class="kicker">The Reference Sheet · Front</div><h2 class="ph">What Each Land May Hide</h2>',
+           '<p>The <b>back</b> of every Resource card shows its Land. The <b>face</b> shows a Resource, the large name, and one Development emblem at its foot. Each Land hides two Resources and two Developments, in four designs.</p>']
+    for key, name, place, res, devs in LANDS:
+        cards = ''.join(f'<div class="card"><img src="cards/{r}-{d}.jpg" alt="" loading="lazy"><span>{cap(r)} · {cap(d)}</span></div>' for r in res for d in devs)
+        out.append(f'<div class="land"><div class="lhead"><img class="lback" src="codex/img/l_{key}.jpg" alt=""><div><div class="lname">{name}</div><div class="lplace">{place}</div>'
+                   f'<div class="lrow"><b>Resources</b> {cap(res[0])} · {cap(res[1])}</div><div class="lrow"><b>Developments</b> {dev(devs[0])} {dev(devs[1])}</div></div></div>'
+                   f'<div class="row four">{cards}</div></div>')
+    out.append('<h2>The five Developments</h2><p>Every face carries one Development emblem at its foot. Learn them: across a Warehouse, an emblem is the quickest way to read a card.</p>')
+    for d in DEVS:
+        lands = ' and '.join(n for k, n, p, r, ds in LANDS if d in ds)
+        out.append(f'<div class="devrow"><img src="codex/img/dev_{d}.png" alt=""><div><div class="lname">{cap(d)}</div><div>Found on <b>{lands}</b> cards.</div><div class="muted">Needed by {NEEDS[d]}.</div></div></div>')
+    if note: out.append(str(note))
+    return ''.join(out)
+
+def welcome_cards(html):
+    """page 7 (Of the cards): show the five emblems by name under the card anatomy"""
+    row = '<div class="devs">' + ''.join(f'<div><img src="codex/img/dev_{d}.png" alt=""><span>{cap(d)}</span></div>' for d in DEVS) + '</div>'
+    i = html.find('</div>', html.find('class="anatomy"'))
+    j = html.find('<p>', i)
+    return html[:j] + '<p class="cap">The five Development emblems</p>' + row + html[j:] if j > 0 else html + row
+
+ENRICH = {7: welcome_cards, 21: scoring, 22: lands_page}
+
 for p in PAGES:
     sec = secs[p - 1]
     if 'opener' in sec.get('class', []):
@@ -71,6 +135,7 @@ for p in PAGES:
     else:
         panel = clean(sec.select_one('.panel'))
         html = panel.decode_contents().strip()
+        if p in ENRICH: html = ENRICH[p](html)
     h = hashlib.sha256(f'{SALT}-{p}-brasshaven'.encode()).hexdigest()[:16]
     open(os.path.join(OUT, h + '.html'), 'w', encoding='utf-8').write(html + '\n')
     pagemap[p] = h
