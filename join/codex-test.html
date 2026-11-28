@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Codex · phone test</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<style>html,body{margin:0;background:#120a05;color:#f3e3bd;font-family:"Crimson Text",serif}
+.again{display:flex;align-items:center;justify-content:center;height:100vh}
+.again button{min-height:56px;padding:0 22px;border-radius:14px;border:2px solid #6b4517;background:#c9973f;color:#2a1606;font:700 18px "Cinzel",serif}</style>
+</head><body>
+<div class="again"><button id="go">Open the Codex</button></div>
+<script src="codex-reader.js"></script>
+<script>
+/* A stand-in for the player's phone: the test bench (preview.html) says which point of the Decade to show. */
+const q = new URLSearchParams(location.search);
+const k = { started: +q.get('started') || 0, completed: +q.get('completed') || 0, yearOneDone: q.get('y1') === '1' };
+const pages = q.get('all') === '1' ? CodexReader.CHAPTERS.flatMap(c => c.pages) : CodexReader.pagesAt(k);
+const KEY = 'ie-codex-test-seen-' + (q.get('id') || '0');
+const seen = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } };
+function open(){ CodexReader.open({ pages, seen: seen(), start: q.get('tab') || undefined,
+  onSeen(p){ const s = seen(); if (!s.includes(p)) { s.push(p); localStorage.setItem(KEY, JSON.stringify(s)); } } }); }
+document.getElementById('go').onclick = open;
+open();
+</script>
+</body></html>

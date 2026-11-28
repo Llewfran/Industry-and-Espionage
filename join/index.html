@@ -161,18 +161,6 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
 @keyframes fl{to{opacity:0}}
 .lgrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .lgrow .btn{min-height:50px;padding:0 14px;font-size:15px}
-.codex{position:fixed;inset:0;z-index:38;background:#120a05;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 14px)}
-.chead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.chead .btn{min-height:46px;padding:0 18px;font-size:16px}
-.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.cgrid button{padding:0;border:2px solid #6b4517;border-radius:6px;background:#2a1606;cursor:pointer;position:relative;aspect-ratio:148/210;overflow:hidden}
-.cgrid img{width:100%;height:100%;object-fit:cover;display:block}
-.cgrid i{position:absolute;left:4px;top:4px;font:700 11px "Cinzel",serif;color:#fff;background:rgba(0,0,0,.6);border-radius:4px;padding:1px 5px;font-style:normal}
-.cgrid .new{border-color:#f2d48a;box-shadow:0 0 12px rgba(255,200,110,.7)}
-.cview{position:fixed;inset:0;z-index:39;background:#000;display:flex;flex-direction:column}
-.cview img{flex:1;min-height:0;width:100%;object-fit:contain;touch-action:pan-y pinch-zoom}
-.cnav{display:flex;gap:10px;align-items:center;justify-content:center;padding:10px 10px calc(env(safe-area-inset-bottom) + 10px);background:#120a05;color:#cfb27a;font:600 14px "Cinzel",serif}
-.cnav .btn{min-height:46px;padding:0 18px;font-size:18px}
 .lnk{font:600 12px "Cinzel",serif;letter-spacing:.14em;color:#8d6a35;text-transform:uppercase}
 .lnk.live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#7fc27a;margin-right:8px;box-shadow:0 0 8px #7fc27a}
 .alarm{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;
@@ -279,12 +267,7 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<div class="codex" id="codex" hidden>
-  <div class="chead"><div><div class="kick">The Herald's Codex</div><div class="t" style="font-size:20px">Your pages</div></div><button class="btn ghost" id="bCodexClose">Close</button></div>
-  <div class="cgrid" id="cGrid"></div>
-  <p class="how" style="margin:10px auto 20px;font-size:15px">More pages open as the Decade unfolds.</p>
-  <div class="cview" id="cView" hidden><img id="cImg" alt="">
-    <div class="cnav"><button class="btn ghost" id="cPrev">‹</button><span id="cPos"></span><button class="btn ghost" id="cNext">›</button><button class="btn" id="cBack">Pages</button></div></div>
+
 </div>
 
 <!-- 3. THE FLY-OVER -->
@@ -311,6 +294,7 @@ body.demo .live-only,body:not(.demo) .demo-only{display:none!important}
   <g id="gearShape"><path id="gp" fill="url(#gb)" stroke="#2a1606" stroke-width="1.5"/><circle r="12" fill="#2a1606"/><circle r="7" fill="url(#gb)"/></g>
 </defs></svg>
 
+<script src="codex-reader.js"></script>
 <script src="../shared/link.js"></script>
 <script>
 {
@@ -355,7 +339,7 @@ function taDa(){
 }
 
 /* ---------- stages ---------- */
-const REV = '0.12';
+const REV = '0.13';
 const show = id => document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === id));
 let players = 6, mine = 4;
 const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
@@ -487,7 +471,6 @@ $('bAlt').addEventListener('click', () => { wake(); gateAlt && gateAlt.go(); });
 $('bReplay').addEventListener('click', () => startFly());
 
 /* ---------- the Port screen: reminders, the player's own clock, and the Codex ---------- */
-const CODEX = {6:'9f13fafb5bd1ce',7:'d342f48c33bf8d',8:'9b9bb8e5f47041',9:'90cd61035eb07a',10:'85ffd0e0e4b1de',11:'768068f72cdfe3',12:'4211c0e63b5e58',13:'f4b9710d656cb7',14:'8a8787240dddbd',15:'ffd5162429e3f7',16:'0600cc229fd1c7',17:'5a73a8be5ec196',18:'f6a33aa20db311',19:'5f3c8090361212',20:'352882dc287929',21:'68d5335683b091',22:'deb4b103002990',23:'b2184c56244650',24:'2f63a73bbdde42',25:'ae0a40c7c3d20c',26:'aab130ef16a217'};
 const WORDS = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 let armed = false, wakeLock = null, alarmTimer = null, ST = null, stAt = 0, firedKey = '';
 const linkState = () => LINK && LINK.status === 'live';
@@ -634,29 +617,14 @@ function callMe(m){
   alarm('next');
 }
 
-/* the Codex: only the pages this player has earned */
-let cList = [], cAt = 0;
+/* the Codex: only the pages this player has earned, as chapters with tabs and large type (join/codex-reader.js) */
 function openCodex(){
-  cList = myPages(); if (!cList.length) return;
-  const seen = store.get(gkey('ie-seen')) || [];
-  $('cGrid').innerHTML = cList.map((p, i) => `<button data-i="${i}" class="${seen.includes(p) ? '' : 'new'}"><img loading="lazy" src="codex/${CODEX[p]}.jpg" alt="Codex page ${p}"><i>${p}</i></button>`).join('');
-  $('codex').hidden = false; $('cView').hidden = true;
-}
-function viewPage(i){
-  cAt = Math.max(0, Math.min(cList.length - 1, i)); const p = cList[cAt];
-  $('cImg').src = 'codex/' + CODEX[p] + '.jpg'; $('cPos').textContent = 'Page ' + p + ' · ' + (cAt + 1) + ' of ' + cList.length; $('cView').hidden = false;
-  const seen = store.get(gkey('ie-seen')) || []; if (!seen.includes(p)) { seen.push(p); store.set(gkey('ie-seen'), seen); }
-  const b = $('cGrid').querySelector(`[data-i="${cAt}"]`); if (b) b.classList.remove('new');
+  const pages = myPages(); if (!pages.length || !window.CodexReader) return;
+  CodexReader.open({ pages, seen: store.get(gkey('ie-seen')) || [],
+    onSeen(p){ const seen = store.get(gkey('ie-seen')) || []; if (!seen.includes(p)) { seen.push(p); store.set(gkey('ie-seen'), seen); } },
+    onClose(){ renderWatch(); } });
 }
 $('bCodex').addEventListener('click', openCodex);
-$('cGrid').addEventListener('click', e => { const b = e.target.closest('button'); if (b) viewPage(+b.dataset.i); });
-$('cPrev').addEventListener('click', () => viewPage(cAt - 1));
-$('cNext').addEventListener('click', () => viewPage(cAt + 1));
-$('cBack').addEventListener('click', () => { $('cView').hidden = true; });
-$('bCodexClose').addEventListener('click', () => { $('codex').hidden = true; renderWatch(); });
-let sx = null;
-$('cImg').addEventListener('touchstart', e => { if (e.touches.length === 1) sx = e.touches[0].clientX; }, { passive: true });
-$('cImg').addEventListener('touchend', e => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; sx = null; if (Math.abs(dx) > 60) viewPage(cAt + (dx < 0 ? 1 : -1)); });
 
 /* ---------- the player's private register: In Stock, On Order, and the Trade Register ----------
    Kept only on this phone, cleared with a new Decade. Nothing is checked or worked out: it holds what the player puts in. */
@@ -716,7 +684,7 @@ $('bLgClose').addEventListener('click', () => { $('ledger').hidden = true; rende
 $('bStock').addEventListener('click', () => openLedger('stock'));
 $('bOrder').addEventListener('click', () => openLedger('order'));
 $('bTrade').addEventListener('click', () => openLedger('trade'));
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { $('ledger').hidden = true; $('codex').hidden = true; } });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { $('ledger').hidden = true; if (window.CodexReader) CodexReader.close(); } });
 
 /* the number shows only while the player holds the Reminder button, so no one reads it by accident or guile */
 let hideT = null;

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Codex · test bench</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+body{margin:0;background:#1b120a;color:#f3e3bd;font:17px/1.45 "Crimson Text",serif}
+header{padding:16px 22px 6px}
+h1{font:700 22px "Cinzel",serif;color:#f2d48a;margin:0 0 4px;letter-spacing:.04em}
+.muted{color:#cfb27a}
+.bar{display:flex;flex-wrap:wrap;gap:18px;align-items:center;padding:10px 22px 16px;border-bottom:1px solid #4d300c}
+label{font:700 13px "Cinzel",serif;letter-spacing:.12em;text-transform:uppercase;color:#c9973f;display:block;margin-bottom:4px}
+select,button{font:600 16px "Crimson Text",serif;min-height:40px;border-radius:10px;border:2px solid #6b4517;background:#2a1606;color:#f2d48a;padding:0 12px}
+button{cursor:pointer;font-family:"Cinzel",serif;font-weight:700}
+.phones{display:flex;flex-wrap:wrap;gap:30px;padding:22px;align-items:flex-start}
+.phone{background:#000;border-radius:36px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.6),inset 0 0 0 2px #333}
+.phone iframe{display:block;border:0;border-radius:24px;background:#120a05}
+.cap{text-align:center;font:700 13px "Cinzel",serif;color:#cfb27a;margin-top:8px;letter-spacing:.08em}
+</style></head><body>
+<header><h1>The Herald's Codex · phone test bench</h1>
+<div class="muted">For the designer and the Chairman. Shows the phone Codex at real phone sizes, at any point of the Decade, without a game or a phone. Do not share this link with players: it can open sealed pages.</div></header>
+<div class="bar">
+  <div><label for="stage">Point in the Decade</label><select id="stage"></select></div>
+  <div><label for="dev">Phones</label><select id="dev">
+    <option value="both">Android and iPhone side by side</option>
+    <option value="360x780">Small Android (360 × 780)</option>
+    <option value="412x915">Large Android (412 × 915)</option>
+    <option value="390x844">iPhone (390 × 844)</option>
+    <option value="430x932">Large iPhone (430 × 932)</option></select></div>
+  <div><label>&nbsp;</label><button id="reset">Mark all unread</button></div>
+</div>
+<div class="phones" id="phones"></div>
+<script>
+const STAGES = [
+  ['Year One, before your Call (Initiate)', { started: 1, completed: 0, y1: 0 }],
+  ['Year One, after your first Call (Industrialist)', { started: 1, completed: 0, y1: 1 }],
+  ['Year Two (after the Honour of the Pin)', { started: 2, completed: 1, y1: 1 }],
+  ['Year Three (after the Warning)', { started: 3, completed: 2, y1: 1 }],
+  ['Year Four', { started: 4, completed: 3, y1: 1 }],
+  ['Year Five', { started: 5, completed: 4, y1: 1 }],
+  ['After Year Five (the Silent Procession)', { started: 5, completed: 5, y1: 1 }],
+  ['Years Six to Nine', { started: 7, completed: 6, y1: 1 }],
+  ['Year Ten', { started: 10, completed: 9, y1: 1 }],
+  ['After the Decade (every page)', { started: 10, completed: 10, y1: 1 }]];
+const sel = document.getElementById('stage'), dev = document.getElementById('dev');
+sel.innerHTML = STAGES.map((s, i) => `<option value="${i}">${s[0]}</option>`).join('');
+try { sel.value = localStorage.getItem('ie-bench-stage') || '1'; dev.value = localStorage.getItem('ie-bench-dev') || 'both'; } catch (e) {}
+function draw(){
+  const k = STAGES[+sel.value][1], q = `codex-test.html?started=${k.started}&completed=${k.completed}&y1=${k.y1}`;
+  const sizes = dev.value === 'both' ? [['Android', 360, 780], ['iPhone', 390, 844]] : [[dev.options[dev.selectedIndex].text, ...dev.value.split('x').map(Number)]];
+  document.getElementById('phones').innerHTML = sizes.map(([n, w, h], i) =>
+    `<div><div class="phone"><iframe src="${q}&id=${i}" width="${w}" height="${h}" title="${n}"></iframe></div><div class="cap">${n} · ${w} × ${h}</div></div>`).join('');
+  try { localStorage.setItem('ie-bench-stage', sel.value); localStorage.setItem('ie-bench-dev', dev.value); } catch (e) {}
+}
+sel.onchange = draw; dev.onchange = draw;
+document.getElementById('reset').onclick = () => { Object.keys(localStorage).filter(k => k.startsWith('ie-codex-test-seen')).forEach(k => localStorage.removeItem(k)); draw(); };
+draw();
+</script>
+</body></html>
